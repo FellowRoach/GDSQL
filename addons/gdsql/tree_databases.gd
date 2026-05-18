@@ -257,7 +257,7 @@ func add_table_to_config(db_name: String, table_name: String, comment: String,
 		GDSQL.RootConfig.save()
 		msgs.push_back(tr("1 file: %s has been modified.") % GDSQL.RootConfig.path)
 	else:
-		GDSQL.ConfManager.save(table_data_path)
+		GDSQL.ConfManager.save_conf_by_origin_password_or_dek(table_data_path)
 	if not valid_if_not_exist:
 		GDSQL.ConfManager.mark_invalid_if_not_exist(table_data_path)
 	msgs.push_back(tr("1 file: %s has been saved.") % table_data_path)

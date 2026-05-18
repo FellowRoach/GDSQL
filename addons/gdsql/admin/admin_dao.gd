@@ -183,15 +183,10 @@ func _create_database_impl(db_name: String, path: String) -> Error:
 	GDSQL.RootConfig.save()
 	msgs.push_back(tr("1 file: %s has been modified.") % GDSQL.RootConfig.path)
 	
-	var dir = DirAccess.open(GDSQL.RootConfig.get_base_dir())
-	if dir == null:
-		msgs.push_back(tr("Failed! Cannot open config root %s dir! Err: %s.") % 
-			[GDSQL.RootConfig.get_base_dir(), DirAccess.get_open_error()])
-		return _error_occur(action, msgs)
-		
 	var config_path = GDSQL.RootConfig.get_database_config_path(db_name)
-	if not dir.dir_exists(config_path):
-		var err = dir.make_dir_recursive(config_path)
+	var abs_config_path = ProjectSettings.globalize_path(config_path)
+	if not DirAccess.dir_exists_absolute(abs_config_path):
+		var err = DirAccess.make_dir_recursive_absolute(abs_config_path)
 		if err == OK:
 			msgs.push_back(tr("Dir: %s has been made.") % config_path)
 		else:
@@ -418,7 +413,7 @@ comment: String = "", password: String = "", valid_if_not_exist: bool = false) -
 		GDSQL.RootConfig.save()
 		msgs.push_back(tr("1 file: %s has been modified.") % GDSQL.RootConfig.path)
 	else:
-		GDSQL.ConfManager.save(table_data_path)
+		GDSQL.ConfManager.save_conf_by_origin_password_or_dek(table_data_path)
 	if not valid_if_not_exist:
 		GDSQL.ConfManager.mark_invalid_if_not_exist(table_data_path)
 	msgs.push_back(tr("1 file: %s has been saved.") % table_data_path)
@@ -1091,8 +1086,14 @@ func clear_table_password(db_name: String, table_name: String) -> Error:
 func _is_project_path(path: String) -> bool:
 	return path.begins_with("res://")
 	
+## 判断指定路径是否可写。
+## 规则：
+##   - 导出游戏中 res:// 路径只读（PCK 包），不可写。
+##   - 其他情况（编辑器环境、user://、install://、绝对路径）：允许。
 func _can_path_be_modified(path: String) -> bool:
-	return not (_is_project_path(path) and _is_editor())
+	if _is_project_path(path) and not OS.has_feature("editor"):
+		return false
+	return true
 	
 func _remove_table_files(db_name: String, table_name: String) -> void:
 	var conf_path = GDSQL.RootConfig.get_table_config_path(db_name, table_name)

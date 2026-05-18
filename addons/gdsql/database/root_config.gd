@@ -7,6 +7,11 @@ const DEK = "_DEK_"
 var path: String
 var conf: ConfigFile
 
+## 补充配置：仅在导出游戏（非编辑器）中有效，用于保存运行时创建的数据库/表元数据。
+## 位于 user:// 下，可读写。主配置 conf（res://）在导出后只读。
+var supplementary_path: String = ""
+var supplementary_conf: ConfigFile = null
+
 func _init(p_path: String = "res://gdsql/define/config.cfg") -> void:
 	set_path(p_path)
 	
@@ -16,68 +21,125 @@ func set_path(p_path: String):
 	path = p_path
 	conf = GDSQL.ConfManager.get_conf(path, "")
 	
+## 初始化补充配置（仅在导出游戏中需要调用）。
+## supp_path：补充配置文件路径，应在可写目录（如 user://）下。
+func init_supplementary(supp_path: String) -> void:
+	supplementary_path = supp_path
+	supplementary_conf = ConfigFile.new()
+	if FileAccess.file_exists(supp_path):
+		supplementary_conf.load(supp_path)
+
+## 是否使用补充配置（即当前处于导出游戏中）
+func _use_supplementary() -> bool:
+	return supplementary_conf != null
+
+## 判断某数据库名是否归属于补充配置
+func _is_db_in_supplementary(db_name: String) -> bool:
+	return supplementary_conf != null and supplementary_conf.has_section(db_name)
+
 func get_base_dir() -> String:
 	return path.get_base_dir()
+
+## 获取补充配置的基础目录（即 supplementary_path 所在目录）
+func get_supplementary_base_dir() -> String:
+	return supplementary_path.get_base_dir() if supplementary_path else ""
 	
 func reload():
 	GDSQL.ConfManager.remove_conf(path)
 	conf = GDSQL.ConfManager.get_conf(path, "")
+	if supplementary_conf != null and FileAccess.file_exists(supplementary_path):
+		supplementary_conf.load(supplementary_path)
 	
 # 清空所有配置
 func clear() -> void:
 	conf.clear()
+	if supplementary_conf:
+		supplementary_conf.clear()
 	
-# 编码为配置文本字符串
+# 编码为配置文本字符串（仅主配置）
 func encode_to_text() -> String:
 	return conf.encode_to_text()
 	
 # 删除整个分组
 func erase_section(section: String) -> void:
-	conf.erase_section(section)
+	if supplementary_conf and supplementary_conf.has_section(section):
+		supplementary_conf.erase_section(section)
+	else:
+		conf.erase_section(section)
 	
 # 删除分组下的键
 func erase_section_key(section: String, key: String) -> void:
-	conf.erase_key(section, key)
+	if supplementary_conf and supplementary_conf.has_section_key(section, key):
+		supplementary_conf.erase_key(section, key)
+	else:
+		conf.erase_key(section, key)
 	
-# 获取分组下所有键
+# 获取分组下所有键（优先补充配置）
 func get_section_keys(section: String) -> PackedStringArray:
+	if supplementary_conf and supplementary_conf.has_section(section):
+		return supplementary_conf.get_section_keys(section)
 	return conf.get_section_keys(section)
 	
-# 获取所有分组名
+# 获取所有分组名（合并主配置与补充配置）
 func get_sections() -> PackedStringArray:
-	return conf.get_sections()
+	var sections = conf.get_sections()
+	if supplementary_conf:
+		for section in supplementary_conf.get_sections():
+			if not sections.has(section):
+				sections.append(section)
+	return sections
 	
-# 获取配置值（带默认值）
+# 获取配置值（补充配置优先，回退到主配置）
 func get_value(section: String, key: String, default: Variant = null) -> Variant:
+	if supplementary_conf and supplementary_conf.has_section_key(section, key):
+		return supplementary_conf.get_value(section, key, default)
 	return conf.get_value(section, key, default)
 	
-# 判断是否存在分组
+# 判断是否存在分组（任一配置中存在即为 true）
 func has_section(section: String) -> bool:
+	if supplementary_conf and supplementary_conf.has_section(section):
+		return true
 	return conf.has_section(section)
 	
-# 判断是否存在分组+键
+# 判断是否存在分组+键（任一配置中存在即为 true）
 func has_section_key(section: String, key: String) -> bool:
+	if supplementary_conf and supplementary_conf.has_section_key(section, key):
+		return true
 	return conf.has_section_key(section, key)
 	
 # 解析文本格式配置
 func parse(data: String) -> Error:
 	return conf.parse(data)
 	
-# 保存配置到文件（使用成员变量 path）
+# 保存配置。
+# 在导出游戏中：保存补充配置到 supplementary_path（user:// 下可写）。
+# 在编辑器中：保存主配置到 path（res:// 下）。
 func save() -> Error:
-	return GDSQL.ConfManager.save2(path)
+	if _use_supplementary():
+		# 确保目录存在
+		var dir_path = supplementary_path.get_base_dir()
+		if not DirAccess.dir_exists_absolute(ProjectSettings.globalize_path(dir_path)):
+			DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(dir_path))
+		return supplementary_conf.save(supplementary_path)
+	GDSQL.ConfManager.save_conf_by_origin_password_or_dek(path)
+	return OK
 	
 # 保存加密配置（使用成员变量 path）
 func save_encrypted(key: PackedByteArray) -> Error:
-	return GDSQL.ConfManager.save_encrypted2(path, key)
+	GDSQL.ConfManager.save_conf_by_password(path, key)
+	return OK
 	
 # 保存加密配置（密码，使用成员变量 path）
 func save_encrypted_pass(password: String) -> Error:
-	return GDSQL.ConfManager.save_encrypted_pass2(path, password)
+	GDSQL.ConfManager.save_conf_by_password(path, password)
+	return OK
 	
-# 设置配置值
+# 设置配置值（在导出游戏中写入补充配置，编辑器中写入主配置）
 func set_value(section: String, key: String, value: Variant) -> void:
-	conf.set_value(section, key, value)
+	if _use_supplementary():
+		supplementary_conf.set_value(section, key, value)
+	else:
+		conf.set_value(section, key, value)
 	
 func validate_name(p_name: String) -> String:
 	var ret = p_name.to_lower()
@@ -90,6 +152,10 @@ func get_databases() -> Array[String]:
 	for section in conf.get_sections():
 		if section != DEK:
 			ret.push_back(section)
+	if supplementary_conf:
+		for section in supplementary_conf.get_sections():
+			if section != DEK and not ret.has(section):
+				ret.push_back(section)
 	return ret
 	
 func get_tables(db_name: String) -> Array[String]:
@@ -128,16 +194,16 @@ func get_databases_info() -> Dictionary:
 	
 func set_database_data(db_name: String, data_path: String, encypted_dek: String):
 	db_name = validate_name(db_name)
-	conf.set_value(db_name, "data_path", data_path)
-	conf.set_value(db_name, "encrypted", encypted_dek)
+	set_value(db_name, "data_path", data_path)
+	set_value(db_name, "encrypted", encypted_dek)
 	
 func set_database_data_path(db_name: String, data_path: String):
 	db_name = validate_name(db_name)
-	conf.set_value(db_name, "data_path", data_path)
+	set_value(db_name, "data_path", data_path)
 	
 func set_database_encrypted(db_name: String, encypted_dek: String):
 	db_name = validate_name(db_name)
-	conf.set_value(db_name, "encrypted", encypted_dek)
+	set_value(db_name, "encrypted", encypted_dek)
 	
 func erase_database(db_name: String):
 	db_name = validate_name(db_name)
@@ -145,42 +211,47 @@ func erase_database(db_name: String):
 	
 func set_database_dek(db_name: String, dek = null):
 	db_name = validate_name(db_name)
-	conf.set_value(DEK, get_database_data_path(db_name), dek)
+	set_value(DEK, get_database_data_path(db_name), dek)
 	
 func get_database_dek64(db_name: String) -> String:
 	db_name = validate_name(db_name)
-	return conf.get_value(DEK, get_database_data_path(db_name), "")
+	return get_value(DEK, get_database_data_path(db_name), "")
 	
 func get_table_dek64(db_name: String, table_name: String) -> String:
 	db_name = validate_name(db_name)
 	table_name = validate_name(table_name)
-	return conf.get_value(DEK, get_table_data_path(db_name, table_name), "")
+	return get_value(DEK, get_table_data_path(db_name, table_name), "")
 	
 func set_table_dek(db_name: String, table_name: String, dek = null):
 	db_name = validate_name(db_name)
 	table_name = validate_name(table_name)
-	conf.set_value(DEK, get_table_data_path(db_name, table_name), dek)
+	set_value(DEK, get_table_data_path(db_name, table_name), dek)
 	
 func get_database_data(db_name: String) -> Dictionary:
 	db_name = validate_name(db_name)
 	var ret = {}
-	for key in conf.get_section_keys(db_name):
-		ret[key] = conf.get_value(db_name, key)
+	for key in get_section_keys(db_name):
+		ret[key] = get_value(db_name, key)
 	return ret
 	
+## 获取数据库配置目录路径。
+## 对于运行时创建的数据库（归属补充配置），返回 user:// 下的路径；
+## 对于预定义数据库（归属主配置），返回主配置所在目录下的路径。
 func get_database_config_path(db_name: String) -> String:
 	db_name = validate_name(db_name)
+	if _is_db_in_supplementary(db_name):
+		return supplementary_path.get_base_dir().path_join(db_name)
 	return get_base_dir().path_join(db_name)
 	
 func get_database_data_path(db_name: String) -> String:
 	db_name = validate_name(db_name)
-	return conf.get_value(db_name, "data_path", "")
+	return get_value(db_name, "data_path", "")
 	
 func get_database_name_by_db_path(p_path: String) -> String:
-	for db_name in conf.get_sections():
-		if conf.has_section_key(db_name, "data_path"):
-			if conf.get_value(db_name, "data_path") == p_path or \
-			GDSQL.GDSQLUtils.globalize_path(conf.get_value(db_name, "data_path")) == GDSQL.GDSQLUtils.globalize_path(p_path):
+	for db_name in get_sections():
+		if has_section_key(db_name, "data_path"):
+			if get_value(db_name, "data_path") == p_path or \
+			GDSQL.GDSQLUtils.globalize_path(get_value(db_name, "data_path")) == GDSQL.GDSQLUtils.globalize_path(p_path):
 				return db_name
 	return ""
 	
@@ -192,11 +263,11 @@ func get_table_config_path(db_name: String, table_name: String) -> String:
 func get_table_data_path(db_name: String, table_name: String) -> String:
 	db_name = validate_name(db_name)
 	table_name = validate_name(table_name)
-	return conf.get_value(db_name, "data_path").path_join(table_name) + DATA_EXTENSION
+	return get_value(db_name, "data_path").path_join(table_name) + DATA_EXTENSION
 	
 func get_database_encrypted_dek(db_name: String) -> String:
 	db_name = validate_name(db_name)
-	return conf.get_value(db_name, "encrypted", "")
+	return get_value(db_name, "encrypted", "")
 	
 func get_database_dek(db_name: String) -> PackedByteArray:
 	var dek64 = get_database_dek64(db_name)
@@ -249,4 +320,3 @@ func get_table_valid_if_not_exist(db_name: String, table_name: String) -> bool:
 	table_name = validate_name(table_name)
 	var table_config = GDSQL.ConfManager.get_conf(get_table_config_path(db_name, table_name), "")
 	return table_config.get_value(table_name, "valid_if_not_exist", false)
-	

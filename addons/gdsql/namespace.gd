@@ -54,6 +54,12 @@ static func get_setting_root_config_path() -> String:
 static func get_setting_game_conf_db_dir() -> String:
 	return _get_settings("config/game_conf_db_dir", "")
 	
+## 获取补充配置文件路径（用于导出游戏中保存运行时创建的数据库/表元数据）。
+## 默认存储在 user://gdsql/define/ 下，可在 gdsql/settings.cfg 中
+## [config] supplementary_config_path 覆盖。
+static func get_setting_supplementary_config_path() -> String:
+	return _get_settings("config/supplementary_config_path", "user://gdsql/define/runtime_config.cfg")
+	
 static func _get_settings(prop: String, default_value: Variant = null):
 	var settings = ConfigFile.new()
 	settings.load("res://gdsql/settings.cfg")
@@ -92,6 +98,9 @@ static func _get_root_config() -> RootConfigClass:
 		rc.name = &"GDSQLRootConfig"
 		Engine.register_singleton(&"GDSQLRootConfig", rc)
 		Engine.get_main_loop().root.add_child.call_deferred(rc, true)
+		# 在导出游戏中（非编辑器）初始化补充配置，用于存储运行时创建的数据库/表
+		if not OS.has_feature("editor"):
+			rc.init_supplementary(get_setting_supplementary_config_path())
 	return Engine.get_singleton(&"GDSQLRootConfig")
 	
 static func _clear():
