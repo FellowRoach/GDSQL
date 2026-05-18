@@ -178,6 +178,8 @@ static func evaluate_command_script(command: String, variable_names = [], variab
 static func globalize_path(path: String) -> String:
 	if path.begins_with("res://"):
 		return path.simplify_path()
+	if path.begins_with("install://"):
+		return OS.get_executable_path().get_base_dir().path_join(path.substr("install://".length()))
 	if OS.has_feature("editor"):
 		var res_path = ProjectSettings.globalize_path("res://")
 		if path.begins_with(res_path):

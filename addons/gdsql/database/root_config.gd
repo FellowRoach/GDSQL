@@ -65,15 +65,15 @@ func parse(data: String) -> Error:
 	
 # 保存配置到文件（使用成员变量 path）
 func save() -> Error:
-	return conf.save(path)
+	return GDSQL.ConfManager.save2(path)
 	
 # 保存加密配置（使用成员变量 path）
 func save_encrypted(key: PackedByteArray) -> Error:
-	return conf.save_encrypted(path, key)
+	return GDSQL.ConfManager.save_encrypted2(path, key)
 	
 # 保存加密配置（密码，使用成员变量 path）
 func save_encrypted_pass(password: String) -> Error:
-	return conf.save_encrypted_pass(path, password)
+	return GDSQL.ConfManager.save_encrypted_pass2(path, password)
 	
 # 设置配置值
 func set_value(section: String, key: String, value: Variant) -> void:
@@ -115,8 +115,8 @@ func get_databases_info() -> Dictionary:
 		var db_conf_path = get_database_config_path(db_name)
 		var table_confs = GDSQL.GDSQLUtils.get_specific_extension_files(db_conf_path, CONFIG_EXTENSION.substr(1))
 		for file_name in table_confs:
-			var table_conf = ConfigFile.new()
-			table_conf.load(db_conf_path.path_join(file_name))
+			var table_conf = GDSQL.ImprovedConfigFile.new()
+			table_conf.load2(db_conf_path.path_join(file_name))
 			var table_name = file_name.get_basename()
 			
 			var table_info = {}

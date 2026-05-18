@@ -39,11 +39,11 @@ func get_conf(path: String, password) -> GDSQL.ImprovedConfigFile:
 		
 	var err = OK
 	if password.is_empty():
-		err = conf.load(path)
+		err = conf.load2(path)
 	elif password is PackedByteArray:
-		err = conf.load_encrypted(path, password)
+		err = conf.load_encrypted2(path, password)
 	else:
-		err = conf.load_encrypted_pass(path, password)
+		err = conf.load_encrypted_pass2(path, password)
 		
 	if err != OK:
 		assert(false, "conf load failed! err:%s(%s), `%s`:`%s`" % [err, error_string(err), path, password])
@@ -99,11 +99,11 @@ func save_conf_by_origin_password_or_dek(path: String):
 		return
 	var conf = get_conf(path, "")
 	if _passwords[path].is_empty():
-		conf.save(path)
+		conf.save2(path)
 	elif _passwords[path] is PackedByteArray:
-		conf.save_encrypted(path, _passwords[path])
+		conf.save_encrypted2(path, _passwords[path])
 	else:
-		conf.save_encrypted_pass(path, _passwords[path])
+		conf.save_encrypted_pass2(path, _passwords[path])
 		
 	if OS.has_feature("editor"):
 		_conf_modified_time[path] = FileAccess.get_modified_time(path)
@@ -121,11 +121,11 @@ func save_conf_by_same_password_or_dek(path: String, ref_path: String):
 	var conf = get_conf(path, "")
 	_passwords[path] = _passwords[ref_path]
 	if _passwords[ref_path].is_empty():
-		conf.save(path)
+		conf.save2(path)
 	elif _passwords[path] is PackedByteArray:
-		conf.save_encrypted(path, _passwords[path])
+		conf.save_encrypted2(path, _passwords[path])
 	else:
-		conf.save_encrypted_pass(path, _passwords[path])
+		conf.save_encrypted_pass2(path, _passwords[path])
 		
 	if OS.has_feature("editor"):
 		_conf_modified_time[path] = FileAccess.get_modified_time(path)
@@ -143,11 +143,11 @@ func save_conf_by_password(path: String, password):
 	
 	_passwords[path] = password
 	if _passwords[path].is_empty():
-		conf.save(path)
+		conf.save2(path)
 	elif _passwords[path] is PackedByteArray:
-		conf.save_encrypted(path, _passwords[path])
+		conf.save_encrypted2(path, _passwords[path])
 	else:
-		conf.save_encrypted_pass(path, _passwords[path])
+		conf.save_encrypted_pass2(path, _passwords[path])
 		
 	if OS.has_feature("editor"):
 		_conf_modified_time[path] = FileAccess.get_modified_time(path)

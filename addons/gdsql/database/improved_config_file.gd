@@ -137,3 +137,33 @@ func get_sections_by_indexed_key(indexed_name: String, indexed_value) -> Array:
 	if indexed_datas[indexed_name].has(indexed_value):
 		return indexed_datas[indexed_name][indexed_value].duplicate()
 	return []
+	
+func load2(path: String) -> Error:
+	if path.begins_with("install://"):
+		path = GDSQL.GDSQLUtils.globalize_path(path)
+	return self.load(path)
+	
+func load_encrypted2(path: String, key: PackedByteArray) -> Error:
+	if path.begins_with("install://"):
+		path = GDSQL.GDSQLUtils.globalize_path(path)
+	return self.load_encrypted(path, key)
+	
+func load_encrypted_pass2(path: String, password: String) -> Error:
+	if path.begins_with("install://"):
+		path = GDSQL.GDSQLUtils.globalize_path(path)
+	return self.load_encrypted_pass(path, password)
+
+func save2(path: String) -> Error:
+	if path.begins_with("install://"):
+		path = GDSQL.GDSQLUtils.globalize_path(path)
+	return self.save(path)
+	
+func save_encrypted2(path: String, key: PackedByteArray) -> Error:
+	if path.begins_with("install://"):
+		path = GDSQL.GDSQLUtils.globalize_path(path)
+	return self.save_encrypted(path, key)
+	
+func save_encrypted_pass2(path: String, password: String) -> Error:
+	if path.begins_with("install://"):
+		path = GDSQL.GDSQLUtils.globalize_path(path)
+	return self.save_encrypted_pass(path, password)
