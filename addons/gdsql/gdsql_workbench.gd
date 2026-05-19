@@ -163,8 +163,9 @@ func init_settings() -> Error:
 		settings.load(settings_path)
 		
 	var default_values = {
-		"config/root_config_path": "res://gdsql/define/config.cfg",
-		"config/database_dir": "res://gdsql/database",
+		"config/root_config_path": "res://gdsql/define/config.cfg", # Root config within project.
+		"config/supplementary_config_path": "user://gdsql/define/runtime_config.cfg", # Supplementary root config used when game is exported.
+		"config/game_conf_db_name": "", 
 	}
 	
 	var changed = false
@@ -178,6 +179,7 @@ func init_settings() -> Error:
 	if changed:
 		settings.save(settings_path)
 		
+	# Root config.
 	if true:
 		var path: String = settings.get_value("config", "root_config_path")
 		if not FileAccess.file_exists(path):
@@ -189,12 +191,16 @@ func init_settings() -> Error:
 				push_error("Initialize GDSQL root config failed! Path: %s." % path)
 				return FAILED
 				
+	# Supplementary root config.
 	if true:
-		var path: String = settings.get_value("config", "database_dir")
-		if not DirAccess.dir_exists_absolute(path):
-			var err = DirAccess.make_dir_recursive_absolute(path)
-			if err != OK:
-				push_error("Initialize GDSQL database dir failed! Path: %s." % path)
+		var path: String = settings.get_value("config", "supplementary_config_path")
+		if not FileAccess.file_exists(path):
+			var err = DirAccess.make_dir_recursive_absolute(path.get_base_dir())
+			if err == OK:
+				var cf = ConfigFile.new()
+				cf.save(path)
+			else:
+				push_error("Initialize GDSQL supplementary root config failed! Path: %s." % path)
 				return FAILED
 				
 	return OK

@@ -51,8 +51,8 @@ static var RootConfig: RootConfigClass: get = _get_root_config
 static func get_setting_root_config_path() -> String:
 	return _get_settings("config/root_config_path", "res://gdsql/define/config.cfg")
 	
-static func get_setting_game_conf_db_dir() -> String:
-	return _get_settings("config/game_conf_db_dir", "")
+static func get_setting_game_conf_db_name() -> String:
+	return _get_settings("config/game_conf_db_name", "")
 	
 ## 获取补充配置文件路径（用于导出游戏中保存运行时创建的数据库/表元数据）。
 ## 默认存储在 user://gdsql/define/ 下，可在 gdsql/settings.cfg 中

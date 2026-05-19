@@ -126,9 +126,12 @@ func use_user_db() -> GDSQL.BaseDao:
 	return self
 	
 func use_conf_db() -> GDSQL.BaseDao:
-	var game_conf_db_dir = GDSQL.get_setting_game_conf_db_dir()
+	var game_conf_db_name = GDSQL.get_setting_game_conf_db_name()
+	if game_conf_db_name == "":
+		return _assert_false("use_conf_db", "Game conf db name is not set!")
+	var game_conf_db_dir = GDSQL.RootConfig.get_database_data_path(game_conf_db_name)
 	if game_conf_db_dir == "":
-		return _assert_false("use_conf_db", "Game conf db dir is not set!")
+		return _assert_false("use_conf_db", "Game conf db dir is empty!")
 	use_db(game_conf_db_dir)
 	return self
 	
