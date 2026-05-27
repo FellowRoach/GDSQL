@@ -65,7 +65,7 @@ lacking_tables = null):
 		
 	# 缺少一些表
 	if not expression.get_lack_input_names().is_empty():
-		if lacking_tables:
+		if lacking_tables is Array:
 			lacking_tables.append_array(expression.get_lack_input_names())
 		return null
 		
