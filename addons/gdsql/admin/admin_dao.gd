@@ -306,6 +306,10 @@ func _drop_database_impl(db_name: String) -> Error:
 	for table_name in databases[db_name]["tables"]:
 		_remove_table_files(db_name, table_name)
 		
+	var db_abs_path = GDSQL.GDSQLUtils.globalize_path(db_data_path)
+	if DirAccess.dir_exists_absolute(db_abs_path):
+		OS.move_to_trash(db_abs_path)
+		
 	GDSQL.RootConfig.set_database_dek(db_name, null)
 	GDSQL.RootConfig.erase_database(db_name)
 	GDSQL.RootConfig.save()
