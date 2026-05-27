@@ -33,6 +33,7 @@ func _eval_sql(expr: String, input_names: Array = [],
 # 1. Basic arithmetic
 # ============================================================================
 
+## 测试: 加法运算
 func test_arithmetic_addition() -> void:
 	assert_int(_eval("1+1")).is_equal(2)
 	assert_int(_eval("1 + 1")).is_equal(2)
@@ -40,47 +41,55 @@ func test_arithmetic_addition() -> void:
 	assert_int(_eval("-1+1")).is_equal(0)
 
 
+## 测试: 减法运算
 func test_arithmetic_subtraction() -> void:
 	assert_int(_eval("2-1")).is_equal(1)
 	assert_int(_eval("10-5")).is_equal(5)
 	assert_int(_eval("0-5")).is_equal(-5)
 
 
+## 测试: 乘法运算
 func test_arithmetic_multiplication() -> void:
 	assert_int(_eval("2*3")).is_equal(6)
 	assert_int(_eval("0*5")).is_equal(0)
 	assert_int(_eval("-2*3")).is_equal(-6)
 
 
+## 测试: 除法运算
 func test_arithmetic_division() -> void:
 	assert_int(_eval("10/2")).is_equal(5)
 	assert_int(_eval("9/3")).is_equal(3)
 	assert_float(_eval("7/2")).is_equal(3.5)
 
 
+## 测试: 取模运算
 func test_arithmetic_modulo() -> void:
 	assert_int(_eval("5%2")).is_equal(1)
 	assert_int(_eval("10%3")).is_equal(1)
 	assert_int(_eval("8%4")).is_equal(0)
 
 
+## 测试: 幂运算
 func test_arithmetic_power() -> void:
 	assert_int(_eval("2**3")).is_equal(8)
 	assert_int(_eval("3**2")).is_equal(9)
 	assert_int(_eval("10**0")).is_equal(1)
 
 
+## 测试: 一元负号
 func test_arithmetic_unary_minus() -> void:
 	assert_int(_eval("-5")).is_equal(-5)
 	assert_int(_eval("--5")).is_equal(5)
 	assert_int(_eval("-(3+2)")).is_equal(-5)
 
 
+## 测试: 一元正号
 func test_arithmetic_unary_plus() -> void:
 	assert_int(_eval("+5")).is_equal(5)
 	assert_int(_eval("++5")).is_equal(5)
 
 
+## 测试: 运算符优先级
 func test_arithmetic_operator_precedence() -> void:
 	assert_int(_eval("2+3*4")).is_equal(14)   # * before +
 	assert_int(_eval("(2+3)*4")).is_equal(20)  # parens override
@@ -92,6 +101,7 @@ func test_arithmetic_operator_precedence() -> void:
 # 2. Comparison
 # ============================================================================
 
+## 测试: 相等比较
 func test_comparison_equal() -> void:
 	assert_bool(_eval("1==1")).is_true()
 	assert_bool(_eval("1==2")).is_false()
@@ -99,35 +109,41 @@ func test_comparison_equal() -> void:
 	assert_bool(_eval("'abc'=='xyz'")).is_false()
 
 
+## 测试: 不等比较
 func test_comparison_not_equal() -> void:
 	assert_bool(_eval("1!=2")).is_true()
 	assert_bool(_eval("1!=1")).is_false()
 
 
+## 测试: 小于比较
 func test_comparison_less() -> void:
 	assert_bool(_eval("1<2")).is_true()
 	assert_bool(_eval("2<1")).is_false()
 	assert_bool(_eval("2<2")).is_false()
 
 
+## 测试: 大于比较
 func test_comparison_greater() -> void:
 	assert_bool(_eval("2>1")).is_true()
 	assert_bool(_eval("1>2")).is_false()
 	assert_bool(_eval("2>2")).is_false()
 
 
+## 测试: 小于等于比较
 func test_comparison_less_equal() -> void:
 	assert_bool(_eval("1<=2")).is_true()
 	assert_bool(_eval("2<=2")).is_true()
 	assert_bool(_eval("3<=2")).is_false()
 
 
+## 测试: 大于等于比较
 func test_comparison_greater_equal() -> void:
 	assert_bool(_eval("2>=1")).is_true()
 	assert_bool(_eval("2>=2")).is_true()
 	assert_bool(_eval("1>=2")).is_false()
 
 
+## 测试: 链式比较
 func test_comparison_chained() -> void:
 	assert_bool(_eval("1<2 and 2<3")).is_true()
 	assert_bool(_eval("1<2 and 2>3")).is_false()
@@ -137,6 +153,7 @@ func test_comparison_chained() -> void:
 # 3. Logic
 # ============================================================================
 
+## 测试: 逻辑与
 func test_logic_and() -> void:
 	assert_bool(_eval("true and true")).is_true()
 	assert_bool(_eval("true and false")).is_false()
@@ -144,18 +161,21 @@ func test_logic_and() -> void:
 	assert_bool(_eval("false and false")).is_false()
 
 
+## 测试: 逻辑或
 func test_logic_or() -> void:
 	assert_bool(_eval("true or false")).is_true()
 	assert_bool(_eval("false or true")).is_true()
 	assert_bool(_eval("false or false")).is_false()
 
 
+## 测试: 逻辑非
 func test_logic_not() -> void:
 	assert_bool(_eval("not true")).is_false()
 	assert_bool(_eval("not false")).is_true()
 	assert_bool(_eval("not (1==2)")).is_true()
 
 
+## 测试: 复合逻辑运算
 func test_logic_compound() -> void:
 	assert_bool(_eval("true and not false")).is_true()
 	assert_bool(_eval("not true or false")).is_false()
@@ -166,32 +186,38 @@ func test_logic_compound() -> void:
 # 4. Bitwise
 # ============================================================================
 
+## 测试: 按位与
 func test_bitwise_and() -> void:
 	assert_int(_eval("5&3")).is_equal(1)   # 101 & 011 = 001
 	assert_int(_eval("6&2")).is_equal(2)   # 110 & 010 = 010
 
 
+## 测试: 按位或
 func test_bitwise_or() -> void:
 	assert_int(_eval("5|3")).is_equal(7)   # 101 | 011 = 111
 	assert_int(_eval("1|2")).is_equal(3)
 
 
+## 测试: 按位异或
 func test_bitwise_xor() -> void:
 	assert_int(_eval("5^3")).is_equal(6)   # 101 ^ 011 = 110
 	assert_int(_eval("1^1")).is_equal(0)
 
 
+## 测试: 左移运算
 func test_bitwise_shift_left() -> void:
 	assert_int(_eval("1<<3")).is_equal(8)
 	assert_int(_eval("2<<2")).is_equal(8)
 	assert_int(_eval("0<<5")).is_equal(0)
 
 
+## 测试: 右移运算
 func test_bitwise_shift_right() -> void:
 	assert_int(_eval("8>>3")).is_equal(1)
 	assert_int(_eval("16>>2")).is_equal(4)
 
 
+## 测试: 按位取反
 func test_bitwise_invert() -> void:
 	assert_int(_eval("~0")).is_equal(-1)
 	assert_int(_eval("~1")).is_equal(-2)
@@ -201,11 +227,13 @@ func test_bitwise_invert() -> void:
 # 5. String operations
 # ============================================================================
 
+## 测试: 字符串拼接
 func test_string_concatenation() -> void:
 	assert_str(_eval("'hello'+' world'")).is_equal("hello world")
 	assert_str(_eval("'a'+'b'+'c'")).is_equal("abc")
 
 
+## 测试: 数字自动转字符串
 func test_string_with_numbers_coercion() -> void:
 	# GDScript auto-coerces number to string in + context
 	assert_str(_eval("'count:'+1")).is_equal("count:1")
@@ -215,6 +243,7 @@ func test_string_with_numbers_coercion() -> void:
 # 6. Constants
 # ============================================================================
 
+## 测试: null常量
 func test_constant_null() -> void:
 	var e = GDSQL.SQLExpression.new()
 	e.parse("null")
@@ -222,26 +251,32 @@ func test_constant_null() -> void:
 	assert_that(result).is_null()
 
 
+## 测试: true常量
 func test_constant_true() -> void:
 	assert_bool(_eval("true")).is_true()
 
 
+## 测试: false常量
 func test_constant_false() -> void:
 	assert_bool(_eval("false")).is_false()
 
 
+## 测试: PI常量
 func test_constant_pi() -> void:
 	assert_float(_eval("PI")).is_equal(PI)
 
 
+## 测试: TAU常量
 func test_constant_tau() -> void:
 	assert_float(_eval("TAU")).is_equal(TAU)
 
 
+## 测试: INF常量
 func test_constant_inf() -> void:
 	assert_float(_eval("INF")).is_equal(INF)
 
 
+## 测试: NAN常量
 func test_constant_nan() -> void:
 	var result = _eval("NAN")
 	assert_bool(is_nan(result)).is_true()
@@ -251,96 +286,116 @@ func test_constant_nan() -> void:
 # 7. Function calls
 # ============================================================================
 
+## 测试: sin函数
 func test_func_sin() -> void:
 	assert_float(_eval("sin(0.0)")).is_equal(0.0)
 	assert_float(_eval("sin(PI/2)")).is_approx_equal(1.0)
 
 
+## 测试: cos函数
 func test_func_cos() -> void:
 	assert_float(_eval("cos(0.0)")).is_equal(1.0)
 	assert_float(_eval("cos(PI)")).is_approx_equal(-1.0)
 
 
+## 测试: min函数
 func test_func_min() -> void:
 	assert_int(_eval("min(3,5)")).is_equal(3)
 	assert_int(_eval("min(-1,10)")).is_equal(-1)
 
 
+## 测试: max函数
 func test_func_max() -> void:
 	assert_int(_eval("max(3,5)")).is_equal(5)
 	assert_int(_eval("max(-1,10)")).is_equal(10)
 
 
+## 测试: abs函数
 func test_func_abs() -> void:
 	assert_int(_eval("abs(-5)")).is_equal(5)
 	assert_int(_eval("abs(3)")).is_equal(3)
 
 
+## 测试: round函数
 func test_func_round() -> void:
 	assert_int(_eval("round(3.7)")).is_equal(4)
 	assert_int(_eval("round(3.2)")).is_equal(3)
 
 
+## 测试: floor函数
 func test_func_floor() -> void:
 	assert_int(_eval("floor(3.7)")).is_equal(3)
 	assert_int(_eval("floor(-1.5)")).is_equal(-2)
 
 
+## 测试: ceil函数
 func test_func_ceil() -> void:
 	assert_int(_eval("ceil(3.2)")).is_equal(4)
 	assert_int(_eval("ceil(-1.5)")).is_equal(-1)
 
 
+## 测试: sqrt函数
 func test_func_sqrt() -> void:
 	assert_float(_eval("sqrt(9.0)")).is_equal(3.0)
 
 
+## 测试: pow函数
 func test_func_pow() -> void:
 	assert_float(_eval("pow(2.0, 3.0)")).is_equal(8.0)
 
 
+## 测试: clamp函数
 func test_func_clamp() -> void:
 	assert_int(_eval("clamp(5, 0, 10)")).is_equal(5)
 	assert_int(_eval("clamp(-1, 0, 10)")).is_equal(0)
 	assert_int(_eval("clamp(15, 0, 10)")).is_equal(10)
 
 
+## 测试: lerp函数
 func test_func_lerp() -> void:
 	assert_float(_eval("lerp(0.0, 10.0, 0.5)")).is_equal(5.0)
 
 
+## 测试: is_nan函数
 func test_func_is_nan() -> void:
 	assert_bool(_eval("is_nan(NAN)")).is_true()
 	assert_bool(_eval("is_nan(1.0)")).is_false()
 
 
+## 测试: is_inf函数
 func test_func_is_inf() -> void:
 	assert_bool(_eval("is_inf(INF)")).is_true()
 	assert_bool(_eval("is_inf(1.0)")).is_false()
 
 
+## 测试: str函数
 func test_func_str() -> void:
 	assert_str(_eval("str(123)")).is_equal("123")
 	assert_str(_eval("str(1,2,3)")).is_equal("123")
 
 
+## 测试: len函数
 func test_func_len() -> void:
 	assert_int(_eval("len('hello')")).is_equal(5)
 	assert_int(_eval("len([1,2,3])")).is_equal(3)
 
 
+## 测试: snapped函数
 func test_func_snapped() -> void:
 	assert_float(_eval("snapped(3.7, 1.0)")).is_equal(4.0)
 
 
+## 测试: deg_to_rad函数
 func test_func_deg_to_rad() -> void:
 	assert_float(_eval("deg_to_rad(180.0)")).is_approx_equal(PI)
 
 
+## 测试: rad_to_deg函数
 func test_func_rad_to_deg() -> void:
 	assert_float(_eval("rad_to_deg(PI)")).is_approx_equal(180.0)
 
 
+## 测试: step_decimals函数
 func test_func_step_decimals() -> void:
 	assert_int(_eval("step_decimals(3.000)")).is_equal(0)
 	# step_decimals(3.100) could be 1 depending on float representation
@@ -350,6 +405,7 @@ func test_func_step_decimals() -> void:
 # 8. Variables / inputs
 # ============================================================================
 
+## 测试: 单个变量输入
 func test_input_single_variable() -> void:
 	var e = GDSQL.SQLExpression.new()
 	e.parse("x + 1", ["x"])
@@ -357,6 +413,7 @@ func test_input_single_variable() -> void:
 	assert_int(result).is_equal(6)
 
 
+## 测试: 多个变量输入
 func test_input_multiple_variables() -> void:
 	var e = GDSQL.SQLExpression.new()
 	e.parse("a + b * c", ["a", "b", "c"])
@@ -364,6 +421,7 @@ func test_input_multiple_variables() -> void:
 	assert_int(result).is_equal(7)  # 1 + (2 * 3) = 7
 
 
+## 测试: 字符串类型变量
 func test_input_as_string() -> void:
 	var e = GDSQL.SQLExpression.new()
 	e.parse("'Hello, ' + name", ["name"])
@@ -371,6 +429,7 @@ func test_input_as_string() -> void:
 	assert_str(result).is_equal("Hello, World")
 
 
+## 测试: 缺失变量默认为null
 func test_input_missing_provides_null() -> void:
 	var e = GDSQL.SQLExpression.new()
 	e.parse("x + 1", ["x"])
@@ -379,6 +438,7 @@ func test_input_missing_provides_null() -> void:
 	assert_that(result).is_null()
 
 
+## 测试: 索引变量$0/$1
 func test_input_indexed() -> void:
 	var e = GDSQL.SQLExpression.new()
 	e.parse("$0 + $1", [])
@@ -386,6 +446,7 @@ func test_input_indexed() -> void:
 	assert_int(result).is_equal(30)
 
 
+## 测试: 索引变量与名称混用
 func test_input_indexed_with_names() -> void:
 	var e = GDSQL.SQLExpression.new()
 	e.parse("$0 + $1", ["a", "b"])
@@ -393,6 +454,7 @@ func test_input_indexed_with_names() -> void:
 	assert_int(result).is_equal(7)
 
 
+## 测试: 命名变量作为函数参数
 func test_input_named_identifier_used_in_function() -> void:
 	var e = GDSQL.SQLExpression.new()
 	e.parse("abs(x)", ["x"])
@@ -400,6 +462,7 @@ func test_input_named_identifier_used_in_function() -> void:
 	assert_int(result).is_equal(42)
 
 
+## 测试: 变量名不能是关键字
 func test_input_names_validated_for_keywords() -> void:
 	var e = GDSQL.SQLExpression.new()
 	var err = e.parse("1+1", ["null"])
@@ -411,6 +474,7 @@ func test_input_names_validated_for_keywords() -> void:
 # 9. SQL mode — null propagation
 # ============================================================================
 
+## 测试: SQL模式加法null传播
 func test_sql_mode_null_propagation_addition() -> void:
 	var e = GDSQL.SQLExpression.new()
 	e.sql_mode = true
@@ -419,6 +483,7 @@ func test_sql_mode_null_propagation_addition() -> void:
 	assert_that(result).is_null()
 
 
+## 测试: SQL模式乘法null传播
 func test_sql_mode_null_propagation_multiplication() -> void:
 	var e = GDSQL.SQLExpression.new()
 	e.sql_mode = true
@@ -427,6 +492,7 @@ func test_sql_mode_null_propagation_multiplication() -> void:
 	assert_that(result).is_null()
 
 
+## 测试: SQL模式比较null传播
 func test_sql_mode_null_propagation_comparison() -> void:
 	var e = GDSQL.SQLExpression.new()
 	e.sql_mode = true
@@ -435,6 +501,7 @@ func test_sql_mode_null_propagation_comparison() -> void:
 	assert_bool(result).is_false()
 
 
+## 测试: 非SQL模式null行为
 func test_sql_mode_no_null_propagation_in_non_sql_mode() -> void:
 	# In non-sql mode, null + 1 will also be null (GDScript behavior)
 	var e = GDSQL.SQLExpression.new()
@@ -444,6 +511,7 @@ func test_sql_mode_no_null_propagation_in_non_sql_mode() -> void:
 	assert_that(result).is_null()
 
 
+## 测试: SQL模式字符串运算
 func test_sql_mode_string_arithmetic() -> void:
 	# The expression engine converts string numbers to int/float in sql_mode
 	var e = GDSQL.SQLExpression.new()
@@ -454,6 +522,7 @@ func test_sql_mode_string_arithmetic() -> void:
 	assert_str(result).is_equal("53")
 
 
+## 测试: SQL模式变量输入
 func test_sql_mode_variable_input() -> void:
 	var e = GDSQL.SQLExpression.new()
 	e.sql_mode = true
@@ -466,6 +535,7 @@ func test_sql_mode_variable_input() -> void:
 # 10. SQL input names — table.column syntax
 # ============================================================================
 
+## 测试: 表.列语法访问
 func test_sql_input_names_table_column() -> void:
 	var e = GDSQL.SQLExpression.new()
 	e.sql_mode = true
@@ -477,6 +547,7 @@ func test_sql_input_names_table_column() -> void:
 	assert_bool(result).is_true()
 
 
+## 测试: 未知列名报错
 func test_sql_input_names_unknown_column() -> void:
 	var e = GDSQL.SQLExpression.new()
 	e.sql_mode = true
@@ -488,6 +559,7 @@ func test_sql_input_names_unknown_column() -> void:
 	assert_bool(e.has_execute_failed()).is_true()
 
 
+## 测试: 缺失列名检测
 func test_sql_input_names_lack_input_names() -> void:
 	var e = GDSQL.SQLExpression.new()
 	e.sql_mode = true
@@ -499,6 +571,7 @@ func test_sql_input_names_lack_input_names() -> void:
 	assert_that(lack).is_not_null()
 
 
+## 测试: 列值条件比较
 func test_sql_input_names_column_value() -> void:
 	var e = GDSQL.SQLExpression.new()
 	e.sql_mode = true
@@ -510,6 +583,7 @@ func test_sql_input_names_column_value() -> void:
 	assert_bool(result).is_true()
 
 
+## 测试: 列与命名变量比较
 func test_sql_input_names_equals_column_by_name() -> void:
 	# Test comparing a column to a name identifier
 	var e = GDSQL.SQLExpression.new()
@@ -526,6 +600,7 @@ func test_sql_input_names_equals_column_by_name() -> void:
 # 11. Parse errors
 # ============================================================================
 
+## 测试: 非法字符解析错误
 func test_parse_error_unexpected_character() -> void:
 	var e = GDSQL.SQLExpression.new()
 	var err = e.parse("1 @ 2", [])
@@ -533,6 +608,7 @@ func test_parse_error_unexpected_character() -> void:
 	assert_str(e.get_error_text()).contains("Unexpected")
 
 
+## 测试: 未闭合字符串解析错误
 func test_parse_error_unterminated_string() -> void:
 	var e = GDSQL.SQLExpression.new()
 	var err = e.parse("'hello", [])
@@ -540,6 +616,7 @@ func test_parse_error_unterminated_string() -> void:
 	assert_str(e.get_error_text()).contains("Unterminated")
 
 
+## 测试: 缺失括号解析错误
 func test_parse_error_missing_parenthesis() -> void:
 	var e = GDSQL.SQLExpression.new()
 	var err = e.parse("(1+2", [])
@@ -547,24 +624,28 @@ func test_parse_error_missing_parenthesis() -> void:
 	assert_str(e.get_error_text()).contains("Expected")
 
 
+## 测试: 缺失操作数解析错误
 func test_parse_error_missing_operand() -> void:
 	var e = GDSQL.SQLExpression.new()
 	var err = e.parse("1+", [])
 	assert_bool(err != OK).is_true()
 
 
+## 测试: 连续运算符解析错误
 func test_parse_error_two_consecutive_operators() -> void:
 	var e = GDSQL.SQLExpression.new()
 	var err = e.parse("1++2", [])
 	assert_bool(err != OK).is_true()
 
 
+## 测试: 空表达式解析错误
 func test_parse_error_empty_expression() -> void:
 	var e = GDSQL.SQLExpression.new()
 	var err = e.parse("", [])
 	assert_bool(err != OK).is_true()
 
 
+## 测试: 单等号解析错误
 func test_parse_error_expected_equals() -> void:
 	var e = GDSQL.SQLExpression.new()
 	var err = e.parse("1 = 2", [])
@@ -572,12 +653,14 @@ func test_parse_error_expected_equals() -> void:
 	assert_str(e.get_error_text()).contains("Expected '='")
 
 
+## 测试: 缺失表达式解析错误
 func test_parse_error_expected_expression() -> void:
 	var e = GDSQL.SQLExpression.new()
 	var err = e.parse("+", [])
 	assert_bool(err != OK).is_true()
 
 
+## 测试: 未知函数解析
 func test_parse_error_unknown_function() -> void:
 	# The parser should accept function identifiers, but if not a builtin func it treats as call
 	var e = GDSQL.SQLExpression.new()
@@ -594,6 +677,7 @@ func test_parse_error_unknown_function() -> void:
 # 12. Caching — EXPRESSION_CACHE
 # ============================================================================
 
+## 测试: 缓存对象存在性
 func test_cache_found_after_parse() -> void:
 	# After parsing, the EXPRESSION_CACHE should still be null
 	# since caching is managed by the caller (base_dao), not by expression itself.
@@ -601,10 +685,12 @@ func test_cache_found_after_parse() -> void:
 	assert_that(GDSQL.SQLExpression.EXPRESSION_CACHE).is_not_null()
 
 
+## 测试: 缓存默认容量
 func test_cache_capacity_default() -> void:
 	assert_int(GDSQL.SQLExpression.EXPRESSION_CACHE.capacity).is_equal(1024)
 
 
+## 测试: 缓存写入与读取
 func test_cache_put_and_get() -> void:
 	var cache = GDSQL.SQLExpression.EXPRESSION_CACHE
 	cache.put_value("test_key_1", 42)
@@ -612,6 +698,7 @@ func test_cache_put_and_get() -> void:
 	cache.remove_value("test_key_1")
 
 
+## 测试: 缓存覆盖旧值
 func test_cache_overwrite_value() -> void:
 	var cache = GDSQL.SQLExpression.EXPRESSION_CACHE
 	cache.put_value("test_key_2", "old")
@@ -620,11 +707,13 @@ func test_cache_overwrite_value() -> void:
 	cache.remove_value("test_key_2")
 
 
+## 测试: 缓存缺失键返回null
 func test_cache_missing_key() -> void:
 	var cache = GDSQL.SQLExpression.EXPRESSION_CACHE
 	assert_that(cache.get_value("nonexistent_key")).is_null()
 
 
+## 测试: 缓存满时淘汰最旧
 func test_cache_eviction_when_full() -> void:
 	var cache = GDSQL.SQLExpression.EXPRESSION_CACHE
 	var original_capacity = cache.capacity
@@ -650,6 +739,7 @@ func test_cache_eviction_when_full() -> void:
 	cache.capacity = original_capacity
 
 
+## 测试: 缓存LRU重新排序
 func test_cache_lru_reorder() -> void:
 	var cache = GDSQL.SQLExpression.EXPRESSION_CACHE
 	var original_capacity = cache.capacity
@@ -676,6 +766,7 @@ func test_cache_lru_reorder() -> void:
 	cache.capacity = original_capacity
 
 
+## 测试: 缓存清空
 func test_cache_clear() -> void:
 	var cache = GDSQL.SQLExpression.EXPRESSION_CACHE
 	cache.put_value("clear_test", 99)
@@ -687,6 +778,7 @@ func test_cache_clear() -> void:
 # Error reporting
 # ============================================================================
 
+## 测试: 解析错误后获取错误文本
 func test_get_error_text_after_parse_error() -> void:
 	var e = GDSQL.SQLExpression.new()
 	e.parse("bad^expression", [])
@@ -694,6 +786,7 @@ func test_get_error_text_after_parse_error() -> void:
 	assert_bool(err_text.length() > 0).is_true()
 
 
+## 测试: 成功执行后无错误
 func test_has_execute_failed_after_success() -> void:
 	var e = GDSQL.SQLExpression.new()
 	e.parse("1+1", [])
@@ -701,6 +794,7 @@ func test_has_execute_failed_after_success() -> void:
 	assert_bool(e.has_execute_failed()).is_false()
 
 
+## 测试: 执行错误后标记失败
 func test_has_execute_failed_after_execution_error() -> void:
 	# Execution error can happen when a named property doesn't exist
 	var e = GDSQL.SQLExpression.new()
@@ -713,16 +807,19 @@ func test_has_execute_failed_after_execution_error() -> void:
 # Edge cases and combinations
 # ============================================================================
 
+## 测试: 嵌套括号运算
 func test_nested_parentheses() -> void:
 	assert_int(_eval("((1+2)*3)")).is_equal(9)
 	assert_int(_eval("(2*(3+4))/2")).is_equal(7)
 
 
+## 测试: 浮点数算术运算
 func test_float_arithmetic() -> void:
 	assert_float(_eval("3.5+1.5")).is_equal(5.0)
 	assert_float(_eval("10.0/3.0")).is_approx_equal(3.33333)
 
 
+## 测试: 混合运算符组合
 func test_multiple_operators_mixed() -> void:
 	var e = GDSQL.SQLExpression.new()
 	e.parse("1+2*3==7", [])
@@ -730,20 +827,24 @@ func test_multiple_operators_mixed() -> void:
 	assert_bool(result).is_true()
 
 
+## 测试: 大整数运算
 func test_large_integer() -> void:
 	assert_int(_eval("1000000*1000")).is_equal(1000000000)
 
 
+## 测试: 布尔值与数字相等性
 func test_boolean_equality_with_numbers() -> void:
 	assert_bool(_eval("1==true")).is_true()
 	assert_bool(_eval("0==false")).is_true()
 
 
+## 测试: not与比较运算结合
 func test_not_with_comparison() -> void:
 	assert_bool(_eval("not 1==2")).is_true()
 	assert_bool(_eval("not (1<2)")).is_false()
 
 
+## 测试: 复杂多变量表达式
 func test_complex_expression() -> void:
 	var e = GDSQL.SQLExpression.new()
 	e.parse("(a + b) * abs(c) - d / e", ["a", "b", "c", "d", "e"])
@@ -752,6 +853,7 @@ func test_complex_expression() -> void:
 	assert_int(result).is_equal(15)
 
 
+## 测试: 重复求值不同输入
 func test_repeated_eval_with_different_inputs() -> void:
 	var e = GDSQL.SQLExpression.new()
 	e.parse("x * 2", ["x"])
@@ -760,19 +862,23 @@ func test_repeated_eval_with_different_inputs() -> void:
 	assert_int(e.execute([0], {}, null, true)).is_equal(0)
 
 
+## 测试: 多空格表达式
 func test_expression_with_multiple_whitespace() -> void:
 	assert_int(_eval("  1  +  2  *  3  ")).is_equal(7)
 
 
+## 测试: 除零返回INF
 func test_division_by_zero_returns_inf() -> void:
 	var result = _eval("1/0")
 	assert_bool(is_inf(result)).is_true()
 
 
+## 测试: 模零返回NAN
 func test_modulo_by_zero() -> void:
 	var result = _eval("5%0")
 	assert_bool(is_nan(result)).is_true()
 
 
+## 测试: 负指数幂运算
 func test_power_negative_exponent() -> void:
 	assert_float(_eval("2**-1")).is_approx_equal(0.5)

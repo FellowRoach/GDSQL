@@ -9,6 +9,7 @@ extends GdUnitTestSuite
 # Basic condition tests
 # ---------------------------------------------------------------------------
 
+## 测试: 基础条件 age>=20 为 true
 func test_basic_condition_true() -> void:
 	var cw = GDSQL.ConditionWrapper.new()
 	cw.cond("t.age >= 20", {"t": {true: ["age"]}})
@@ -16,6 +17,7 @@ func test_basic_condition_true() -> void:
 	assert_bool(result).is_true()
 
 
+## 测试: 基础条件 age>=20 为 false
 func test_basic_condition_false() -> void:
 	var cw = GDSQL.ConditionWrapper.new()
 	cw.cond("t.age >= 20", {"t": {true: ["age"]}})
@@ -23,6 +25,7 @@ func test_basic_condition_false() -> void:
 	assert_bool(result).is_false()
 
 
+## 测试: 基础条件 level==10 比较
 func test_basic_condition_equal() -> void:
 	var cw = GDSQL.ConditionWrapper.new()
 	cw.cond("t.level == 10", {"t": {true: ["level"]}})
@@ -30,6 +33,7 @@ func test_basic_condition_equal() -> void:
 	assert_bool(cw.check([], {"t": {"level": 11}})).is_false()
 
 
+## 测试: 基础条件 level!=0 不等比较
 func test_basic_condition_not_equal() -> void:
 	var cw = GDSQL.ConditionWrapper.new()
 	cw.cond("t.level != 0", {"t": {true: ["level"]}})
@@ -41,6 +45,7 @@ func test_basic_condition_not_equal() -> void:
 # String comparison tests
 # ---------------------------------------------------------------------------
 
+## 测试: 字符串相等 name=='Alice'
 func test_string_equality() -> void:
 	var cw = GDSQL.ConditionWrapper.new()
 	cw.cond("t.name == 'Alice'", {"t": {true: ["name"]}})
@@ -48,6 +53,7 @@ func test_string_equality() -> void:
 	assert_bool(cw.check([], {"t": {"name": "Bob"}})).is_false()
 
 
+## 测试: 字符串 begins_with 匹配
 func test_string_begins_with() -> void:
 	var cw = GDSQL.ConditionWrapper.new()
 	cw.cond("t.name.begins_with('Ali')", {"t": {true: ["name"]}})
@@ -59,6 +65,7 @@ func test_string_begins_with() -> void:
 # AND chaining tests
 # ---------------------------------------------------------------------------
 
+## 测试: AND 两个条件均为真
 func test_and_chaining_both_true() -> void:
 	var cw = GDSQL.ConditionWrapper.new()
 	cw.cond("t.a > 5", {"t": {true: ["a", "b"]}})
@@ -67,6 +74,7 @@ func test_and_chaining_both_true() -> void:
 	assert_bool(result).is_true()
 
 
+## 测试: AND 第一个条件为 false
 func test_and_chaining_first_false() -> void:
 	# When the first condition is false, AND short-circuits and returns false.
 	var cw = GDSQL.ConditionWrapper.new()
@@ -76,6 +84,7 @@ func test_and_chaining_first_false() -> void:
 	assert_bool(result).is_false()
 
 
+## 测试: AND 第二个条件为 false
 func test_and_chaining_second_false() -> void:
 	var cw = GDSQL.ConditionWrapper.new()
 	cw.cond("t.a > 5", {"t": {true: ["a", "b"]}})
@@ -84,6 +93,7 @@ func test_and_chaining_second_false() -> void:
 	assert_bool(result).is_false()
 
 
+## 测试: AND 两个条件均为 false
 func test_and_chaining_both_false() -> void:
 	var cw = GDSQL.ConditionWrapper.new()
 	cw.cond("t.a > 5", {"t": {true: ["a", "b"]}})
@@ -92,6 +102,7 @@ func test_and_chaining_both_false() -> void:
 	assert_bool(result).is_false()
 
 
+## 测试: AND 三个条件嵌套链
 func test_and_three_conditions() -> void:
 	# a > 0 AND b > 0 AND c > 0  (nested chain)
 	var cw_c = GDSQL.ConditionWrapper.new().cond("t.c > 0", {"t": {true: ["c"]}})
@@ -111,6 +122,7 @@ func test_and_three_conditions() -> void:
 # OR chaining tests
 # ---------------------------------------------------------------------------
 
+## 测试: OR 两个条件均为 false
 func test_or_chaining_both_false() -> void:
 	var cw = GDSQL.ConditionWrapper.new()
 	cw.cond("t.a > 5", {"t": {true: ["a", "b"]}})
@@ -119,6 +131,7 @@ func test_or_chaining_both_false() -> void:
 	assert_bool(result).is_false()
 
 
+## 测试: OR 第一个条件为 true
 func test_or_chaining_first_true() -> void:
 	var cw = GDSQL.ConditionWrapper.new()
 	cw.cond("t.a > 5", {"t": {true: ["a", "b"]}})
@@ -127,6 +140,7 @@ func test_or_chaining_first_true() -> void:
 	assert_bool(result).is_true()
 
 
+## 测试: OR 第二个条件为 true
 func test_or_chaining_second_true() -> void:
 	var cw = GDSQL.ConditionWrapper.new()
 	cw.cond("t.a > 5", {"t": {true: ["a", "b"]}})
@@ -135,6 +149,7 @@ func test_or_chaining_second_true() -> void:
 	assert_bool(result).is_true()
 
 
+## 测试: OR 两个条件均为 true
 func test_or_chaining_both_true() -> void:
 	var cw = GDSQL.ConditionWrapper.new()
 	cw.cond("t.a > 5", {"t": {true: ["a", "b"]}})
@@ -147,6 +162,7 @@ func test_or_chaining_both_true() -> void:
 # Nested AND/OR combination tests
 # ---------------------------------------------------------------------------
 
+## 测试: 嵌套 AND(a>5) OR(b<10 OR c==1)
 func test_nested_and_or_or() -> void:
 	# Condition: t.a > 5 AND (t.b < 10 OR t.c == 1)
 	# The AND wrapper wraps an OR wrapper.
@@ -171,6 +187,7 @@ func test_nested_and_or_or() -> void:
 	assert_bool(cw_and.check([], {"t": {"a": 7, "b": 20, "c": 0}})).is_false()
 
 
+## 测试: 嵌套 OR(a>5) AND(b<10 AND c>0)
 func test_nested_or_and_and() -> void:
 	# Condition: t.a > 5 OR (t.b < 10 AND t.c > 0)
 	var cw_and = GDSQL.ConditionWrapper.new()
@@ -195,6 +212,7 @@ func test_nested_or_and_and() -> void:
 # Empty condition test
 # ---------------------------------------------------------------------------
 
+## 测试: 无条件默认返回 true
 func test_empty_condition() -> void:
 	# When no condition is set, check() returns true.
 	var cw = GDSQL.ConditionWrapper.new()
@@ -206,6 +224,7 @@ func test_empty_condition() -> void:
 # Missing tables detection tests
 # ---------------------------------------------------------------------------
 
+## 测试: 缺失表时条件安全求值
 func test_missing_table() -> void:
 	# When a table referenced in the condition is not in sql_input_names,
 	# check() returns null and get_lacking_tables() reports the missing table.
@@ -218,6 +237,7 @@ func test_missing_table() -> void:
 	assert_str(lacking[0]).is_equal("no_such_table")
 
 
+## 测试: AND 链中缺失表时安全求值
 func test_missing_table_with_and() -> void:
 	# Main condition passes, but the AND wrapper has a missing table.
 	# The lacking table should propagate to the parent wrapper.
@@ -235,6 +255,7 @@ func test_missing_table_with_and() -> void:
 	assert_str(lacking[0]).is_equal("missing_tbl")
 
 
+## 测试: OR 链中缺失表时安全求值
 func test_missing_table_with_or() -> void:
 	# Main condition evaluates to false, then the OR wrapper has a missing table.
 	var cw_main = GDSQL.ConditionWrapper.new()
@@ -255,6 +276,7 @@ func test_missing_table_with_or() -> void:
 # Subquery result tests
 # ---------------------------------------------------------------------------
 
+## 测试: 子查询返回真值 1
 func test_subquery_returns_true_value() -> void:
 	# When check() receives a QueryResult from evaluate_command_with_sql_expression,
 	# it extracts the single value. A truthy value (1) becomes true.
@@ -269,6 +291,7 @@ func test_subquery_returns_true_value() -> void:
 	assert_bool(result).is_true()
 
 
+## 测试: 子查询返回假值 0
 func test_subquery_returns_false_value() -> void:
 	# When the subquery returns 0 or false, the condition evaluates to false.
 	var qr = GDSQL.QueryResult.new()
@@ -282,6 +305,7 @@ func test_subquery_returns_false_value() -> void:
 	assert_bool(result).is_false()
 
 
+## 测试: 子查询空结果返回 false
 func test_subquery_empty_result_returns_false() -> void:
 	# An empty subquery result (no rows) means the condition is false.
 	var qr = GDSQL.QueryResult.new()
@@ -295,6 +319,7 @@ func test_subquery_empty_result_returns_false() -> void:
 	assert_bool(result).is_false()
 
 
+## 测试: 子查询 AND 链组合
 func test_subquery_with_and_chaining() -> void:
 	# Main condition (t.a > 5) AND subquery result.
 	var qr = GDSQL.QueryResult.new()
@@ -316,6 +341,7 @@ func test_subquery_with_and_chaining() -> void:
 	assert_bool(cw_main.check([], {"t": {"a": 1}})).is_false()
 
 
+## 测试: 子查询 OR 链组合
 func test_subquery_with_or_chaining() -> void:
 	# Main condition (t.a > 100) OR subquery result.
 	var qr = GDSQL.QueryResult.new()
@@ -354,6 +380,7 @@ func test_subquery_with_or_chaining() -> void:
 # Chained return value tests
 # ---------------------------------------------------------------------------
 
+## 测试: and_() 返回自身
 func test_and_returns_self() -> void:
 	# and_() returns self for chaining.
 	var cw = GDSQL.ConditionWrapper.new()
@@ -361,6 +388,7 @@ func test_and_returns_self() -> void:
 	assert_that(ret).is_same(cw)
 
 
+## 测试: or_() 返回自身
 func test_or_returns_self() -> void:
 	# or_() returns self for chaining.
 	var cw = GDSQL.ConditionWrapper.new()
@@ -368,6 +396,7 @@ func test_or_returns_self() -> void:
 	assert_that(ret).is_same(cw)
 
 
+## 测试: cond() 返回自身
 func test_cond_returns_self() -> void:
 	# cond() returns self for chaining.
 	var cw = GDSQL.ConditionWrapper.new()
@@ -379,6 +408,7 @@ func test_cond_returns_self() -> void:
 # Static inputs tests (supplementary table data)
 # ---------------------------------------------------------------------------
 
+## 测试: 静态输入补充表数据
 func test_with_static_inputs() -> void:
 	# Supplementary table data is passed via static_inputs.
 	# sql_input_names maps the supplementary table alias to {false: index}
@@ -398,6 +428,7 @@ func test_with_static_inputs() -> void:
 # Multiple table references in single condition
 # ---------------------------------------------------------------------------
 
+## 测试: 多表字段交叉比较
 func test_multi_table_condition() -> void:
 	# Condition comparing fields from two tables.
 	var sql_input_names = {
