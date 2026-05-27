@@ -1,6 +1,9 @@
 # Godot 4+ specific ignores
 .godot/
 
+# GdUnit4 test reports and caches
+.gdunit4/
+
 # Godot-specific ignores
 .import/
 export.cfg

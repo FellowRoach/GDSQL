@@ -23,4 +23,9 @@ script/search_in_file_extensions=PackedStringArray("gd", "tscn", "gdshader")
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/gdsql/plugin.cfg")
+enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg", "res://addons/gdsql/plugin.cfg")
+
+[gdunit4]
+
+settings/test/test_discovery=true
+ui/toolbar/run_overall=true
