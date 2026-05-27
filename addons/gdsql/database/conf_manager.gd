@@ -73,7 +73,7 @@ func get_conf(path: String, password) -> GDSQL.ImprovedConfigFile:
 ## 创建并获取配置：前提是该配置的文件不存在
 func create_conf(path: String, password) -> GDSQL.ImprovedConfigFile:
 	path = GDSQL.GDSQLUtils.globalize_path(path)
-	if not GDSQL.GDSQLUtils.file_exists(path):
+	if GDSQL.GDSQLUtils.file_exists(path):
 		assert(false, "file:[%s] already exist" % path)
 		return null
 		

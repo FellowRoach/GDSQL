@@ -470,8 +470,7 @@ column_infos: Array, comments: String = "", valid_if_not_exist: bool = false) ->
 		msgs.push_back(tr("Failed! Database %s not exists!") % db_name)
 		return _error_occur(action, msgs)
 		
-	var table_columns = GDSQL.RootConfig.get_table_columns(db_name, new_table_name)
-	if new_table_name != old_table_name and table_columns:
+	if new_table_name != old_table_name and databases[db_name].has(new_table_name):
 		msgs.push_back(tr("Failed! Table [%s] name has been occupied!") % new_table_name)
 		return _error_occur(action, msgs)
 		
