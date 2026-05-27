@@ -404,7 +404,8 @@ static func get_specific_extension_files(p_path: String, extension: String) -> A
 		# 注意：git不能提交空目录，可能是因为这个导致clone下来的代码没有空目录
 		# 这种情况下，请自己手动创建个空目录即可
 		var msg = "Can not open the path: %s." % p_path
-		EditorInterface.get_editor_toaster().push_toast(msg, EditorToaster.SEVERITY_WARNING)
+		if Engine.is_editor_hint():
+			EditorInterface.get_editor_toaster().push_toast(msg, EditorToaster.SEVERITY_WARNING)
 		push_warning(msg)
 		
 	return ret
