@@ -203,81 +203,83 @@ func set_evalueate_mode(enable: bool):
 	__enable_evaluate = enable
 	
 ## 查询数据子句
-## something: 查询字段语句，即数据库查询语句select和from之间的语句
-## need_head: 是否需要表头。传true，如果查询到了数据，那么返回数据的第一行会是一个表头表示每列是什么字段。
-## union表该参数无效，等价于false。
-## 注意：若联表查询还要求返回平数据，则query后会在每条数据的每个字段前加上表的别名和小数点。例如：
-## [["t1.a": xx, "t2.m": yy]].
-## 这个方法会预处理每个要求的字段和字段的别名（如有），但不会马上在这里处理星号，而是推迟到query的时候才处理。
-func select(something: String, need_head: bool) -> GDSQL.BaseDao:
+## 两种调用方式：
+##   1. select("id, name, score", true)          — 旧方式：字段串 + need_head
+##   2. select("id", "name", "score", true)       — 新方式：多个字段参数 + need_head
+## 其中 need_head 表示是否需要表头。
+func select(...varargs) -> GDSQL.BaseDao:
+	if varargs.is_empty():
+		return _assert_false("select", "Expected at least 1 argument")
 	if not (__cmd == "" or __cmd == "select"):
 		return _assert_false("select", "already set command %s" % __cmd)
-	#if __parent_union and need_head:
-		#push_warning("union table cannot have head but the param `need_head` is true, 
-		#this param will be ignored")
+		
+	# 最后一个参数必须是 bool（need_head）
+	if typeof(varargs[varargs.size() - 1]) != TYPE_BOOL:
+		return _assert_false("select", "last argument must be bool (need_head)")
+	var need_head: bool = varargs[varargs.size() - 1]
+	
 	__cmd = "select"
-	__select_str = something
 	__select.clear()
 	__field_as_index.clear()
 	__need_head = need_head
-	something = something.strip_edges()
-	# 拆分select的字段。不能简单用split(",")，因为字段有可能是函数调用，它不支持正则（至少Godot 4.1不支持）
-	# 下面的方案支持类似这样的情况："*,a.uname.contains(),aa.level, t.img, at.icon(1, 2, \"a, b\"), 
-	# t_user.u, y.call()"
-	#var regex = RegEx.new()
-	#regex.compile(",\\s*(?![^()]*\\))") # 匹配逗号的位置，括号内的逗号不匹配
-	# 匹配逗号的位置，括号、引号内的逗号都不匹配
-	#regex.compile(",(?=(([^']*'){2})*[^']*$)(?=(([^\"]*\"){2})*[^\"]*$)(?![^()]*\\))")
-	#var matches = regex_comma.search_all(something)
-	var matches = GDSQL.GDSQLUtils.search_symbol(something, ",")
 	
-	# 别名
-	#var regex_2 = RegEx.new()
-	#regex_2.compile("[\\s]+as[\\s]+([0-9a-zA-Z_]+)$")
-	#regex_2.compile("([\\s]+)(as[\\s]+)?([0-9a-zA-Z_:]+)$") # 支持 x as position:x 这样的写法
-	
-	if not matches.is_empty():
+	# 只有一个字符串参数 → 旧方式，走完整的分词逻辑（支持逗号、函数等复杂表达式）
+	if varargs.size() == 2:
+		if typeof(varargs[0]) != TYPE_STRING:
+			return _assert_false("select", "argument must be String")
+		return _select_impl(varargs[0] as String)
 		
+	# 多个字符串参数 → 新方式，每个参数是一个字段，直接处理
+	var field_strs = []
+	for i in varargs.size() - 1:
+		if typeof(varargs[i]) != TYPE_STRING:
+			return _assert_false("select", "argument %d must be String" % i)
+		_push_field(varargs[i] as String)
+		field_strs.push_back(varargs[i] as String)
+	__select_str = ",".join(field_strs)
+	return self
+	
+## 将单个字段字符串解析后加入 __select 和 __field_as_index
+func _push_field(field_str: String) -> void:
+	field_str = field_str.strip_edges()
+	if field_str.is_empty():
+		return
+	var field_as = ""
+	var m = regex_as.search(field_str)
+	if m and not field_str[m.get_start(1) - 1] in ".+-*/&^%<>|!~":
+		field_str = field_str.substr(0, m.get_start(1))
+		field_as = m.get_string(3)
+	__field_as_index[__select.size()] = field_as
+	__select.push_back(field_str)
+	
+func _select_impl(something: String) -> GDSQL.BaseDao:
+	__select_str = something
+	something = something.strip_edges()
+	# 拆分select的字段。不能简单用split(",")，因为字段有可能是函数调用（不支持正则，至少Godot 4.1不支持）
+	var matches = GDSQL.GDSQLUtils.search_symbol(something, ",")
+	if not matches.is_empty():
 		var start = 0
 		for i in matches:
-			# 知道逗号的起始位置，就可以截取逗号前的位置到上一个逗号的结束位置
 			var field_str = something.substr(start, i[0] - start).strip_edges()
 			var field_as = ""
 			start = i[1]
-			
-			# 有可能取了别名，例如t_user.icon(1, 2, \"a, b\") as iii
 			var m = regex_as.search(field_str)
 			if m:
-				# 实际要求的式子，例子中的t_user.icon(1, 2, \"a, b\")
 				field_str = field_str.substr(0, m.get_start(1))
 				field_as = m.get_string(3)
-				
 			__field_as_index[__select.size()] = field_as
 			__select.push_back(field_str)
-			
-		# 别忘了还有最后一个逗号到最后
 		if start < something.length():
 			var field_str = something.substr(start).strip_edges()
 			var field_as = ""
-			
 			var m = regex_as.search(field_str)
-			# t. name 或别的运算符也会匹配上，所以还需要检查前面那个符号是不是运算符
-			if m and not field_str[m.get_start(1)-1] in ".+-*/&^%<>|!~":
+			if m and not field_str[m.get_start(1) - 1] in ".+-*/&^%<>|!~":
 				field_str = field_str.substr(0, m.get_start(1))
 				field_as = m.get_string(3)
-				
 			__field_as_index[__select.size()] = field_as
 			__select.push_back(field_str)
-	# 没有逗号分割，*或者某个单独的字段
 	else:
-		var field_as = ""
-		var m = regex_as.search(something)
-		if m and not something[m.get_start(1)-1] in ".+-*/&^%<>|!~":
-			something = something.substr(0, m.get_start(1))
-			field_as = m.get_string(3)
-			
-		__field_as_index[__select.size()] = field_as
-		__select.push_back(something)
+		_push_field(something)
 	return self
 	
 ## union之后的BaseDao可以进行select_same，表示与父BaseDao查询相同的字段。

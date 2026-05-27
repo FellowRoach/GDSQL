@@ -127,6 +127,35 @@ func test_select_order_by() -> void:
 	assert_float(rows[2][2]).is_equal(90.0)
 
 
+## 测试: SELECT 变参 "id", "name", true 方式
+func test_select_variadic() -> void:
+	_bd().insert_into(TEST_TABLE).values({"name": "Variadic", "score": 10}).query()
+	var rows = _bd().select("id", "name", "score", true).from(TEST_TABLE).query().get_head_and_data()
+	assert_int(rows.size()).is_equal(2)
+	assert_str(rows[0][0]["field_as"]).is_equal("id")
+	assert_str(rows[0][1]["field_as"]).is_equal("name")
+	assert_str(rows[1][1]).is_equal("Variadic")
+
+
+## 测试: SELECT 别名 "id as uid", "name as uname" 变参
+func test_select_variadic_with_alias() -> void:
+	_bd().insert_into(TEST_TABLE).values({"name": "Alias", "score": 5}).query()
+	var hd = _bd().select("id as uid", "name as uname", "score as xx", true).from(TEST_TABLE).query().get_head_and_data()
+	assert_int(hd.size()).is_equal(2)
+	assert_str(hd[0][0]["field_as"]).is_equal("uid")
+	assert_str(hd[0][1]["field_as"]).is_equal("uname")
+	assert_str(hd[1][1]).is_equal("Alias")
+
+
+## 测试: SELECT 旧方式 "id, name", true 仍然可用
+func test_select_old_style() -> void:
+	_bd().insert_into(TEST_TABLE).values({"name": "Old", "score": 1}).query()
+	var rows = _bd().select("name, score", false).from(TEST_TABLE).query().get_data()
+	assert_int(rows.size()).is_equal(1)
+	assert_str(rows[0][0]).is_equal("Old")
+	assert_float(rows[0][1]).is_equal(1.0)
+
+
 ## 测试: SELECT ORDER BY "score desc" 单参
 func test_select_order_by_string() -> void:
 	_bd().insert_into(TEST_TABLE).values({"name": "C", "score": 70}).query()
