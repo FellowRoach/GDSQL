@@ -101,6 +101,8 @@ static func _get_root_config() -> RootConfigClass:
 		# 在导出游戏中（非编辑器）初始化补充配置，用于存储运行时创建的数据库/表
 		if not OS.has_feature("editor"):
 			rc.init_supplementary(get_setting_supplementary_config_path())
+			# 为非 res:// 的数据库创建数据目录，防止首次查表/插入时目录不存在
+			rc.init_database_dirs()
 	return Engine.get_singleton(&"GDSQLRootConfig")
 	
 static func _clear():

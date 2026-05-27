@@ -40,6 +40,22 @@ func _is_db_in_supplementary(db_name: String) -> bool:
 func get_base_dir() -> String:
 	return path.get_base_dir()
 
+## 在导出游戏中，为非项目内（非 res://）的数据库创建数据目录。
+## 防止在查表或插入数据时才发现目录不存在。
+func init_database_dirs() -> void:
+	if OS.has_feature("editor"):
+		return
+
+	for db_name in get_databases():
+		var data_path = get_database_data_path(db_name)
+		if data_path == "":
+			continue
+		if data_path.begins_with("res://"):
+			continue
+		var abs_path = GDSQL.GDSQLUtils.globalize_path(data_path)
+		if not DirAccess.dir_exists_absolute(abs_path):
+			DirAccess.make_dir_recursive_absolute(abs_path)
+
 ## 获取补充配置的基础目录（即 supplementary_path 所在目录）
 func get_supplementary_base_dir() -> String:
 	return supplementary_path.get_base_dir() if supplementary_path else ""
