@@ -127,6 +127,19 @@ func test_select_order_by() -> void:
 	assert_float(rows[2][2]).is_equal(90.0)
 
 
+## 测试: SELECT ORDER BY "score desc" 单参
+func test_select_order_by_string() -> void:
+	_bd().insert_into(TEST_TABLE).values({"name": "C", "score": 70}).query()
+	_bd().insert_into(TEST_TABLE).values({"name": "A", "score": 90}).query()
+	_bd().insert_into(TEST_TABLE).values({"name": "B", "score": 80}).query()
+
+	var rows = _bd().select("*", false).from(TEST_TABLE).order_by("score desc").query().get_data()
+	assert_int(rows.size()).is_equal(3)
+	assert_float(rows[0][2]).is_equal(90.0)
+	assert_float(rows[1][2]).is_equal(80.0)
+	assert_float(rows[2][2]).is_equal(70.0)
+
+
 ## 测试: SELECT LIMIT 限制
 func test_select_limit() -> void:
 	for i in 5:

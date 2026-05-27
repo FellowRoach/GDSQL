@@ -484,6 +484,7 @@ func group_by_str(something: String) -> GDSQL.BaseDao:
 	
 ## 注意该方法具有嵌套效果，在union的时候，链条中某个环节的order_by会对后面所有环节进行排序
 ## 如果是union的，那么order by作用于最终数据集上。
+## 支持在 field 参数中附带排序方向，如 "name asc" 或 "name  desc"
 func order_by(field: String, order: GDSQL.ORDER_BY = GDSQL.ORDER_BY.ASC) -> GDSQL.BaseDao:
 	if __parent_union:
 		__parent_union.get_ref().order_by(field, order)
@@ -492,6 +493,14 @@ func order_by(field: String, order: GDSQL.ORDER_BY = GDSQL.ORDER_BY.ASC) -> GDSQ
 		return _assert_false("order_by", "'order_by' can only be used after 'select'")
 	field = field.strip_edges()
 	if field != "":
+		# 支持在 field 参数中附带排序方向，如 "name asc" 或 "name  desc"
+		var l = field.length()
+		if l >= 5 and field.substr(l - 4).to_lower() == " asc":
+			field = field.substr(0, l - 4).strip_edges()
+			order = GDSQL.ORDER_BY.ASC
+		elif l >= 6 and field.substr(l - 5).to_lower() == " desc":
+			field = field.substr(0, l - 5).strip_edges()
+			order = GDSQL.ORDER_BY.DESC
 		__order_by.push_back([field, order])
 	return self
 	
