@@ -1,0 +1,877 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites id="2026-05-27" name="report_1" tests="422" failures="0" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="test_admin_dao" package="test/admin" timestamp="2026-05-27T13:16:20" hostname="localhost" tests="14" failures="0" errors="0" skipped="0" flaky="0" time="1.802">
+		<testcase name="test_create_database" classname="test_admin_dao" time="0.006">
+		</testcase>
+		<testcase name="test_create_database_duplicate_name" classname="test_admin_dao" time="0.172">
+		</testcase>
+		<testcase name="test_create_database_empty_name" classname="test_admin_dao" time="0.088">
+		</testcase>
+		<testcase name="test_create_database_duplicate_path" classname="test_admin_dao" time="0.007">
+		</testcase>
+		<testcase name="test_alter_database_rename" classname="test_admin_dao" time="0.108">
+		</testcase>
+		<testcase name="test_alter_database_same_name" classname="test_admin_dao" time="0.098">
+		</testcase>
+		<testcase name="test_drop_database" classname="test_admin_dao" time="0.213">
+		</testcase>
+		<testcase name="test_drop_database_missing" classname="test_admin_dao" time="0.007">
+		</testcase>
+		<testcase name="test_create_table" classname="test_admin_dao" time="0.007">
+		</testcase>
+		<testcase name="test_create_table_duplicate" classname="test_admin_dao" time="0.095">
+		</testcase>
+		<testcase name="test_alter_table_rename" classname="test_admin_dao" time="0.286">
+		</testcase>
+		<testcase name="test_drop_table" classname="test_admin_dao" time="0.288">
+		</testcase>
+		<testcase name="test_truncate_table_empty" classname="test_admin_dao" time="0.196">
+		</testcase>
+		<testcase name="test_set_db_password" classname="test_admin_dao" time="0.208">
+		</testcase>
+	</testsuite>
+	<testsuite id="1" name="test_base_dao" package="test/admin" timestamp="2026-05-27T13:16:21" hostname="localhost" tests="8" failures="0" errors="0" skipped="0" flaky="0" time="2.312">
+		<testcase name="test_insert_single_row" classname="test_base_dao" time="0.277">
+		</testcase>
+		<testcase name="test_auto_increment_sequence" classname="test_base_dao" time="0.297">
+		</testcase>
+		<testcase name="test_select_all" classname="test_base_dao" time="0.287">
+		</testcase>
+		<testcase name="test_select_where" classname="test_base_dao" time="0.283">
+		</testcase>
+		<testcase name="test_select_order_by" classname="test_base_dao" time="0.282">
+		</testcase>
+		<testcase name="test_select_limit" classname="test_base_dao" time="0.292">
+		</testcase>
+		<testcase name="test_update" classname="test_base_dao" time="0.289">
+		</testcase>
+		<testcase name="test_delete" classname="test_base_dao" time="0.288">
+		</testcase>
+	</testsuite>
+	<testsuite id="2" name="test_aggregate_functions" package="test/core" timestamp="2026-05-27T13:16:24" hostname="localhost" tests="80" failures="0" errors="0" skipped="0" flaky="0" time="1.336">
+		<testcase name="test_prepare_mode_count_returns_self" classname="test_aggregate_functions" time="0.003">
+		</testcase>
+		<testcase name="test_prepare_mode_maxn_returns_self" classname="test_aggregate_functions" time="0.002">
+		</testcase>
+		<testcase name="test_prepare_mode_minn_returns_self" classname="test_aggregate_functions" time="0.003">
+		</testcase>
+		<testcase name="test_prepare_mode_sum_returns_self" classname="test_aggregate_functions" time="0.006">
+		</testcase>
+		<testcase name="test_prepare_mode_avg_returns_self" classname="test_aggregate_functions" time="0.016">
+		</testcase>
+		<testcase name="test_prepare_mode_first_returns_self" classname="test_aggregate_functions" time="0.071">
+		</testcase>
+		<testcase name="test_prepare_mode_last_returns_self" classname="test_aggregate_functions" time="0.003">
+		</testcase>
+		<testcase name="test_prepare_mode_list_returns_self" classname="test_aggregate_functions" time="0.003">
+		</testcase>
+		<testcase name="test_prepare_mode_group_concat_returns_self" classname="test_aggregate_functions" time="0.002">
+		</testcase>
+		<testcase name="test_prepare_mode_distinct_group_concat_returns_self" classname="test_aggregate_functions" time="0.003">
+		</testcase>
+		<testcase name="test_prepare_mode_grid_checkbox_returns_self" classname="test_aggregate_functions" time="0.013">
+		</testcase>
+		<testcase name="test_count_basic" classname="test_aggregate_functions" time="0.016">
+		</testcase>
+		<testcase name="test_count_single_value" classname="test_aggregate_functions" time="0.015">
+		</testcase>
+		<testcase name="test_count_with_null_values" classname="test_aggregate_functions" time="0.015">
+		</testcase>
+		<testcase name="test_maxn_basic" classname="test_aggregate_functions" time="0.016">
+		</testcase>
+		<testcase name="test_maxn_negative" classname="test_aggregate_functions" time="0.016">
+		</testcase>
+		<testcase name="test_maxn_single_value" classname="test_aggregate_functions" time="0.016">
+		</testcase>
+		<testcase name="test_maxn_string_values" classname="test_aggregate_functions" time="0.015">
+		</testcase>
+		<testcase name="test_minn_basic" classname="test_aggregate_functions" time="0.016">
+		</testcase>
+		<testcase name="test_minn_negative" classname="test_aggregate_functions" time="0.013">
+		</testcase>
+		<testcase name="test_minn_single_value" classname="test_aggregate_functions" time="0.019">
+		</testcase>
+		<testcase name="test_minn_string_values" classname="test_aggregate_functions" time="0.013">
+		</testcase>
+		<testcase name="test_sum_basic" classname="test_aggregate_functions" time="0.016">
+		</testcase>
+		<testcase name="test_sum_mixed_sign" classname="test_aggregate_functions" time="0.018">
+		</testcase>
+		<testcase name="test_sum_single_value" classname="test_aggregate_functions" time="0.015">
+		</testcase>
+		<testcase name="test_avg_basic" classname="test_aggregate_functions" time="0.016">
+		</testcase>
+		<testcase name="test_avg_single_value" classname="test_aggregate_functions" time="0.015">
+		</testcase>
+		<testcase name="test_avg_float_values" classname="test_aggregate_functions" time="0.015">
+		</testcase>
+		<testcase name="test_first_basic" classname="test_aggregate_functions" time="0.015">
+		</testcase>
+		<testcase name="test_first_single_value" classname="test_aggregate_functions" time="0.016">
+		</testcase>
+		<testcase name="test_last_basic" classname="test_aggregate_functions" time="0.016">
+		</testcase>
+		<testcase name="test_last_single_value" classname="test_aggregate_functions" time="0.016">
+		</testcase>
+		<testcase name="test_list_basic" classname="test_aggregate_functions" time="0.016">
+		</testcase>
+		<testcase name="test_list_mixed_types" classname="test_aggregate_functions" time="0.014">
+		</testcase>
+		<testcase name="test_group_concat_basic" classname="test_aggregate_functions" time="0.016">
+		</testcase>
+		<testcase name="test_group_concat_custom_separator" classname="test_aggregate_functions" time="0.016">
+		</testcase>
+		<testcase name="test_group_concat_single_value" classname="test_aggregate_functions" time="0.013">
+		</testcase>
+		<testcase name="test_group_concat_null_filtered" classname="test_aggregate_functions" time="0.018">
+		</testcase>
+		<testcase name="test_group_concat_all_nulls_returns_null" classname="test_aggregate_functions" time="0.013">
+		</testcase>
+		<testcase name="test_group_concat_order_asc" classname="test_aggregate_functions" time="0.016">
+		</testcase>
+		<testcase name="test_group_concat_order_desc" classname="test_aggregate_functions" time="0.016">
+		</testcase>
+		<testcase name="test_group_concat_order_by_param_name" classname="test_aggregate_functions" time="0.015">
+		</testcase>
+		<testcase name="test_group_concat_order_by_second_column" classname="test_aggregate_functions" time="0.017">
+		</testcase>
+		<testcase name="test_distinct_group_concat_basic" classname="test_aggregate_functions" time="0.015">
+		</testcase>
+		<testcase name="test_distinct_group_concat_all_same" classname="test_aggregate_functions" time="0.015">
+		</testcase>
+		<testcase name="test_distinct_group_concat_custom_separator" classname="test_aggregate_functions" time="0.016">
+		</testcase>
+		<testcase name="test_distinct_group_concat_order_asc" classname="test_aggregate_functions" time="0.015">
+		</testcase>
+		<testcase name="test_distinct_group_concat_order_desc" classname="test_aggregate_functions" time="0.015">
+		</testcase>
+		<testcase name="test_distinct_group_concat_null_filtered" classname="test_aggregate_functions" time="0.015">
+		</testcase>
+		<testcase name="test_distinct_group_concat_all_nulls_returns_null" classname="test_aggregate_functions" time="0.015">
+		</testcase>
+		<testcase name="test_distinct_group_concat_order_by_param_name" classname="test_aggregate_functions" time="0.015">
+		</testcase>
+		<testcase name="test_grid_checkbox_creates_grid_container" classname="test_aggregate_functions" time="0.016">
+		</testcase>
+		<testcase name="test_grid_checkbox_with_vector2" classname="test_aggregate_functions" time="0.015">
+		</testcase>
+		<testcase name="test_grid_checkbox_with_vector2i" classname="test_aggregate_functions" time="0.016">
+		</testcase>
+		<testcase name="test_ifn_true_returns_value_if_true" classname="test_aggregate_functions" time="0.016">
+		</testcase>
+		<testcase name="test_ifn_false_returns_value_if_false" classname="test_aggregate_functions" time="0.015">
+		</testcase>
+		<testcase name="test_ifn_numeric_condition" classname="test_aggregate_functions" time="0.015">
+		</testcase>
+		<testcase name="test_ifn_with_aggregate_functions_returns_self" classname="test_aggregate_functions" time="0.016">
+		</testcase>
+		<testcase name="test_ifnull_null_value_returns_fallback" classname="test_aggregate_functions" time="0.015">
+		</testcase>
+		<testcase name="test_ifnull_non_null_returns_value" classname="test_aggregate_functions" time="0.015">
+		</testcase>
+		<testcase name="test_ifnull_zero_is_not_null" classname="test_aggregate_functions" time="0.016">
+		</testcase>
+		<testcase name="test_ifnull_false_is_not_null" classname="test_aggregate_functions" time="0.015">
+		</testcase>
+		<testcase name="test_ifnull_empty_string_is_not_null" classname="test_aggregate_functions" time="0.016">
+		</testcase>
+		<testcase name="test_ifnull_with_aggregate_functions_returns_self" classname="test_aggregate_functions" time="0.015">
+		</testcase>
+		<testcase name="test_get_instance_same_id_returns_same_object" classname="test_aggregate_functions" time="0.016">
+		</testcase>
+		<testcase name="test_get_instance_different_ids_return_different_objects" classname="test_aggregate_functions" time="0.015">
+		</testcase>
+		<testcase name="test_clear_instances_empties_cache" classname="test_aggregate_functions" time="0.015">
+		</testcase>
+		<testcase name="test_possible_has_func_detects_functions" classname="test_aggregate_functions" time="0.016">
+		</testcase>
+		<testcase name="test_possible_has_func_returns_false_without_parens" classname="test_aggregate_functions" time="0.016">
+		</testcase>
+		<testcase name="test_possible_has_func_returns_false_for_non_function" classname="test_aggregate_functions" time="0.015">
+		</testcase>
+		<testcase name="test_recount_resets_counter" classname="test_aggregate_functions" time="0.014">
+		</testcase>
+		<testcase name="test_empty_data_mode_count_returns_zero" classname="test_aggregate_functions" time="0.015">
+		</testcase>
+		<testcase name="test_empty_data_mode_maxn_returns_null" classname="test_aggregate_functions" time="0.017">
+		</testcase>
+		<testcase name="test_empty_data_mode_sum_returns_null" classname="test_aggregate_functions" time="0.015">
+		</testcase>
+		<testcase name="test_empty_data_mode_avg_returns_null" classname="test_aggregate_functions" time="0.014">
+		</testcase>
+		<testcase name="test_empty_data_mode_list_returns_null" classname="test_aggregate_functions" time="0.015">
+		</testcase>
+		<testcase name="test_empty_data_mode_group_concat_returns_null" classname="test_aggregate_functions" time="0.016">
+		</testcase>
+		<testcase name="test_lifecycle_prepare_then_data_rows_maxn" classname="test_aggregate_functions" time="0.015">
+		</testcase>
+		<testcase name="test_lifecycle_prepare_then_data_rows_count" classname="test_aggregate_functions" time="0.015">
+		</testcase>
+		<testcase name="test_lifecycle_multiple_functions_same_row" classname="test_aggregate_functions" time="0.015">
+		</testcase>
+	</testsuite>
+	<testsuite id="3" name="test_condition_wrapper" package="test/core" timestamp="2026-05-27T13:16:25" hostname="localhost" tests="31" failures="0" errors="0" skipped="0" flaky="0" time="0.526">
+		<testcase name="test_basic_condition_true" classname="test_condition_wrapper" time="0.003">
+		</testcase>
+		<testcase name="test_basic_condition_false" classname="test_condition_wrapper" time="0.002">
+		</testcase>
+		<testcase name="test_basic_condition_equal" classname="test_condition_wrapper" time="0.003">
+		</testcase>
+		<testcase name="test_basic_condition_not_equal" classname="test_condition_wrapper" time="0.009">
+		</testcase>
+		<testcase name="test_string_equality" classname="test_condition_wrapper" time="0.015">
+		</testcase>
+		<testcase name="test_string_begins_with" classname="test_condition_wrapper" time="0.016">
+		</testcase>
+		<testcase name="test_and_chaining_both_true" classname="test_condition_wrapper" time="0.015">
+		</testcase>
+		<testcase name="test_and_chaining_first_false" classname="test_condition_wrapper" time="0.016">
+		</testcase>
+		<testcase name="test_and_chaining_second_false" classname="test_condition_wrapper" time="0.013">
+		</testcase>
+		<testcase name="test_and_chaining_both_false" classname="test_condition_wrapper" time="0.032">
+		</testcase>
+		<testcase name="test_and_three_conditions" classname="test_condition_wrapper" time="0.014">
+		</testcase>
+		<testcase name="test_or_chaining_both_false" classname="test_condition_wrapper" time="0.032">
+		</testcase>
+		<testcase name="test_or_chaining_first_true" classname="test_condition_wrapper" time="0.015">
+		</testcase>
+		<testcase name="test_or_chaining_second_true" classname="test_condition_wrapper" time="0.019">
+		</testcase>
+		<testcase name="test_or_chaining_both_true" classname="test_condition_wrapper" time="0.014">
+		</testcase>
+		<testcase name="test_nested_and_or_or" classname="test_condition_wrapper" time="0.016">
+		</testcase>
+		<testcase name="test_nested_or_and_and" classname="test_condition_wrapper" time="0.016">
+		</testcase>
+		<testcase name="test_empty_condition" classname="test_condition_wrapper" time="0.015">
+		</testcase>
+		<testcase name="test_missing_table" classname="test_condition_wrapper" time="0.015">
+		</testcase>
+		<testcase name="test_missing_table_with_and" classname="test_condition_wrapper" time="0.017">
+		</testcase>
+		<testcase name="test_missing_table_with_or" classname="test_condition_wrapper" time="0.015">
+		</testcase>
+		<testcase name="test_subquery_returns_true_value" classname="test_condition_wrapper" time="0.015">
+		</testcase>
+		<testcase name="test_subquery_returns_false_value" classname="test_condition_wrapper" time="0.015">
+		</testcase>
+		<testcase name="test_subquery_empty_result_returns_false" classname="test_condition_wrapper" time="0.015">
+		</testcase>
+		<testcase name="test_subquery_with_and_chaining" classname="test_condition_wrapper" time="0.016">
+		</testcase>
+		<testcase name="test_subquery_with_or_chaining" classname="test_condition_wrapper" time="0.015">
+		</testcase>
+		<testcase name="test_and_returns_self" classname="test_condition_wrapper" time="0.016">
+		</testcase>
+		<testcase name="test_or_returns_self" classname="test_condition_wrapper" time="0.015">
+		</testcase>
+		<testcase name="test_cond_returns_self" classname="test_condition_wrapper" time="0.015">
+		</testcase>
+		<testcase name="test_with_static_inputs" classname="test_condition_wrapper" time="0.016">
+		</testcase>
+		<testcase name="test_multi_table_condition" classname="test_condition_wrapper" time="0.016">
+		</testcase>
+	</testsuite>
+	<testsuite id="4" name="test_expression" package="test/core" timestamp="2026-05-27T13:16:26" hostname="localhost" tests="88" failures="0" errors="0" skipped="0" flaky="0" time="1.445">
+		<testcase name="test_arithmetic_addition" classname="test_expression" time="0.004">
+		</testcase>
+		<testcase name="test_arithmetic_subtraction" classname="test_expression" time="0.004">
+		</testcase>
+		<testcase name="test_arithmetic_multiplication" classname="test_expression" time="0.003">
+		</testcase>
+		<testcase name="test_arithmetic_division" classname="test_expression" time="0.003">
+		</testcase>
+		<testcase name="test_arithmetic_modulo" classname="test_expression" time="0.010">
+		</testcase>
+		<testcase name="test_arithmetic_power" classname="test_expression" time="0.016">
+		</testcase>
+		<testcase name="test_arithmetic_unary_minus" classname="test_expression" time="0.016">
+		</testcase>
+		<testcase name="test_arithmetic_unary_plus" classname="test_expression" time="0.016">
+		</testcase>
+		<testcase name="test_arithmetic_operator_precedence" classname="test_expression" time="0.016">
+		</testcase>
+		<testcase name="test_comparison_equal" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_comparison_not_equal" classname="test_expression" time="0.016">
+		</testcase>
+		<testcase name="test_comparison_less" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_comparison_greater" classname="test_expression" time="0.016">
+		</testcase>
+		<testcase name="test_comparison_less_equal" classname="test_expression" time="0.016">
+		</testcase>
+		<testcase name="test_comparison_greater_equal" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_comparison_chained" classname="test_expression" time="0.016">
+		</testcase>
+		<testcase name="test_logic_and" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_logic_or" classname="test_expression" time="0.016">
+		</testcase>
+		<testcase name="test_logic_not" classname="test_expression" time="0.016">
+		</testcase>
+		<testcase name="test_logic_compound" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_bitwise_and" classname="test_expression" time="0.016">
+		</testcase>
+		<testcase name="test_bitwise_or" classname="test_expression" time="0.016">
+		</testcase>
+		<testcase name="test_bitwise_xor" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_bitwise_shift_left" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_bitwise_shift_right" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_bitwise_invert" classname="test_expression" time="0.016">
+		</testcase>
+		<testcase name="test_string_concatenation" classname="test_expression" time="0.016">
+		</testcase>
+		<testcase name="test_constant_null" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_constant_true" classname="test_expression" time="0.016">
+		</testcase>
+		<testcase name="test_constant_false" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_constant_pi" classname="test_expression" time="0.016">
+		</testcase>
+		<testcase name="test_constant_tau" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_constant_inf" classname="test_expression" time="0.016">
+		</testcase>
+		<testcase name="test_constant_nan" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_func_sin" classname="test_expression" time="0.016">
+		</testcase>
+		<testcase name="test_func_cos" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_func_min" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_func_max" classname="test_expression" time="0.016">
+		</testcase>
+		<testcase name="test_func_abs" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_func_round" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_func_floor" classname="test_expression" time="0.014">
+		</testcase>
+		<testcase name="test_func_ceil" classname="test_expression" time="0.017">
+		</testcase>
+		<testcase name="test_func_sqrt" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_func_pow" classname="test_expression" time="0.016">
+		</testcase>
+		<testcase name="test_func_clamp" classname="test_expression" time="0.016">
+		</testcase>
+		<testcase name="test_func_lerp" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_func_is_nan" classname="test_expression" time="0.014">
+		</testcase>
+		<testcase name="test_func_is_inf" classname="test_expression" time="0.016">
+		</testcase>
+		<testcase name="test_func_str" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_func_len" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_func_snapped" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_func_deg_to_rad" classname="test_expression" time="0.016">
+		</testcase>
+		<testcase name="test_func_rad_to_deg" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_func_step_decimals" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_input_single_variable" classname="test_expression" time="0.016">
+		</testcase>
+		<testcase name="test_input_multiple_variables" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_input_as_string" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_input_missing_provides_null" classname="test_expression" time="0.016">
+		</testcase>
+		<testcase name="test_input_indexed" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_input_indexed_with_names" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_input_named_identifier_used_in_function" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_sql_mode_null_propagation_comparison" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_sql_mode_string_arithmetic" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_sql_mode_variable_input" classname="test_expression" time="0.016">
+		</testcase>
+		<testcase name="test_sql_input_names_table_column" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_sql_input_names_unknown_column" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_sql_input_names_lack_input_names" classname="test_expression" time="0.017">
+		</testcase>
+		<testcase name="test_sql_input_names_column_value" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_sql_input_names_equals_column_by_name" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_cache_found_after_parse" classname="test_expression" time="0.016">
+		</testcase>
+		<testcase name="test_cache_capacity_default" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_cache_put_and_get" classname="test_expression" time="0.016">
+		</testcase>
+		<testcase name="test_cache_overwrite_value" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_cache_missing_key" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_cache_eviction_when_full" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_cache_lru_reorder" classname="test_expression" time="0.014">
+		</testcase>
+		<testcase name="test_cache_clear" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_has_execute_failed_after_success" classname="test_expression" time="0.014">
+		</testcase>
+		<testcase name="test_has_execute_failed_after_execution_error" classname="test_expression" time="0.016">
+		</testcase>
+		<testcase name="test_nested_parentheses" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_float_arithmetic" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_multiple_operators_mixed" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_large_integer" classname="test_expression" time="0.016">
+		</testcase>
+		<testcase name="test_not_with_comparison" classname="test_expression" time="0.016">
+		</testcase>
+		<testcase name="test_complex_expression" classname="test_expression" time="0.016">
+		</testcase>
+		<testcase name="test_repeated_eval_with_different_inputs" classname="test_expression" time="0.015">
+		</testcase>
+		<testcase name="test_expression_with_multiple_whitespace" classname="test_expression" time="0.014">
+		</testcase>
+		<testcase name="test_power_negative_exponent" classname="test_expression" time="0.015">
+		</testcase>
+	</testsuite>
+	<testsuite id="5" name="test_gdsql_utils" package="test/core" timestamp="2026-05-27T13:16:27" hostname="localhost" tests="116" failures="0" errors="0" skipped="0" flaky="0" time="1.935">
+		<testcase name="test_evaluate_command_simple_arithmetic" classname="test_gdsql_utils" time="0.003">
+		</testcase>
+		<testcase name="test_evaluate_command_simple_multiplication" classname="test_gdsql_utils" time="0.003">
+		</testcase>
+		<testcase name="test_evaluate_command_mixed_arithmetic" classname="test_gdsql_utils" time="0.003">
+		</testcase>
+		<testcase name="test_evaluate_command_parentheses" classname="test_gdsql_utils" time="0.012">
+		</testcase>
+		<testcase name="test_evaluate_command_string_concat" classname="test_gdsql_utils" time="0.016">
+		</testcase>
+		<testcase name="test_evaluate_command_boolean_and" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_evaluate_command_boolean_or" classname="test_gdsql_utils" time="0.016">
+		</testcase>
+		<testcase name="test_evaluate_command_equality" classname="test_gdsql_utils" time="0.016">
+		</testcase>
+		<testcase name="test_evaluate_command_inequality" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_evaluate_command_greater_than" classname="test_gdsql_utils" time="0.016">
+		</testcase>
+		<testcase name="test_evaluate_command_with_variables" classname="test_gdsql_utils" time="0.016">
+		</testcase>
+		<testcase name="test_evaluate_command_with_variables_string" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_evaluate_command_with_single_variable" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_evaluate_command_with_three_variables" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_evaluate_command_float_arithmetic" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_evaluate_command_negation" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_evaluate_command_modulo" classname="test_gdsql_utils" time="0.016">
+		</testcase>
+		<testcase name="test_evaluate_command_with_target_script_properties" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_evaluate_command_with_target_and_variables" classname="test_gdsql_utils" time="0.014">
+		</testcase>
+		<testcase name="test_evaluate_command_with_target_method_call" classname="test_gdsql_utils" time="0.016">
+		</testcase>
+		<testcase name="test_evaluate_command_unary_plus_chain" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_evaluate_command_negate_boolean" classname="test_gdsql_utils" time="0.016">
+		</testcase>
+		<testcase name="test_evaluate_command_bitwise_ops" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_evaluate_command_with_sql_expression_simple" classname="test_gdsql_utils" time="0.016">
+		</testcase>
+		<testcase name="test_evaluate_command_with_sql_expression_variables" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_evaluate_command_with_sql_expression_string" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_evaluate_command_with_sql_expression_input_names" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_evaluate_command_with_sql_expression_lacking_tables" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_evaluate_command_with_sql_expression_with_nested_subqueries" classname="test_gdsql_utils" time="0.017">
+		</testcase>
+		<testcase name="test_evalute_command_with_agg_simple" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_evalute_command_with_agg_variables" classname="test_gdsql_utils" time="0.014">
+		</testcase>
+		<testcase name="test_evalute_command_with_agg_with_instance" classname="test_gdsql_utils" time="0.016">
+		</testcase>
+		<testcase name="test_evalute_command_with_agg_input_names" classname="test_gdsql_utils" time="0.014">
+		</testcase>
+		<testcase name="test_evaluate_command_script_simple" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_evaluate_command_script_multiplication" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_evaluate_command_script_with_variables" classname="test_gdsql_utils" time="0.016">
+		</testcase>
+		<testcase name="test_evaluate_command_script_string_concat" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_evaluate_command_script_boolean" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_evaluate_command_script_complex_expression" classname="test_gdsql_utils" time="0.014">
+		</testcase>
+		<testcase name="test_evaluate_command_script_with_null_variable" classname="test_gdsql_utils" time="0.017">
+		</testcase>
+		<testcase name="test_evaluate_command_script_ternary" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_evaluate_command_script_array_literal" classname="test_gdsql_utils" time="0.016">
+		</testcase>
+		<testcase name="test_evaluate_command_script_dictionary_literal" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_globalize_path_res_simplify" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_globalize_path_res_with_dots" classname="test_gdsql_utils" time="0.016">
+		</testcase>
+		<testcase name="test_globalize_path_res_simple_dir" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_globalize_path_install_contains_path" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_globalize_path_install_does_not_start_with_res" classname="test_gdsql_utils" time="0.016">
+		</testcase>
+		<testcase name="test_globalize_path_install_subdir" classname="test_gdsql_utils" time="0.014">
+		</testcase>
+		<testcase name="test_globalize_path_absolute_path_passthrough" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_globalize_path_windows_absolute_passthrough" classname="test_gdsql_utils" time="0.016">
+		</testcase>
+		<testcase name="test_globalize_path_relative_path_passthrough" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_globalize_path_install_then_res_path" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_globalize_path_empty_string" classname="test_gdsql_utils" time="0.014">
+		</testcase>
+		<testcase name="test_file_exists_res_path_true" classname="test_gdsql_utils" time="0.016">
+		</testcase>
+		<testcase name="test_file_exists_res_path_false" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_file_exists_install_path_translated" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_file_exists_absolute_path" classname="test_gdsql_utils" time="0.017">
+		</testcase>
+		<testcase name="test_file_exists_empty_string" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_search_symbol_simple_commas" classname="test_gdsql_utils" time="0.016">
+		</testcase>
+		<testcase name="test_search_symbol_with_quotes" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_search_symbol_with_double_quotes" classname="test_gdsql_utils" time="0.016">
+		</testcase>
+		<testcase name="test_search_symbol_with_brackets" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_search_symbol_nested_brackets" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_search_symbol_with_braces" classname="test_gdsql_utils" time="0.016">
+		</testcase>
+		<testcase name="test_search_symbol_no_match" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_search_symbol_single_char_text" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_search_symbol_empty_text" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_search_symbol_whitespace" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_search_symbol_whitespace_with_tabs" classname="test_gdsql_utils" time="0.016">
+		</testcase>
+		<testcase name="test_search_symbol_whitespace_no_match" classname="test_gdsql_utils" time="0.016">
+		</testcase>
+		<testcase name="test_search_symbol_allow_empty_false_removes_adjacent_empty" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_search_symbol_with_escaped_quote" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_search_symbol_semicolon" classname="test_gdsql_utils" time="0.017">
+		</testcase>
+		<testcase name="test_search_symbol_at_sign" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_search_symbol_pipe" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_search_symbol_double_quote_inside_brackets" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_search_symbol_mixed_quotes" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_extract_outer_quotes" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_extract_outer_quotes_double_quotes" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_extract_outer_quotes_mixed_single_double" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_extract_outer_quotes_nested_brackets" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_extract_outer_quotes_no_quotes" classname="test_gdsql_utils" time="0.016">
+		</testcase>
+		<testcase name="test_extract_outer_quotes_empty_string" classname="test_gdsql_utils" time="0.016">
+		</testcase>
+		<testcase name="test_extract_outer_quotes_bracket_not_outer" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_extract_outer_quotes_multiple_returns_sorted_by_length" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_extract_outer_quotes_escaped_quotes" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_extract_outer_quotes_with_braces" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_extract_outer_quotes_only_unmatched_warning" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_extract_outer_bracket_simple" classname="test_gdsql_utils" time="0.016">
+		</testcase>
+		<testcase name="test_extract_outer_bracket_nested" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_extract_outer_bracket_multiple" classname="test_gdsql_utils" time="0.016">
+		</testcase>
+		<testcase name="test_extract_outer_bracket_with_quotes" classname="test_gdsql_utils" time="0.016">
+		</testcase>
+		<testcase name="test_extract_outer_bracket_no_brackets" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_extract_outer_bracket_empty_string" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_extract_outer_bracket_only_brackets_inside_quotes" classname="test_gdsql_utils" time="0.014">
+		</testcase>
+		<testcase name="test_extract_outer_bracket_square_brackets_not_extracted" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_extract_outer_bracket_braces_not_extracted" classname="test_gdsql_utils" time="0.014">
+		</testcase>
+		<testcase name="test_extract_outer_bracket_with_commas_inside" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_extract_outer_bracket_sorted_by_length" classname="test_gdsql_utils" time="0.014">
+		</testcase>
+		<testcase name="test_extract_outer_bracket_unmatched_inside_quotes" classname="test_gdsql_utils" time="0.014">
+		</testcase>
+		<testcase name="test_get_specific_extension_files_find_gd" classname="test_gdsql_utils" time="0.014">
+		</testcase>
+		<testcase name="test_get_specific_extension_files_find_gd_in_test_dir" classname="test_gdsql_utils" time="0.016">
+		</testcase>
+		<testcase name="test_get_specific_extension_files_nonexistent_extension" classname="test_gdsql_utils" time="0.014">
+		</testcase>
+		<testcase name="test_get_specific_extension_files_extension_case_insensitive" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_extract_outer_quotes_result_order" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_extract_outer_bracket_result_order" classname="test_gdsql_utils" time="0.014">
+		</testcase>
+		<testcase name="test_search_symbol_with_empty_result_for_non_existent_symbol" classname="test_gdsql_utils" time="0.016">
+		</testcase>
+		<testcase name="test_search_symbol_single_char_input" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_evaluate_command_script_large_numbers" classname="test_gdsql_utils" time="0.014">
+		</testcase>
+		<testcase name="test_evaluate_command_with_sql_expression_cache_hit" classname="test_gdsql_utils" time="0.014">
+		</testcase>
+		<testcase name="test_search_symbol_with_brackets_quotes_and_commas" classname="test_gdsql_utils" time="0.016">
+		</testcase>
+		<testcase name="test_evaluate_command_script_float_division" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_evaluate_command_with_target_method_returning_string" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+		<testcase name="test_search_symbol_space_as_delimiter" classname="test_gdsql_utils" time="0.016">
+		</testcase>
+		<testcase name="test_evaluate_command_script_nested_ternary" classname="test_gdsql_utils" time="0.015">
+		</testcase>
+	</testsuite>
+	<testsuite id="6" name="test_sql_parser" package="test/core" timestamp="2026-05-27T13:16:29" hostname="localhost" tests="30" failures="0" errors="0" skipped="0" flaky="0" time="0.469">
+		<testcase name="test_parse_select_simple" classname="test_sql_parser" time="0.003">
+		</testcase>
+		<testcase name="test_parse_select_db_table" classname="test_sql_parser" time="0.003">
+		</testcase>
+		<testcase name="test_parse_select_where" classname="test_sql_parser" time="0.003">
+		</testcase>
+		<testcase name="test_parse_select_order_by" classname="test_sql_parser" time="0.007">
+		</testcase>
+		<testcase name="test_parse_select_limit" classname="test_sql_parser" time="0.016">
+		</testcase>
+		<testcase name="test_parse_select_join" classname="test_sql_parser" time="0.015">
+		</testcase>
+		<testcase name="test_parse_select_case_insensitive" classname="test_sql_parser" time="0.016">
+		</testcase>
+		<testcase name="test_parse_update_simple" classname="test_sql_parser" time="0.015">
+		</testcase>
+		<testcase name="test_parse_update_no_where" classname="test_sql_parser" time="0.015">
+		</testcase>
+		<testcase name="test_parse_delete_simple" classname="test_sql_parser" time="0.014">
+		</testcase>
+		<testcase name="test_parse_delete_no_where" classname="test_sql_parser" time="0.015">
+		</testcase>
+		<testcase name="test_parse_insert_simple" classname="test_sql_parser" time="0.014">
+		</testcase>
+		<testcase name="test_parse_insert_with_columns" classname="test_sql_parser" time="0.015">
+		</testcase>
+		<testcase name="test_parse_insert_ignore" classname="test_sql_parser" time="0.016">
+		</testcase>
+		<testcase name="test_parse_insert_on_duplicate" classname="test_sql_parser" time="0.017">
+		</testcase>
+		<testcase name="test_get_db_table" classname="test_sql_parser" time="0.016">
+		</testcase>
+		<testcase name="test_get_db_table_no_db" classname="test_sql_parser" time="0.016">
+		</testcase>
+		<testcase name="test_get_db_table_alias" classname="test_sql_parser" time="0.015">
+		</testcase>
+		<testcase name="test_get_db_table_alias_no_as" classname="test_sql_parser" time="0.014">
+		</testcase>
+		<testcase name="test_remove_semicolon" classname="test_sql_parser" time="0.016">
+		</testcase>
+		<testcase name="test_remove_semicolon_none" classname="test_sql_parser" time="0.015">
+		</testcase>
+		<testcase name="test_remove_semicolon_multi" classname="test_sql_parser" time="0.015">
+		</testcase>
+		<testcase name="test_get_field_list" classname="test_sql_parser" time="0.016">
+		</testcase>
+		<testcase name="test_get_field_list_with_function" classname="test_sql_parser" time="0.015">
+		</testcase>
+		<testcase name="test_get_value_list" classname="test_sql_parser" time="0.015">
+		</testcase>
+		<testcase name="test_prepare_sql" classname="test_sql_parser" time="0.015">
+		</testcase>
+		<testcase name="test_prepare_sql_numbers" classname="test_sql_parser" time="0.016">
+		</testcase>
+		<testcase name="test_restore" classname="test_sql_parser" time="0.015">
+		</testcase>
+		<testcase name="test_extract_bracket" classname="test_sql_parser" time="0.016">
+		</testcase>
+		<testcase name="test_remove_outer_quotes" classname="test_sql_parser" time="0.015">
+		</testcase>
+	</testsuite>
+	<testsuite id="7" name="test_sql_parser_integration" package="test/core" timestamp="2026-05-27T13:16:30" hostname="localhost" tests="4" failures="0" errors="0" skipped="0" flaky="0" time="1.117">
+		<testcase name="test_parse_to_dao_insert" classname="test_sql_parser_integration" time="0.246">
+		</testcase>
+		<testcase name="test_parse_to_dao_select" classname="test_sql_parser_integration" time="0.297">
+		</testcase>
+		<testcase name="test_parse_to_dao_update" classname="test_sql_parser_integration" time="0.284">
+		</testcase>
+		<testcase name="test_parse_to_dao_delete" classname="test_sql_parser_integration" time="0.280">
+		</testcase>
+	</testsuite>
+	<testsuite id="8" name="test_cache" package="test/gbatis" timestamp="2026-05-27T13:16:31" hostname="localhost" tests="9" failures="0" errors="0" skipped="0" flaky="0" time="0.102">
+		<testcase name="test_lru_set_get" classname="test_cache" time="0.003">
+		</testcase>
+		<testcase name="test_lru_eviction" classname="test_cache" time="0.004">
+		</testcase>
+		<testcase name="test_lru_reorder" classname="test_cache" time="0.004">
+		</testcase>
+		<testcase name="test_lru_overwrite" classname="test_cache" time="0.003">
+		</testcase>
+		<testcase name="test_lru_missing" classname="test_cache" time="0.008">
+		</testcase>
+		<testcase name="test_lru_clear" classname="test_cache" time="0.017">
+		</testcase>
+		<testcase name="test_fifo_set_get" classname="test_cache" time="0.015">
+		</testcase>
+		<testcase name="test_fifo_eviction" classname="test_cache" time="0.016">
+		</testcase>
+		<testcase name="test_fifo_clear" classname="test_cache" time="0.015">
+		</testcase>
+	</testsuite>
+	<testsuite id="9" name="test_entity_db" package="test/gbatis" timestamp="2026-05-27T13:16:31" hostname="localhost" tests="6" failures="0" errors="0" skipped="0" flaky="0" time="0.094">
+		<testcase name="test_has_entity_empty" classname="test_entity_db" time="0.004">
+		</testcase>
+		<testcase name="test_set_then_has" classname="test_entity_db" time="0.004">
+		</testcase>
+		<testcase name="test_set_then_get" classname="test_entity_db" time="0.015">
+		</testcase>
+		<testcase name="test_get_non_existent" classname="test_entity_db" time="0.015">
+		</testcase>
+		<testcase name="test_different_primary_keys" classname="test_entity_db" time="0.037">
+		</testcase>
+		<testcase name="test_different_classes" classname="test_entity_db" time="0.004">
+		</testcase>
+	</testsuite>
+	<testsuite id="10" name="test_gbatis_entity" package="test/gbatis" timestamp="2026-05-27T13:16:31" hostname="localhost" tests="7" failures="0" errors="0" skipped="0" flaky="0" time="0.099">
+		<testcase name="test_new_entity_all_null" classname="test_gbatis_entity" time="0.004">
+		</testcase>
+		<testcase name="test_entity_all_set" classname="test_gbatis_entity" time="0.005">
+		</testcase>
+		<testcase name="test_entity_partial_set" classname="test_gbatis_entity" time="0.016">
+		</testcase>
+		<testcase name="test_is_property_set_true" classname="test_gbatis_entity" time="0.015">
+		</testcase>
+		<testcase name="test_is_property_set_false" classname="test_gbatis_entity" time="0.015">
+		</testcase>
+		<testcase name="test_is_properties_set_all" classname="test_gbatis_entity" time="0.016">
+		</testcase>
+		<testcase name="test_is_properties_set_partial" classname="test_gbatis_entity" time="0.015">
+		</testcase>
+	</testsuite>
+	<testsuite id="11" name="test_mapper_integration" package="test/gbatis" timestamp="2026-05-27T13:16:31" hostname="localhost" tests="6" failures="0" errors="0" skipped="0" flaky="0" time="2.929">
+		<testcase name="test_placeholder_simple" classname="test_mapper_integration" time="0.418">
+		</testcase>
+		<testcase name="test_placeholder_dot" classname="test_mapper_integration" time="0.471">
+		</testcase>
+		<testcase name="test_placeholder_index" classname="test_mapper_integration" time="0.568">
+		</testcase>
+		<testcase name="test_placeholder_dollar" classname="test_mapper_integration" time="0.485">
+		</testcase>
+		<testcase name="test_placeholder_multi" classname="test_mapper_integration" time="0.492">
+		</testcase>
+		<testcase name="test_placeholder_map_key" classname="test_mapper_integration" time="0.480">
+		</testcase>
+	</testsuite>
+	<testsuite id="12" name="test_mapper_query" package="test/gbatis" timestamp="2026-05-27T13:16:34" hostname="localhost" tests="3" failures="0" errors="0" skipped="0" flaky="0" time="0.919">
+		<testcase name="test_select_all" classname="test_mapper_query" time="0.307">
+		</testcase>
+		<testcase name="test_select_by_id" classname="test_mapper_query" time="0.322">
+		</testcase>
+		<testcase name="test_mapper_insert" classname="test_mapper_query" time="0.278">
+		</testcase>
+	</testsuite>
+	<testsuite id="13" name="test_gxml_item" package="test/gxml" timestamp="2026-05-27T13:16:35" hostname="localhost" tests="13" failures="0" errors="0" skipped="0" flaky="0" time="0.173">
+		<testcase name="test_item_to_dict_simple" classname="test_gxml_item" time="0.003">
+		</testcase>
+		<testcase name="test_item_to_dict_with_text" classname="test_gxml_item" time="0.003">
+		</testcase>
+		<testcase name="test_item_to_dict_nested" classname="test_gxml_item" time="0.004">
+		</testcase>
+		<testcase name="test_item_to_dict_ignore_blank" classname="test_gxml_item" time="0.005">
+		</testcase>
+		<testcase name="test_item_to_dict_combine_texts" classname="test_gxml_item" time="0.011">
+		</testcase>
+		<testcase name="test_item_to_dict_normal" classname="test_gxml_item" time="0.015">
+		</testcase>
+		<testcase name="test_item_to_dict_cdata_index" classname="test_gxml_item" time="0.016">
+		</testcase>
+		<testcase name="test_item_clean" classname="test_gxml_item" time="0.015">
+		</testcase>
+		<testcase name="test_load_xml_file" classname="test_gxml_item" time="0.011">
+		</testcase>
+		<testcase name="test_load_xml_with_attrs" classname="test_gxml_item" time="0.018">
+		</testcase>
+		<testcase name="test_load_xml_nested" classname="test_gxml_item" time="0.012">
+		</testcase>
+		<testcase name="test_load_xml_siblings" classname="test_gxml_item" time="0.017">
+		</testcase>
+		<testcase name="test_load_then_to_dict" classname="test_gxml_item" time="0.016">
+		</testcase>
+	</testsuite>
+	<testsuite id="14" name="test_gxml_node" package="test/gxml" timestamp="2026-05-27T13:16:36" hostname="localhost" tests="7" failures="0" errors="0" skipped="0" flaky="0" time="0.113">
+		<testcase name="test_node_is_element" classname="test_gxml_node" time="0.046">
+		</testcase>
+		<testcase name="test_node_is_element_end" classname="test_gxml_node" time="0.004">
+		</testcase>
+		<testcase name="test_node_is_text" classname="test_gxml_node" time="0.003">
+		</testcase>
+		<testcase name="test_node_is_blank_text" classname="test_gxml_node" time="0.003">
+		</testcase>
+		<testcase name="test_node_not_blank_text" classname="test_gxml_node" time="0.012">
+		</testcase>
+		<testcase name="test_node_is_cdata" classname="test_gxml_node" time="0.016">
+		</testcase>
+		<testcase name="test_node_get_cdata" classname="test_gxml_node" time="0.015">
+		</testcase>
+	</testsuite>
+</testsuites>
