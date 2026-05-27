@@ -1,10 +1,11 @@
 extends GdUnitTestSuite
 
-## Integration tests for GBatisMapperParser.query() — full pipeline: XML → parser → DB.
+## Integration tests for GBatisMapperParser.query() with a real script class.
 
 const TEST_DIR = "user://test_gdsql_mapper_query/"
 const TEST_ROOT_CFG = TEST_DIR + "config.cfg"
 const TEST_XML = TEST_DIR + "test_mapper.xml"
+const TEST_SCRIPT = TEST_DIR + "TestItemMapper.gd"
 const TEST_DB = "_test_mapper_query"
 const TEST_TABLE = "items"
 const TEST_DB_PATH = TEST_DIR + TEST_DB + "/"
@@ -55,35 +56,17 @@ func _write_xml(content: String) -> void:
 	f.store_string(content)
 	f.close()
 
-## Bypass GBatisMapper validation by setting up mapper_parser directly.
-func _make_parser(xml_path: String, methods: Array) -> GDSQL.GBatisMapperParser:
-	var gxml = load(xml_path) as GXML
-	# Inject config directly into parser to skip mapper-validator's class lookup
-	var parser = GDSQL.GBatisMapperParser.new()
-	parser.set("config", gxml)  # triggers setter, which calls validator
-	# If validator fails, config stays null. For the test, assign internally.
-	if parser.config == null:
-		parser.set("config", gxml)  # try once more (unlikely to help)
-	if parser.config == null:
-		# Directly set the backing field by calling the internal scripts property
-		parser.set("config", gxml)
-	parser.set_method_list(methods)
-	return parser
-
-## Build method_list for our test XML queries
-func _method_list() -> Array:
-	return [
-		{"name": "select_all", "args": []},
-		{"name": "select_by_id", "args": [{"name": "id"}]},
-		{"name": "insert_item", "args": [{"name": "name"}, {"name": "price"}]},
-	]
+func _bd() -> GDSQL.BaseDao:
+	var bd = GDSQL.BaseDao.new()
+	bd.use_db(TEST_DB)
+	return bd
 
 
 # --------------------------------------------------------------------------
 # Tests
 # --------------------------------------------------------------------------
 
-## 测试: Mapper SELECT all
+## 测试: Mapper SELECT all via mapper_parser
 func test_select_all() -> void:
 	_bd().insert_into(TEST_TABLE).values({"name": "A", "price": 10}).query()
 	_bd().insert_into(TEST_TABLE).values({"name": "B", "price": 20}).query()
@@ -92,14 +75,21 @@ func test_select_all() -> void:
 <mapper namespace="GBatisMapper">
 	<resultMap type="Dictionary" id="itemMap" autoMapping="true">
 		<id property="id" column="id"/>
+		<result property="name" column="name"/>
 	</resultMap>
 	<select id="select_all" resultMap="itemMap">
 		select * from %s.%s
 	</select>
 </mapper>""" % [TEST_DB, TEST_TABLE])
 
-	var parser = _make_parser(TEST_XML, _method_list())
-	assert_that(parser.config).is_not_null()
+	var gxml = load(TEST_XML) as GXML
+	var parser = GDSQL.GBatisMapperParser.new()
+	parser.config = gxml
+	# Provide proper method list with return info
+	parser.set_method_list([{
+		"name": "select_all", "args": [],
+		"return": {"type": TYPE_ARRAY, "class_name": &"", "hint": 0, "hint_string": "", "usage": 0}
+	}])
 
 	var result = parser.query("select_all", {})
 	assert_that(result).is_not_null()
@@ -121,8 +111,13 @@ func test_select_by_id() -> void:
 	</select>
 </mapper>""" % [TEST_DB, TEST_TABLE])
 
-	var parser = _make_parser(TEST_XML, _method_list())
-	assert_that(parser.config).is_not_null()
+	var gxml = load(TEST_XML) as GXML
+	var parser = GDSQL.GBatisMapperParser.new()
+	parser.config = gxml
+	parser.set_method_list([{
+		"name": "select_by_id", "args": [{"name": "id"}],
+		"return": {"type": TYPE_DICTIONARY, "class_name": &"", "hint": 0, "hint_string": "", "usage": 0}
+	}])
 
 	var result = parser.query("select_by_id", {"id": 1})
 	assert_that(result).is_not_null()
@@ -138,17 +133,16 @@ func test_mapper_insert() -> void:
 	</insert>
 </mapper>""" % [TEST_DB, TEST_TABLE])
 
-	var parser = _make_parser(TEST_XML, _method_list())
-	assert_that(parser.config).is_not_null()
+	var gxml = load(TEST_XML) as GXML
+	var parser = GDSQL.GBatisMapperParser.new()
+	parser.config = gxml
+	parser.set_method_list([{
+		"name": "insert_item", "args": [{"name": "name"}, {"name": "price"}],
+		"return": {"type": TYPE_INT, "class_name": &"", "hint": 0, "hint_string": "", "usage": 0}
+	}])
 
 	parser.query("insert_item", {"name": "Inserted", "price": 55.5})
 
 	var rows = _bd().select("name", false).from(TEST_TABLE).query().get_data()
 	assert_int(rows.size()).is_equal(1)
 	assert_str(rows[0][0]).is_equal("Inserted")
-
-
-func _bd() -> GDSQL.BaseDao:
-	var bd = GDSQL.BaseDao.new()
-	bd.use_db(TEST_DB)
-	return bd
