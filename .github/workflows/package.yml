@@ -1,0 +1,25 @@
+name: Package Addon
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Package addon
+        run: |
+          mkdir -p dist/addons
+          cp -r addons/gdsql dist/addons/gdsql
+          cd dist
+          zip -r ../gdsql-${{ github.ref_name }}.zip addons/
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: gdsql-${{ github.ref_name }}.zip

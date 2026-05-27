@@ -1,0 +1,33 @@
+name: GDSQL Tests
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        godot-version: [4.7-beta3]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: godot-gdunit-labs/gdUnit4-action@v1
+        with:
+          godot-version: ${{ matrix.godot-version }}
+          version: installed
+          paths: |
+            res://test/core
+            res://test/admin
+            res://test/gbatis
+            res://test/gxml
+          timeout: 5
