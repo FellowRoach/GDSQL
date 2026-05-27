@@ -27,6 +27,7 @@ func before_test() -> void:
 		var cf = ConfigFile.new()
 		cf.save(TEST_ROOT_CFG)
 	rc.set_path(TEST_ROOT_CFG)
+	rc.clear()
 
 	_dao = GDSQL.AdminDao.new()
 
@@ -233,4 +234,5 @@ func test_set_db_password() -> void:
 	var n = "_test_pwd"
 	assert_int(_dao.create_database(n, TEST_DIR + n + "/")).is_equal(OK)
 	var err = _dao.set_db_password(n, "secret")
-	assert_bool(err == OK or err == ERR_UNAUTHORIZED).is_true()
+	assert_bool(err == OK).is_true()
+	assert_bool(await _dao.drop_database(n) == OK).is_true()
