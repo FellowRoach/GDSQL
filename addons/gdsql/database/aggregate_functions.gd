@@ -22,7 +22,7 @@ var _empty_data_mode = false ## 无数据模式
 var _used = false ## 该对象的真实聚合函数被至少使用过一次
 var _return_null = false ## 真实返回值是否为null。true表示null参与了运算
 
-const FUNCTIONS = ["count", "maxn", "minn", "sum", "avg", "first", "last", "list",
+const FUNCTIONS = ["count", "maxn", "minn", "max", "min", "sum", "avg", "first", "last", "list",
 "distinct_group_concat", "group_concat", "grid_checkbox", "ifn", "ifnull"]
 
 static var _instances = {}

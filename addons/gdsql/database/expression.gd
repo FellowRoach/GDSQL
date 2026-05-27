@@ -2900,6 +2900,12 @@ func _get_token(r_token: ExpressionToken) -> Error:
 			
 
 						if (has_utility_function(id)) :
+							# 在 SQL 模式下，max/min 优先作为聚合函数处理
+							if sql_mode and (id == "max" or id == "min"):
+								r_token.type = TokenType.TK_IDENTIFIER
+								r_token.value = id
+								return OK
+
 							# fix not support parse('abs')
 							var next_token = ExpressionToken.new()
 							var cofs = str_ofs
@@ -3065,6 +3071,12 @@ func _parse_expression() -> ExpressionENode:
 					# function call
 					var func_call = alloc_node('CallNode') as ExpressionCallNode
 					func_call.method = identifier
+					# SQL 模式下重命名标准函数到内部聚合函数名
+					if sql_mode and identifier is String:
+						if identifier == "max":
+							func_call.method = "maxn"
+						elif identifier == "min":
+							func_call.method = "minn"
 					var self_node = alloc_node('SelfNode')
 					func_call.base = self_node
 
