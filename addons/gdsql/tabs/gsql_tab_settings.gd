@@ -114,7 +114,7 @@ func _on_button_save_pressed() -> void:
 	
 	var settings := ConfigFile.new()
 	
-	if FileAccess.file_exists(SETTINGS_PATH):
+	if GDSQL.GDSQLUtils.file_exists(SETTINGS_PATH):
 		settings.load(SETTINGS_PATH)
 	
 	settings.set_value("config", "root_config_path", root_config_path)

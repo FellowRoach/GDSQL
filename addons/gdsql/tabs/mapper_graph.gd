@@ -1334,7 +1334,7 @@ func _refresh_item_diff(item: TreeItem):
 	if item.get_button_by_id(3, 5) > -1:
 		item.erase_button(3, item.get_button_by_id(3, 5))
 	var path = line_edit_save_path.text.strip_edges().path_join(item.get_meta("file_name"))
-	if FileAccess.file_exists(path):
+	if GDSQL.GDSQLUtils.file_exists(path):
 		var file_content = FileAccess.open(path, FileAccess.READ).get_as_text()
 		item.set_button_disabled(2, item.get_button_by_id(2, 4), false)
 		if item.get_metadata(0) == file_content:

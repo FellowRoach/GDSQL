@@ -149,7 +149,7 @@ func set_up_localization():
 func init_settings() -> Error:
 	var settings_path = "res://gdsql/settings.cfg"
 	var settings: ConfigFile
-	if not FileAccess.file_exists(settings_path):
+	if not GDSQL.GDSQLUtils.file_exists(settings_path):
 		if not DirAccess.dir_exists_absolute(settings_path.get_base_dir()):
 			var err = DirAccess.make_dir_recursive_absolute(settings_path.get_base_dir())
 			if err != OK:
@@ -182,7 +182,7 @@ func init_settings() -> Error:
 	# Root config.
 	if true:
 		var path: String = settings.get_value("config", "root_config_path")
-		if not FileAccess.file_exists(path):
+		if not GDSQL.GDSQLUtils.file_exists(path):
 			var err = DirAccess.make_dir_recursive_absolute(path.get_base_dir())
 			if err == OK:
 				var cf = ConfigFile.new()
@@ -194,7 +194,7 @@ func init_settings() -> Error:
 	# Supplementary root config.
 	if true:
 		var path: String = settings.get_value("config", "supplementary_config_path")
-		if not FileAccess.file_exists(path):
+		if not GDSQL.GDSQLUtils.file_exists(path):
 			var err = DirAccess.make_dir_recursive_absolute(path.get_base_dir())
 			if err == OK:
 				var cf = ConfigFile.new()

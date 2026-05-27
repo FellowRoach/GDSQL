@@ -27,7 +27,7 @@ func get_conf(path: String, password) -> GDSQL.ImprovedConfigFile:
 		return _conf_map.get(path)
 		
 	var conf := GDSQL.ImprovedConfigFile.new()
-	var exist = FileAccess.file_exists(path)
+	var exist = GDSQL.GDSQLUtils.file_exists(path)
 	if not exist and _valid_if_not_exist_path.has(path):
 		_passwords[path] = password
 		_conf_map[path] = conf
@@ -73,7 +73,7 @@ func get_conf(path: String, password) -> GDSQL.ImprovedConfigFile:
 ## 创建并获取配置：前提是该配置的文件不存在
 func create_conf(path: String, password) -> GDSQL.ImprovedConfigFile:
 	path = GDSQL.GDSQLUtils.globalize_path(path)
-	if not FileAccess.file_exists(path):
+	if not GDSQL.GDSQLUtils.file_exists(path):
 		assert(false, "file:[%s] already exist" % path)
 		return null
 		

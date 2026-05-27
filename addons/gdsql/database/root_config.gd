@@ -26,7 +26,7 @@ func set_path(p_path: String):
 func init_supplementary(supp_path: String) -> void:
 	supplementary_path = supp_path
 	supplementary_conf = ConfigFile.new()
-	if FileAccess.file_exists(supp_path):
+	if GDSQL.GDSQLUtils.file_exists(supp_path):
 		supplementary_conf.load(supp_path)
 
 ## 是否使用补充配置（即当前处于导出游戏中）
@@ -47,7 +47,7 @@ func get_supplementary_base_dir() -> String:
 func reload():
 	GDSQL.ConfManager.remove_conf(path)
 	conf = GDSQL.ConfManager.get_conf(path, "")
-	if supplementary_conf != null and FileAccess.file_exists(supplementary_path):
+	if supplementary_conf != null and GDSQL.GDSQLUtils.file_exists(supplementary_path):
 		supplementary_conf.load(supplementary_path)
 	
 # 清空所有配置

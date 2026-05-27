@@ -41,7 +41,7 @@ func _setup_database() -> void:
 	print("--- Step 1: Set up database ---")
 	DirAccess.make_dir_recursive_absolute(_db_path)
 	var root_conf_path = _db_path.path_join("config.cfg")
-	if not FileAccess.file_exists(root_conf_path):
+	if not GDSQL.GDSQLUtils.file_exists(root_conf_path):
 		var cfg = ConfigFile.new()
 		cfg.set_value("demo_data", "data_path", _db_path)
 		cfg.set_value("demo_data", "encrypted", "")

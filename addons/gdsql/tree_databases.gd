@@ -54,7 +54,7 @@ func _notification(what: int) -> void:
 		var r = disk_changed_list.create_item()
 		disk_changed_list.hide_root = true
 		for path: String in GDSQL.ConfManager._conf_modified_time:
-			if not FileAccess.file_exists(path):
+			if not GDSQL.GDSQLUtils.file_exists(path):
 				var ti = disk_changed_list.create_item(r)
 				ti.set_meta("path", path)
 				ti.set_icon(0, get_theme_icon("FileDead", "EditorIcons"))
@@ -230,7 +230,7 @@ func add_table_to_config(db_name: String, table_name: String, comment: String,
 			mgr.add_log_history.emit("Err", begin_time, action, msgs)
 			return mgr.create_accept_dialog(msgs)
 	else:
-		if FileAccess.file_exists(table_data_path):
+		if GDSQL.GDSQLUtils.file_exists(table_data_path):
 			msgs.push_back(tr("Failed! Data file [%s] already exist!") % table_data_path)
 			mgr.add_log_history.emit("Err", begin_time, action, msgs)
 			return mgr.create_accept_dialog(msgs)
@@ -380,7 +380,7 @@ func modify_table_to_config(db_name: String, old_table_name: String, new_table_n
 		
 	var old_table_data_path = GDSQL.RootConfig.get_table_data_path(db_name, old_table_name)
 	var new_table_data_path = GDSQL.RootConfig.get_table_data_path(db_name, new_table_name)
-	if not FileAccess.file_exists(old_table_data_path):
+	if not GDSQL.GDSQLUtils.file_exists(old_table_data_path):
 		var config_file = ConfigFile.new()
 		var table_conf_path = GDSQL.RootConfig.get_table_config_path(db_name, new_table_name)
 		config_file.set_value(new_table_name, "encrypted", table_confs[old_table_name]["encrypted"]) # 保留原密码
@@ -393,7 +393,7 @@ func modify_table_to_config(db_name: String, old_table_name: String, new_table_n
 		if old_table_data_path != new_table_data_path:
 			var old_table_conf_path = GDSQL.RootConfig.get_table_config_path(db_name, old_table_name)
 			var old_table_conf_path_abs = GDSQL.GDSQLUtils.globalize_path(old_table_conf_path)
-			if FileAccess.file_exists(old_table_conf_path_abs):
+			if GDSQL.GDSQLUtils.file_exists(old_table_conf_path_abs):
 				OS.move_to_trash(old_table_conf_path_abs) # 删配置
 				msgs.push_back(tr("1 file: %s has been moved to trash.") % old_table_conf_path_abs)
 				
@@ -402,7 +402,7 @@ func modify_table_to_config(db_name: String, old_table_name: String, new_table_n
 		mgr.add_log_history.emit("OK", begin_time, action, msgs)
 		return
 		
-	if new_table_data_path != old_table_data_path and FileAccess.file_exists(new_table_data_path):
+	if new_table_data_path != old_table_data_path and GDSQL.GDSQLUtils.file_exists(new_table_data_path):
 		msgs.push_back(tr("Failed! File [%s] already exist!") % new_table_data_path)
 		mgr.add_log_history.emit("Err", begin_time, action, msgs)
 		return mgr.create_accept_dialog(msgs)
@@ -527,10 +527,10 @@ func modify_table_to_config(db_name: String, old_table_name: String, new_table_n
 			var old_table_conf_path = GDSQL.RootConfig.get_table_config_path(db_name, old_table_name)
 			var old_table_conf_path_abs = GDSQL.GDSQLUtils.globalize_path(old_table_conf_path)
 			var old_table_data_path_abs = GDSQL.GDSQLUtils.globalize_path(old_table_data_path)
-			if FileAccess.file_exists(old_table_conf_path_abs):
+			if GDSQL.GDSQLUtils.file_exists(old_table_conf_path_abs):
 				OS.move_to_trash(old_table_conf_path_abs) # 删配置
 				msgs.push_back(tr("1 file: %s has been moved to trash.") % old_table_conf_path_abs)
-			if FileAccess.file_exists(old_table_data_path_abs):
+			if GDSQL.GDSQLUtils.file_exists(old_table_data_path_abs):
 				OS.move_to_trash(old_table_data_path_abs) # 删数据
 				msgs.push_back(tr("1 file: %s has been moved to trash.") % old_table_data_path_abs)
 				
@@ -574,7 +574,7 @@ func set_password_for_database(db_name: String, password: String) -> void:
 	
 	for table_name in mgr.databases[db_name]["tables"]:
 		var table_data_path = GDSQL.RootConfig.get_table_data_path(db_name, table_name)
-		var table_data_file_exist = FileAccess.file_exists(table_data_path)
+		var table_data_file_exist = GDSQL.GDSQLUtils.file_exists(table_data_path)
 		if table_data_file_exist:
 			if not GDSQL.ConfManager.get_conf(table_data_path, ""): # load data
 				msgs.push_back(tr("Failed! Get file %s content failed!") % table_data_path)
@@ -583,7 +583,7 @@ func set_password_for_database(db_name: String, password: String) -> void:
 				
 	for table_name in mgr.databases[db_name]["tables"]:
 		var table_data_path = GDSQL.RootConfig.get_table_data_path(db_name, table_name)
-		var table_data_file_exist = FileAccess.file_exists(table_data_path)
+		var table_data_file_exist = GDSQL.GDSQLUtils.file_exists(table_data_path)
 		if table_data_file_exist:
 			GDSQL.ConfManager.save_conf_by_dek(table_data_path, dek64)
 			msgs.push_back(tr("1 file: %s has been encrypted.") % table_data_path)
@@ -622,7 +622,7 @@ func clear_password_for_database(db_name: String) -> void:
 	
 	for table_name in mgr.databases[db_name]["tables"]:
 		var table_data_path = GDSQL.RootConfig.get_table_data_path(db_name, table_name)
-		var table_data_file_exist = FileAccess.file_exists(table_data_path)
+		var table_data_file_exist = GDSQL.GDSQLUtils.file_exists(table_data_path)
 		
 		if table_data_file_exist:
 			GDSQL.ConfManager.get_conf(table_data_path, dek)
@@ -715,14 +715,14 @@ func set_password(db_name: String, table_name: String, password: String) -> void
 		return mgr.create_accept_dialog(msgs)
 		
 	var table_conf_path = GDSQL.RootConfig.get_table_config_path(db_name, table_name)
-	if not FileAccess.file_exists(table_conf_path):
+	if not GDSQL.GDSQLUtils.file_exists(table_conf_path):
 		msgs.push_back(tr("Failed! Table conf %s does not exist!") % table_conf_path)
 		mgr.add_log_history.emit("Err", begin_time, action, msgs)
 		return mgr.create_accept_dialog(msgs)
 		
 	var table_data_path = GDSQL.GDSQLUtils.globalize_path(GDSQL.RootConfig.get_table_data_path(db_name, table_name))
-	var table_data_file_exist = FileAccess.file_exists(table_data_path)
-	#if not FileAccess.file_exists(table_data_path):
+	var table_data_file_exist = GDSQL.GDSQLUtils.file_exists(table_data_path)
+	#if not GDSQL.GDSQLUtils.file_exists(table_data_path):
 		#msgs.push_back("Failed! Data file [%s] dose not exist!" % table_data_path)
 		#mgr.add_log_history.emit("Err", begin_time, action, msgs)
 		#return mgr.create_accept_dialog(msgs)
@@ -778,14 +778,14 @@ func clear_password(db_name: String, table_name: String) -> void:
 		return mgr.create_accept_dialog(msgs)
 		
 	var table_conf_path = GDSQL.RootConfig.get_table_config_path(db_name, table_name)
-	if not FileAccess.file_exists(table_conf_path):
+	if not GDSQL.GDSQLUtils.file_exists(table_conf_path):
 		msgs.push_back(tr("Failed! Table conf %s does not exist!") % table_conf_path)
 		mgr.add_log_history.emit("Err", begin_time, action, msgs)
 		return mgr.create_accept_dialog(msgs)
 		
 	var table_data_path = GDSQL.GDSQLUtils.globalize_path(GDSQL.RootConfig.get_table_data_path(db_name, table_name))
-	var table_data_file_exist = FileAccess.file_exists(table_data_path)
-	#if not FileAccess.file_exists(table_data_path):
+	var table_data_file_exist = GDSQL.GDSQLUtils.file_exists(table_data_path)
+	#if not GDSQL.GDSQLUtils.file_exists(table_data_path):
 		#msgs.push_back("Failed! Data file [%s] dose not exist!" % table_data_path)
 		#mgr.add_log_history.emit("Err", begin_time, action, msgs)
 		#return mgr.create_accept_dialog(msgs)
@@ -845,14 +845,14 @@ func change_password(db_name: String, table_name: String, password: String) -> v
 		return mgr.create_accept_dialog(msgs)
 		
 	var table_conf_path = GDSQL.RootConfig.get_table_config_path(db_name, table_name)
-	if not FileAccess.file_exists(table_conf_path):
+	if not GDSQL.GDSQLUtils.file_exists(table_conf_path):
 		msgs.push_back(tr("Failed! Table conf %s does not exist!") % table_conf_path)
 		mgr.add_log_history.emit("Err", begin_time, action, msgs)
 		return mgr.create_accept_dialog(msgs)
 		
 	var table_data_path = GDSQL.GDSQLUtils.globalize_path(GDSQL.RootConfig.get_table_data_path(db_name, table_name))
-	#var table_data_file_exist = FileAccess.file_exists(table_data_path)
-	#if not FileAccess.file_exists(table_data_path):
+	#var table_data_file_exist = GDSQL.GDSQLUtils.file_exists(table_data_path)
+	#if not GDSQL.GDSQLUtils.file_exists(table_data_path):
 		#msgs.push_back("Failed! Data file [%s] dose not exist!" % table_data_path)
 		#mgr.add_log_history.emit("Err", begin_time, action, msgs)
 		#return mgr.create_accept_dialog(msgs)
@@ -931,7 +931,7 @@ func drop_table_from_config(db_name: String, table_name: String) -> void:
 	# remove config file
 	var table_conf_path = GDSQL.RootConfig.get_table_config_path(db_name, table_name)
 	var conf_path = GDSQL.GDSQLUtils.globalize_path(table_conf_path)
-	if FileAccess.file_exists(table_conf_path):
+	if GDSQL.GDSQLUtils.file_exists(table_conf_path):
 		OS.move_to_trash(conf_path)
 		msgs.push_back(tr("1 file: %s has been moved to trash.") % conf_path)
 	else:
@@ -940,7 +940,7 @@ func drop_table_from_config(db_name: String, table_name: String) -> void:
 	
 	# remove data file
 	var data_path = GDSQL.GDSQLUtils.globalize_path(GDSQL.RootConfig.get_table_data_path(db_name, table_name))
-	if FileAccess.file_exists(data_path):
+	if GDSQL.GDSQLUtils.file_exists(data_path):
 		OS.move_to_trash(data_path)
 		msgs.push_back(tr("1 file: %s has been moved to trash.") % data_path)
 	else:
@@ -988,7 +988,7 @@ func truncate_table_from_config(db_name: String, table_name: String) -> void:
 		
 	# clear data file
 	var data_path = GDSQL.GDSQLUtils.globalize_path(GDSQL.RootConfig.get_table_data_path(db_name, table_name))
-	if FileAccess.file_exists(data_path):
+	if GDSQL.GDSQLUtils.file_exists(data_path):
 		OS.move_to_trash(data_path) # users can get their old data file in trash can
 		msgs.push_back(tr("1 file: %s has been moved to trash.") % data_path)
 	else:

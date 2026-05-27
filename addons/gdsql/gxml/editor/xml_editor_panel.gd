@@ -151,7 +151,7 @@ func _ready() -> void:
 	var unclosed_files = config.get_value("history", "unclosed", [])
 	config.set_value("history", "unclosed", [])
 	for path in unclosed_files:
-		if FileAccess.file_exists(path):
+		if GDSQL.GDSQLUtils.file_exists(path):
 			open_file(path)
 		else:
 			print_rich("[color=yellow]XML Editor: File not exist, '%s'[/color]" % path)
@@ -367,7 +367,7 @@ func _on_sub_menu_index_pressed(index: int) -> void:
 		return
 		
 	var path = sub_menu.get_item_text(index)
-	if not FileAccess.file_exists(path):
+	if not GDSQL.GDSQLUtils.file_exists(path):
 		remove_from_recent_history(path)
 		file_not_exist_dialog.popup_centered()
 		return

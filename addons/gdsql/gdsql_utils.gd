@@ -172,7 +172,11 @@ static func evaluate_command_script(command: String, variable_names = [], variab
 	obj.free()
 	return ret
 	
-## 由于在导出的游戏中，ProjectSettings.globalize_path()函数不能正确处理"res://"(@see 
+## FileAccess.file_exists 不支持 install:// 路径，此函数先做路径转换再检查
+static func file_exists(path: String) -> bool:
+	return FileAccess.file_exists(globalize_path(path))
+	
+## 由于在导出的游戏中，ProjectSettings.globalize_path()函数不能正确处理"res://"(@see
 ## Godot Doc)，所以在这里统一处理。如果是res:开头，或实际指向程序内资源，则返回一个res:开头
 ## 的目录
 static func globalize_path(path: String) -> String:
