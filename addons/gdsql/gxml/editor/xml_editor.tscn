@@ -28,16 +28,9 @@ keycode = 92
 [sub_resource type="Shortcut" id="Shortcut_brei4"]
 events = [SubResource("InputEventKey_bjxvd")]
 
-[sub_resource type="DPITexture" id="DPITexture_e72eg"]
-_source = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"8\" height=\"16\"><path fill=\"none\" stroke=\"#e0e0e0\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M6 2 2 8l4 6\"/></svg>
+[sub_resource type="DPITexture" id="DPITexture_cfi1p"]
+_source = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\"><path fill=\"#ff5d5d\" d=\"M2 1v8.586l1.293-1.293a1 1 0 0 1 1.414 0L7 10.587l2.293-2.293a1 1 0 0 1 1.414 0L13 10.586l1-1V6H9V1H2zm8 0v4h4zm-6 9.414-2 2V15h12v-2.586l-.293.293a1 1 0 0 1-1.414 0L10 10.414l-2.293 2.293a1 1 0 0 1-1.414 0L4 10.414z\"/></svg>
 "
-base_scale = 1.5
-saturation = 2.0
-color_map = {
-Color(1, 0.37254903, 0.37254903, 1): Color(1, 0.47, 0.42, 1),
-Color(0.37254903, 1, 0.5921569, 1): Color(0.45, 0.95, 0.5, 1),
-Color(1, 0.8666667, 0.39607844, 1): Color(0.83, 0.78, 0.62, 1)
-}
 
 [node name="XMLEditor" type="VBoxContainer" unique_id=333498302]
 anchors_preset = 15
@@ -90,7 +83,7 @@ layout_mode = 2
 size_flags_vertical = 5
 tooltip_text = "Toggle Scripts Panel (Ctrl+BackSlash)"
 shortcut = SubResource("Shortcut_brei4")
-icon = SubResource("DPITexture_e72eg")
+icon = SubResource("DPITexture_cfi1p")
 flat = true
 
 [node name="Scroll" type="ScrollContainer" parent="ScrollContainer/StatusBar" unique_id=1733193328]
@@ -157,7 +150,7 @@ layout_mode = 2
 layout_mode = 2
 tooltip_text = "Indentation"
 mouse_filter = 0
-text = "制表符"
+text = "Tabs"
 
 [node name="Idle" type="Timer" parent="." unique_id=304961556]
 one_shot = true
