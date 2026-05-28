@@ -32,6 +32,9 @@ func set_db(database_name_or_path: String):
 func get_db() -> String:
 	return __db_name
 	
+func get_db_path() -> String:
+	return __db_path
+	
 func set_password(password):
 	__password = password
 	

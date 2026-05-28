@@ -1806,9 +1806,9 @@ func _get_regex_field(table_alias: String) -> RegEx:
 	
 func __get_head(all_datas: Dictionary, arr_left_join: Array):
 	var real_select = []
-	var gen_dict = func(s, c, f, t_alias = "", d = "", t = ""):
+	var gen_dict = func(s, c, f, t_alias = "", dp = "", dn = "", t = ""):
 		return {"select_name": s, "Column Name": c, "is_field": f, "table_alias": t_alias,
-			"db_path": d, "table_name": t, "hint": PROPERTY_HINT_NONE, "Hint String": ""}
+			"db_path": dp, "db_name": dn, "table_name": t, "hint": PROPERTY_HINT_NONE, "Hint String": ""}
 	var fill_select_name = func(element, alias):
 		element["select_name"] = element["Column Name"] if alias == "" \
 			else (alias + "." + element["Column Name"])
@@ -1878,7 +1878,7 @@ func __get_head(all_datas: Dictionary, arr_left_join: Array):
 							if all_datas[__table_alias].is_empty() or not all_datas[__table_alias][0].has(field):
 								return _assert_false("___select",
 									"field:[%s] not exist in table:[%s], db:[%s]" % [field, __table, __db_name])
-							real_select.push_back(gen_dict.call(s, field, true, __table_alias, __db_path, __table))
+							real_select.push_back(gen_dict.call(s, field, true, __table_alias, __db_path, __db_name, __table))
 						else:
 							real_select.push_back(gen_dict.call(s, s, false))
 				else:
@@ -1909,7 +1909,7 @@ func __get_head(all_datas: Dictionary, arr_left_join: Array):
 											"field:[%s] not exist in table:[%s], db:[%s]" \
 											% [field, a_left_join.get_table(), a_left_join.get_db()])
 									real_select.push_back(gen_dict.call(s, field, true, alias, 
-										a_left_join.get_db(), a_left_join.get_table())) # 没定义的文件
+										a_left_join.get_db_path(), a_left_join.get_db(), a_left_join.get_table())) # 没定义的文件
 								else:
 									real_select.push_back(gen_dict.call(s, s, false))
 						break
@@ -1960,6 +1960,7 @@ func __get_table_columns(db_name: String, table_name: String, table_alias: Strin
 		columns = columns.duplicate(true)
 		for i in columns:
 			i["db_path"] = GDSQL.RootConfig.get_database_data_path(db_name)
+			i["db_name"] = db_name
 			i["table_name"] = table_name
 			i["is_field"] = true
 			i["table_alias"] = table_alias
@@ -1979,6 +1980,7 @@ func __get_table_column_defination(db_name: String, table_name: String, table_al
 	if column != null:
 		column = (column as Dictionary).duplicate(true)
 		column["db_path"] = GDSQL.RootConfig.get_database_data_path(db_name)
+		column["db_name"] = db_name
 		column["table_name"] = table_name
 		column["is_field"] = true
 		column["table_alias"] = table_alias
