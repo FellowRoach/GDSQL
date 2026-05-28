@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://du31pexhv4cpk"]
 
 [ext_resource type="Script" uid="uid://extk7dba57hy" path="res://addons/gdsql/tabs/new_schema.gd" id="1_438pb"]
-[ext_resource type="Texture2D" uid="uid://cvsng4qulhy7p" path="res://addons/gdsql/img/folder.png" id="2_lsuxh"]
+[ext_resource type="Texture2D" uid="uid://caxb01gsgiywd" path="res://addons/gdsql/img/folder.svg" id="2_pm86x"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_oeto1"]
 
@@ -53,21 +53,21 @@ layout_mode = 2
 tooltip_text = "open project's dir"
 theme_override_styles/focus = SubResource("StyleBoxEmpty_0kgcd")
 text = "Resource"
-icon = ExtResource("2_lsuxh")
+icon = ExtResource("2_pm86x")
 
 [node name="Button2" type="Button" parent="HBoxContainer2" unique_id=540655288]
 layout_mode = 2
 tooltip_text = "open user's data dir"
 theme_override_styles/focus = SubResource("StyleBoxEmpty_0kgcd")
 text = "UserData"
-icon = ExtResource("2_lsuxh")
+icon = ExtResource("2_pm86x")
 
 [node name="Button3" type="Button" parent="HBoxContainer2" unique_id=2088547218]
 layout_mode = 2
 tooltip_text = "open any dir of your system"
 theme_override_styles/focus = SubResource("StyleBoxEmpty_0kgcd")
 text = "FileSystem"
-icon = ExtResource("2_lsuxh")
+icon = ExtResource("2_pm86x")
 
 [node name="HFlowContainer" type="HFlowContainer" parent="." unique_id=213056495]
 layout_mode = 2

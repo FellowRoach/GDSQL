@@ -357,7 +357,7 @@ func _on_tab_changed(tab: int) -> void:
 		#welcome_page.name = "\n"
 	if tab_control != new_tab_button:
 		if tab != WELCOME_PAGE_TAB_INDEX:
-			set_tab_button_icon(tab, preload("res://addons/gdsql/img/xmark.png"))
+			set_tab_button_icon(tab, get_theme_icon("Close", "EditorIcons"))
 			
 		for i in get_tab_count():
 			if i != tab and i > WELCOME_PAGE_TAB_INDEX:

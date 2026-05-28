@@ -77,7 +77,7 @@ func _ready() -> void:
 	max_btn.toggle_mode = true
 	max_btn.tooltip_text = tr("Double Click") + tr("Titlebar")
 	max_btn.stretch_mode = TextureButton.STRETCH_KEEP_CENTERED
-	max_btn.texture_normal = preload("res://addons/gdsql/img/maximize.png")
+	max_btn.texture_normal = load("res://addons/gdsql/img/maximize.svg")
 	max_btn.toggled.connect(func(toggled_on: bool):
 		if toggled_on:
 			max_btn.set_meta("old_size", size)
@@ -124,7 +124,7 @@ func _ready() -> void:
 	# close button
 	var close_btn = TextureButton.new()
 	close_btn.stretch_mode = TextureButton.STRETCH_KEEP_CENTERED
-	close_btn.texture_normal = preload("res://addons/gdsql/img/xmark.png")
+	close_btn.texture_normal = get_theme_icon("Close", "EditorIcons")
 	close_btn.pressed.connect(func():
 		if get_parent_control() is GraphEdit:
 			var nodes: Array[StringName] = [name]

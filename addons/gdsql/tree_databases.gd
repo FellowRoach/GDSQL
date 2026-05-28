@@ -97,7 +97,7 @@ func _get_drag_data(at_position: Vector2) -> Variant:
 	if not item or item.get_meta("type", "") != "table":
 		return
 	var texture_rect = TextureRect.new()
-	texture_rect.texture = load("res://addons/gdsql/img/table.png")
+	texture_rect.texture = load("res://addons/gdsql/img/document_table.svg")
 	texture_rect.size = Vector2(36, 36)
 	set_drag_preview(texture_rect)
 	return make_drag_data(item)
@@ -1180,7 +1180,7 @@ func add_database(db_name: String, data: Dictionary) -> TreeItem:
 	var database_item = create_item(root)
 	database_item.set_auto_translate_mode(0, Node.AUTO_TRANSLATE_MODE_DISABLED)
 	database_item.set_text(0, db_name)
-	database_item.set_icon(0, load("res://addons/gdsql/img/icon_db.png"))
+	database_item.set_icon(0, load("res://addons/gdsql/img/icon_db.svg"))
 	database_item.set_icon_max_width(0, 20)
 	database_item.set_tooltip_text(0, data_path)
 	database_item.set_meta("db_name", db_name)
@@ -1190,13 +1190,13 @@ func add_database(db_name: String, data: Dictionary) -> TreeItem:
 		var texture
 		var tooltip
 		if _password_correct.has(data_path):
-			texture = load("res://addons/gdsql/img/unlock.png")
+			texture = load("res://addons/gdsql/img/unlock.svg")
 			tooltip = tr("This database is encrypted, and you've entered the correct password.")
 		else:
-			texture = load("res://addons/gdsql/img/lock.png") 
+			texture = load("res://addons/gdsql/img/lock.svg") 
 			tooltip = tr("This database is encrypted. Please enter your password to proceed.")
 		database_item.add_button(0, texture, ITEM_BUTTON_INDEX.ENCRYPT, false, tooltip)
-	database_item.add_button(0, load("res://addons/gdsql/img/folder.png"), 
+	database_item.add_button(0, load("res://addons/gdsql/img/folder.svg"), 
 		ITEM_BUTTON_INDEX.FOLDER, false, tr("Show in File Manager"))
 	if data_path == _default_database_path:
 		database_item.set_custom_bg_color(0, Color.BLUE_VIOLET)
@@ -1206,7 +1206,7 @@ func add_database(db_name: String, data: Dictionary) -> TreeItem:
 		var item = create_item(database_item)
 		item.set_auto_translate_mode(0, Node.AUTO_TRANSLATE_MODE_ALWAYS)
 		item.set_text(0, tr(arr[i]))
-		item.set_icon(0, load("res://addons/gdsql/img/windows.png"))
+		item.set_icon(0, load("res://addons/gdsql/img/windows.svg"))
 		item.set_icon_max_width(0, 16)
 		item.set_meta("type", arr[i])
 		item.set_meta("db_name", db_name)
@@ -1223,20 +1223,20 @@ func add_table(db: TreeItem, table_name: String):
 	var data_path = db.get_meta("data_path").path_join(file_name)
 	table_item.set_text(0, table_name)
 	table_item.set_auto_translate_mode(0, Node.AUTO_TRANSLATE_MODE_DISABLED)
-	table_item.set_icon(0, load("res://addons/gdsql/img/table.png"))
+	table_item.set_icon(0, load("res://addons/gdsql/img/document_table.svg"))
 	table_item.set_icon_max_width(0, 20)
 	table_item.set_tooltip_text(0, file_name)
 	if mgr.databases[db_name]["tables"][table_name]["encrypted"] != "":
 		var texture
 		var tooltip
 		if GDSQL.ConfManager.has_conf(data_path) and _password_correct.has(data_path):
-			texture = load("res://addons/gdsql/img/unlock.png")
+			texture = load("res://addons/gdsql/img/unlock.svg")
 			tooltip = tr("This table is encrypted and you have entered the right password.")
 		else:
-			texture = load("res://addons/gdsql/img/lock.png") 
+			texture = load("res://addons/gdsql/img/lock.svg") 
 			tooltip = tr("This table's data file is encrypted. Enter password before using it.")
 		table_item.add_button(0, texture, ITEM_BUTTON_INDEX.ENCRYPT, false, tooltip)
-	table_item.add_button(0, load("res://addons/gdsql/img/quick_search.png"), 
+	table_item.add_button(0, load("res://addons/gdsql/img/table_edit.svg"), 
 		ITEM_BUTTON_INDEX.QUICK_SEARCH, false, "select * from %s.%s;" % [db_name, table_name])
 	table_item.set_meta("db_name", db_name)
 	table_item.set_meta("table_name", table_name)
@@ -1255,7 +1255,7 @@ func add_table(db: TreeItem, table_name: String):
 		col_item.set_text(0, ": ".join(texts))
 		col_item.set_tooltip_text(0, "Comment: %s\nDefault(Expression): %s" % \
 			[col["Comment"], col["Default(Expression)"]])
-		col_item.set_icon(0, load("res://addons/gdsql/img/dot.png"))
+		col_item.set_icon(0, load("res://addons/gdsql/img/circle_dot.svg"))
 		col_item.set_meta("db_name", db_name)
 		col_item.set_meta("table_name", table_name)
 		col_item.set_meta("column_name", col["Column Name"])
@@ -1264,11 +1264,11 @@ func add_table(db: TreeItem, table_name: String):
 		var tooltips = ["Auto Increment", "Not NULL", "Uniq", "Primary Key"]
 		for i in properties.size():
 			if col.get(properties[i], false):
-				col_item.add_button(0, load("res://addons/gdsql/img/word_%s.png" \
+				col_item.add_button(0, load("res://addons/gdsql/img/word_%s.svg" \
 				% (properties[i] as String).to_lower()), ITEM_BUTTON_INDEX.COLUMN_PROPERTY
 				, true, tooltips[i])
 		if col.get("Index", false):
-			col_item.add_button(0, load("res://addons/gdsql/img/word_in.png"), 
+			col_item.add_button(0, load("res://addons/gdsql/img/word_in.svg"), 
 				ITEM_BUTTON_INDEX.COLUMN_PROPERTY, true, tr("Indexed"))
 				
 func _on_button_clicked(item: TreeItem, column: int, id: int, _mouse_button_index: int) -> void:
@@ -1547,7 +1547,7 @@ func _switch_item_lock_status(item: TreeItem, lock: bool = true):
 			tooltip = tr("This database: %s is encrypted. Please input password of this databse.") % db_name
 		else:
 			tooltip = tr("This database: %s is encrypted and you have entered the right password.") % db_name
-	var texture = load("res://addons/gdsql/img/lock.png") if lock else load("res://addons/gdsql/img/unlock.png")
+	var texture = load("res://addons/gdsql/img/lock.svg") if lock else load("res://addons/gdsql/img/unlock.svg")
 	item.set_button(0, index, texture)
 	item.set_button_tooltip_text(0, index, tooltip)
 	

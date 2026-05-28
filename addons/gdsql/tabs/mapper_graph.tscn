@@ -2,12 +2,12 @@
 
 [ext_resource type="Script" uid="uid://wm8q6ctsmlk7" path="res://addons/gdsql/tabs/mapper_graph.gd" id="1_skh3h"]
 [ext_resource type="Script" uid="uid://1uifvxy4j0kw" path="res://addons/gdsql/tabs/mapper_graph_edit.gd" id="2_455wi"]
-[ext_resource type="Texture2D" uid="uid://cvsng4qulhy7p" path="res://addons/gdsql/img/folder.png" id="2_ommw4"]
-[ext_resource type="Texture2D" uid="uid://lu2m6lhnamxh" path="res://addons/gdsql/img/floppy-disk.png" id="3_blmae"]
-[ext_resource type="Texture2D" uid="uid://devul8doq53rt" path="res://addons/gdsql/img/plus.png" id="4_ump4m"]
-[ext_resource type="Texture2D" uid="uid://bj6qe4a23bjvc" path="res://addons/gdsql/img/bolt-lightning-edit.png" id="5_xasyh"]
-[ext_resource type="Texture2D" uid="uid://cihap4hh0yid3" path="res://addons/gdsql/img/Instance.svg" id="5_xgrh4"]
-[ext_resource type="Texture2D" uid="uid://fud4boba7d2j" path="res://addons/gdsql/img/bolt-lightning.png" id="6_ip2ph"]
+[ext_resource type="Texture2D" uid="uid://caxb01gsgiywd" path="res://addons/gdsql/img/folder.svg" id="2_iwaq8"]
+[ext_resource type="Texture2D" uid="uid://4swt8gii0lii" path="res://addons/gdsql/img/floppy_disk.svg" id="3_rpwxo"]
+[ext_resource type="Texture2D" uid="uid://cndh7yh8acyoj" path="res://addons/gdsql/img/plus.svg" id="4_iwaq8"]
+[ext_resource type="Texture2D" uid="uid://b7t6xjnsuhung" path="res://addons/gdsql/img/link.svg" id="5_iwaq8"]
+[ext_resource type="Texture2D" uid="uid://bhybihfaocei7" path="res://addons/gdsql/img/flash_on.svg" id="6_iwaq8"]
+[ext_resource type="Texture2D" uid="uid://djuofwx6afqi2" path="res://addons/gdsql/img/flash_auto.svg" id="7_iwaq8"]
 [ext_resource type="Texture2D" uid="uid://dgfl0ydyvpe7" path="res://addons/gdsql/img/progress_check_icon.svg" id="8_iwaq8"]
 [ext_resource type="Script" uid="uid://niieejo28hi8" path="res://addons/gdsql/tabs/tree_node_list.gd" id="8_snyhw"]
 
@@ -28,16 +28,9 @@ keycode = 83
 [sub_resource type="Shortcut" id="Shortcut_n7cwt"]
 events = [SubResource("InputEventKey_lywi6")]
 
-[sub_resource type="DPITexture" id="DPITexture_iwaq8"]
-_source = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\"><path fill=\"#e0e0e0\" d=\"M9 1v2h6V1zM4 1a1 1 0 0 0-.691.291l-2 2a1 1 0 0 0 1.414 1.414l.293-.293v7.172l-.293-.293a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l2-2a1 1 0 0 0-1.414-1.414l-.293.293V4.412l.293.293a1 1 0 0 0 1.414-1.414l-2-2A1 1 0 0 0 4 1zm5 6v2h4V7zm0 6v2h2v-2z\"/></svg>
+[sub_resource type="DPITexture" id="DPITexture_rpwxo"]
+_source = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\"><path fill=\"#ff5d5d\" d=\"M2 1v8.586l1.293-1.293a1 1 0 0 1 1.414 0L7 10.587l2.293-2.293a1 1 0 0 1 1.414 0L13 10.586l1-1V6H9V1H2zm8 0v4h4zm-6 9.414-2 2V15h12v-2.586l-.293.293a1 1 0 0 1-1.414 0L10 10.414l-2.293 2.293a1 1 0 0 1-1.414 0L4 10.414z\"/></svg>
 "
-base_scale = 1.5
-saturation = 2.0
-color_map = {
-Color(1, 0.37254903, 0.37254903, 1): Color(1, 0.47, 0.42, 1),
-Color(0.37254903, 1, 0.5921569, 1): Color(0.45, 0.95, 0.5, 1),
-Color(1, 0.8666667, 0.39607844, 1): Color(0.83, 0.78, 0.62, 1)
-}
 
 [node name="MapperGraph" type="VSplitContainer" unique_id=1742084449]
 anchors_preset = 15
@@ -60,20 +53,20 @@ layout_mode = 2
 
 [node name="ButtonOpen" type="Button" parent="VBoxContainer/HFlowContainer" unique_id=145248926]
 layout_mode = 2
-icon = ExtResource("2_ommw4")
+icon = ExtResource("2_iwaq8")
 
 [node name="ButtonSave" type="Button" parent="VBoxContainer/HFlowContainer" unique_id=1714504404 node_paths=PackedStringArray("shortcut_context")]
 layout_mode = 2
 tooltip_text = "Save"
 shortcut_context = NodePath("../../..")
 shortcut = SubResource("Shortcut_8uhqv")
-icon = ExtResource("3_blmae")
+icon = ExtResource("3_rpwxo")
 
 [node name="ButtonSaveAs" type="Button" parent="VBoxContainer/HFlowContainer" unique_id=455505210]
 layout_mode = 2
 tooltip_text = "Save As..."
 shortcut = SubResource("Shortcut_n7cwt")
-icon = ExtResource("3_blmae")
+icon = ExtResource("3_rpwxo")
 
 [node name="VSeparator" type="VSeparator" parent="VBoxContainer/HFlowContainer" unique_id=887118200]
 layout_mode = 2
@@ -81,12 +74,12 @@ layout_mode = 2
 [node name="ButtonAddNode" type="Button" parent="VBoxContainer/HFlowContainer" unique_id=1535955547]
 layout_mode = 2
 tooltip_text = "This button does not work. Please drag a table from left tree into this panel."
-icon = ExtResource("4_ump4m")
+icon = ExtResource("4_iwaq8")
 
 [node name="ButtonAddInclude" type="Button" parent="VBoxContainer/HFlowContainer" unique_id=1348853935]
 layout_mode = 2
 text = "Include"
-icon = ExtResource("5_xgrh4")
+icon = ExtResource("5_iwaq8")
 
 [node name="VSeparator2" type="VSeparator" parent="VBoxContainer/HFlowContainer" unique_id=1018002398]
 layout_mode = 2
@@ -150,12 +143,12 @@ layout_mode = 2
 [node name="ButtonRunSelected" type="Button" parent="VBoxContainer/HFlowContainer" unique_id=1796626951]
 layout_mode = 2
 tooltip_text = "Generate mapper by selected nodes."
-icon = ExtResource("5_xasyh")
+icon = ExtResource("6_iwaq8")
 
 [node name="ButtonRun" type="Button" parent="VBoxContainer/HFlowContainer" unique_id=852060008]
 layout_mode = 2
 tooltip_text = "Generate mapper by all the nodes."
-icon = ExtResource("6_ip2ph")
+icon = ExtResource("7_iwaq8")
 
 [node name="VSeparator7" type="VSeparator" parent="VBoxContainer/HFlowContainer" unique_id=131381588]
 layout_mode = 2
@@ -175,10 +168,10 @@ force_native = true
 
 [node name="VBoxContainerNodeList" type="VBoxContainer" parent="VBoxContainer/HFlowContainer/ButtonNodeList/PopupPanelNodeList" unique_id=477068297]
 unique_name_in_owner = true
-offset_left = 21.0
-offset_top = 21.0
-offset_right = 508.0
-offset_bottom = 115.0
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 525.0
+offset_bottom = 132.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
@@ -197,7 +190,7 @@ caret_blink = true
 [node name="MenuButtonSortNodeList" type="MenuButton" parent="VBoxContainer/HFlowContainer/ButtonNodeList/PopupPanelNodeList/VBoxContainerNodeList/HBoxContainer" unique_id=1447528022]
 unique_name_in_owner = true
 layout_mode = 2
-icon = SubResource("DPITexture_iwaq8")
+icon = SubResource("DPITexture_rpwxo")
 item_count = 7
 popup/item_0/text = "Default"
 popup/item_0/id = 0
@@ -244,7 +237,7 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-scroll_offset = Vector2(0, -50)
+scroll_offset = Vector2(0, -67)
 right_disconnects = true
 zoom_min = 0.05
 script = ExtResource("2_455wi")

@@ -11,7 +11,7 @@ extends PanelContainer
 func _ready() -> void:
 	var plugin_cfg := ConfigFile.new()
 	plugin_cfg.load("res://addons/gdsql/plugin.cfg")
-	version.text = plugin_cfg.get_value('plugin', 'version', 'unknown version')
+	version.text = "v" + plugin_cfg.get_value('plugin', 'version', 'unknown version')
 	
 	if settings_button:
 		settings_button.pressed.connect(_on_settings_button_pressed)

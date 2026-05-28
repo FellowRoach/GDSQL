@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://byhi4jpo0rbtr"]
 
 [ext_resource type="Script" uid="uid://b7c85xlww24po" path="res://addons/gdsql/tabs/table_data_import.gd" id="1_7aquc"]
-[ext_resource type="Texture2D" uid="uid://cvsng4qulhy7p" path="res://addons/gdsql/img/folder.png" id="1_86bt8"]
 [ext_resource type="PackedScene" uid="uid://bpawj4a7llynx" path="res://addons/gdsql/table.tscn" id="2_nyxc8"]
+[ext_resource type="Texture2D" uid="uid://caxb01gsgiywd" path="res://addons/gdsql/img/folder.svg" id="2_x03ds"]
 
 [sub_resource type="ButtonGroup" id="ButtonGroup_u7q5e"]
 
@@ -46,17 +46,17 @@ editable = false
 [node name="ButtonFilePathResource" type="Button" parent="VBoxContainer/HBoxContainer" unique_id=1199604906]
 layout_mode = 2
 text = "Resource"
-icon = ExtResource("1_86bt8")
+icon = ExtResource("2_x03ds")
 
 [node name="ButtonFilePathUserData" type="Button" parent="VBoxContainer/HBoxContainer" unique_id=1392519008]
 layout_mode = 2
 text = "UserData"
-icon = ExtResource("1_86bt8")
+icon = ExtResource("2_x03ds")
 
 [node name="ButtonFilePathFileSystem" type="Button" parent="VBoxContainer/HBoxContainer" unique_id=1188105994]
 layout_mode = 2
 text = "FileSystem"
-icon = ExtResource("1_86bt8")
+icon = ExtResource("2_x03ds")
 
 [node name="HFlowContainer2" type="HFlowContainer" parent="VBoxContainer" unique_id=618969781]
 visible = false

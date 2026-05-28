@@ -254,7 +254,7 @@ func reset_header():
 			control.size_flags_stretch_ratio = 10000000
 			c.dragger_visibility = HSplitContainer.DRAGGER_HIDDEN_COLLAPSED
 		elif i == 1 and show_frame:
-			button.icon = preload("res://addons/gdsql/img/2D.png") # 全选
+			button.icon = load("res://addons/gdsql/img/right_and_down_arrow.svg") # 全选
 			button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 			button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			button.pressed.connect(_on_button_select_all_pressed)
@@ -265,7 +265,7 @@ func reset_header():
 			button.pressed.connect(select_col)
 			button.mouse_default_cursor_shape = Control.CURSOR_HELP
 			button.mouse_entered.connect(DisplayServer.cursor_set_custom_image.bind(
-				preload("res://addons/gdsql/img/ArrowDown.png"), DisplayServer.CURSOR_HELP, Vector2(12, 12)))
+				load("res://addons/gdsql/img/arrow_down.svg"), DisplayServer.CURSOR_HELP, Vector2(12, 12)))
 			c.dragger_visibility = HSplitContainer.DRAGGER_HIDDEN_COLLAPSED
 			if not column_tips.is_empty():
 				button.tooltip_text = tr(column_tips[i-1-int(show_frame)])
@@ -280,7 +280,7 @@ func reset_header():
 			button.pressed.connect(select_col)
 			button.mouse_default_cursor_shape = Control.CURSOR_HELP
 			button.mouse_entered.connect(DisplayServer.cursor_set_custom_image.bind(
-				preload("res://addons/gdsql/img/ArrowDown.png"), DisplayServer.CURSOR_HELP, Vector2(12, 12)))
+				load("res://addons/gdsql/img/arrow_down.svg"), DisplayServer.CURSOR_HELP, Vector2(12, 12)))
 			if not column_tips.is_empty():
 				button.tooltip_text = tr(column_tips[i-1-int(show_frame)])
 				
@@ -288,8 +288,7 @@ func reset_header():
 				control.size_flags_stretch_ratio = ratios[i - 1 - int(show_frame)]
 			else:
 				control.size_flags_stretch_ratio = fake_columns.size() - i - 2
-			
-			
+				
 		button.text = fake_columns[i]
 		button.name = ("Button_" + button.text).validate_node_name()
 		button.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
@@ -439,7 +438,7 @@ func add_row(a_data):
 			control.add_theme_font_size_override("font_size", 12)
 			control.mouse_default_cursor_shape = Control.CURSOR_HELP
 			control.mouse_entered.connect(DisplayServer.cursor_set_custom_image.bind(
-				preload("res://addons/gdsql/img/ArrowRight.png"), DisplayServer.CURSOR_HELP, Vector2(12, 12)))
+				load("res://addons/gdsql/img/arrow_right.svg"), DisplayServer.CURSOR_HELP, Vector2(12, 12)))
 			control.pressed.connect(func():
 				#button_edit.grab_focus() # 如果不这样，空格键和enter键会激活这个control，而不是编辑按钮
 				# 是否按下ctrl键、shift键
@@ -1041,7 +1040,7 @@ func add_cornor_dragger():
 	var end = (selected_borders.front()["rect"] as Rect2).end - Vector2.ONE
 	var pc = v_box_container.get_child(end.x).get_child(0).get_child(end.y) as PanelContainer
 	var sb = pc.get_theme_stylebox("panel") as StyleBoxFlat
-	var cd = preload("res://addons/gdsql/table/cornor_dragger.tscn").instantiate() as MarginContainer
+	var cd = load("res://addons/gdsql/table/cornor_dragger.tscn").instantiate() as MarginContainer
 	cd.add_theme_constant_override("margin_right", -sb.expand_margin_right)
 	pc.add_child(cd)
 	cd.cornor_drag_start.connect(add_autofill_border.bind(start, end + Vector2.ONE, "start"))
@@ -1662,7 +1661,7 @@ func add_autofill_border(start_pos: Vector2, end_pos: Vector2, mode: String) -> 
 		autofill_info = null
 		return
 	
-	var dc_scene = preload("res://addons/gdsql/table/dash_border.tscn")
+	var dc_scene = load("res://addons/gdsql/table/dash_border.tscn")
 	for row in range(start_pos.x, end_pos.x):
 		for col in range(start_pos.y, end_pos.y):
 			if row == start_pos.x or col == start_pos.y or row == end_pos.x - 1 or col == end_pos.y - 1:
@@ -2745,7 +2744,7 @@ func _on_button_delete_row_pressed():
 
 func _on_v_box_container_mouse_entered():
 	if editable:
-		DisplayServer.cursor_set_custom_image(preload("res://addons/gdsql/img/ToolMove.png"), 
+		DisplayServer.cursor_set_custom_image(load("res://addons/gdsql/img/movetoolarrows.svg"), 
 			DisplayServer.CURSOR_FORBIDDEN, Vector2(12, 12))
 
 

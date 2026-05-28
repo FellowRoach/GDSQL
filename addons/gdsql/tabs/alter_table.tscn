@@ -2,11 +2,11 @@
 
 [ext_resource type="Script" uid="uid://cwb78wbgojxf5" path="res://addons/gdsql/tabs/alter_table.gd" id="1_xbqm1"]
 [ext_resource type="PackedScene" uid="uid://bpawj4a7llynx" path="res://addons/gdsql/table.tscn" id="2_mrk7n"]
-[ext_resource type="Texture2D" uid="uid://dhrujeh8nxhtd" path="res://addons/gdsql/img/trash-can.png" id="3_46hvr"]
-[ext_resource type="Texture2D" uid="uid://ckn3uyjso63l0" path="res://addons/gdsql/img/arrow-up-line.png" id="4_kytjc"]
-[ext_resource type="Texture2D" uid="uid://cuvi8ddapu1jl" path="res://addons/gdsql/img/arrow-up.png" id="5_5qu86"]
-[ext_resource type="Texture2D" uid="uid://b7ff01dmwhqry" path="res://addons/gdsql/img/arrow-down.png" id="6_40j5r"]
-[ext_resource type="Texture2D" uid="uid://b3lvu5w27beu6" path="res://addons/gdsql/img/arrow-down-line.png" id="7_a132x"]
+[ext_resource type="Texture2D" uid="uid://b8nvrn4yyle36" path="res://addons/gdsql/img/trash-can.svg" id="3_n0iux"]
+[ext_resource type="Texture2D" uid="uid://dxnmq4h00w7qg" path="res://addons/gdsql/img/arrow_line_up.svg" id="4_n0iux"]
+[ext_resource type="Texture2D" uid="uid://dn3w4txrj48yk" path="res://addons/gdsql/img/arrow_up.svg" id="5_n0iux"]
+[ext_resource type="Texture2D" uid="uid://be8gtq2xq16vh" path="res://addons/gdsql/img/arrow_down.svg" id="6_buaga"]
+[ext_resource type="Texture2D" uid="uid://c4my44e2s14i4" path="res://addons/gdsql/img/arrow_line_down.svg" id="7_buaga"]
 
 [node name="alter_table" type="ScrollContainer" unique_id=1231800853]
 anchors_preset = 15
@@ -112,21 +112,21 @@ text = "Cancel"
 [node name="PopupMenu" type="PopupMenu" parent="." unique_id=1885157353]
 item_count = 9
 item_0/text = "remove"
-item_0/icon = ExtResource("3_46hvr")
+item_0/icon = ExtResource("3_n0iux")
 item_0/id = 0
 item_1/id = 2
 item_1/separator = true
 item_2/text = "move top"
-item_2/icon = ExtResource("4_kytjc")
+item_2/icon = ExtResource("4_n0iux")
 item_2/id = 1
 item_3/text = "move up"
-item_3/icon = ExtResource("5_5qu86")
+item_3/icon = ExtResource("5_n0iux")
 item_3/id = 3
 item_4/text = "move down"
-item_4/icon = ExtResource("6_40j5r")
+item_4/icon = ExtResource("6_buaga")
 item_4/id = 4
 item_5/text = "move bottom"
-item_5/icon = ExtResource("7_a132x")
+item_5/icon = ExtResource("7_buaga")
 item_5/id = 5
 item_6/id = 6
 item_6/separator = true

@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://nmkw30kvvjy3"]
 
 [ext_resource type="Script" uid="uid://leju7sj5k0eq" path="res://addons/gdsql/tabs/gsql_tab_settings.gd" id="1_gd"]
-[ext_resource type="Texture2D" uid="uid://cvsng4qulhy7p" path="res://addons/gdsql/img/folder.png" id="2_folder"]
+[ext_resource type="Texture2D" uid="uid://caxb01gsgiywd" path="res://addons/gdsql/img/folder.svg" id="2_45jch"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_focus"]
 
@@ -61,21 +61,21 @@ layout_mode = 2
 tooltip_text = "Select file from project resources"
 theme_override_styles/focus = SubResource("StyleBoxEmpty_focus")
 text = "Resource"
-icon = ExtResource("2_folder")
+icon = ExtResource("2_45jch")
 
 [node name="ButtonRootConfig2" type="Button" parent="MarginContainer/VBoxContainer/HBoxRootConfig" unique_id=1390459104]
 layout_mode = 2
 tooltip_text = "Select file from user data directory"
 theme_override_styles/focus = SubResource("StyleBoxEmpty_focus")
 text = "UserData"
-icon = ExtResource("2_folder")
+icon = ExtResource("2_45jch")
 
 [node name="ButtonRootConfig3" type="Button" parent="MarginContainer/VBoxContainer/HBoxRootConfig" unique_id=740544839]
 layout_mode = 2
 tooltip_text = "Select file from file system"
 theme_override_styles/focus = SubResource("StyleBoxEmpty_focus")
 text = "FileSystem"
-icon = ExtResource("2_folder")
+icon = ExtResource("2_45jch")
 
 [node name="ButtonRootConfigInstall" type="Button" parent="MarginContainer/VBoxContainer/HBoxRootConfig" unique_id=187000669]
 layout_mode = 2
@@ -105,14 +105,14 @@ layout_mode = 2
 tooltip_text = "Select file from user data directory"
 theme_override_styles/focus = SubResource("StyleBoxEmpty_focus")
 text = "UserData"
-icon = ExtResource("2_folder")
+icon = ExtResource("2_45jch")
 
 [node name="ButtonSupplConfig3" type="Button" parent="MarginContainer/VBoxContainer/HBoxSupplConfig" unique_id=1853984013]
 layout_mode = 2
 tooltip_text = "Select file from file system"
 theme_override_styles/focus = SubResource("StyleBoxEmpty_focus")
 text = "FileSystem"
-icon = ExtResource("2_folder")
+icon = ExtResource("2_45jch")
 
 [node name="ButtonSupplConfigInstall" type="Button" parent="MarginContainer/VBoxContainer/HBoxSupplConfig" unique_id=175539485]
 layout_mode = 2
