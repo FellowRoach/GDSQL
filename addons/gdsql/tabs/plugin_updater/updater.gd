@@ -389,6 +389,7 @@ func _download_with_progress(url: String) -> PackedByteArray:
 	if client.get_status() != HTTPClient.STATUS_CONNECTED:
 		return PackedByteArray()
 
+	_status_label.text = "Requesting..."
 	client.request(HTTPClient.METHOD_GET, path, ["User-Agent: Godot"])
 	while client.get_status() == HTTPClient.STATUS_REQUESTING:
 		client.poll()
@@ -404,6 +405,7 @@ func _download_with_progress(url: String) -> PackedByteArray:
 		for h in client.get_response_headers():
 			if h.to_lower().begins_with("location:"):
 				var loc = h.substr(9).strip_edges()
+				_status_label.text = "Redirecting..."
 				client.close()
 				return await _download_with_progress(loc)
 
