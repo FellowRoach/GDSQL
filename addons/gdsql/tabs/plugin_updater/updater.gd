@@ -21,6 +21,7 @@ var _info_label: Label
 var _notes_rt: RichTextLabel
 var _upgrade_btn: Button
 var _http: HTTPRequest
+var _dl_http: HTTPRequest
 
 
 func _init() -> void:
@@ -70,7 +71,7 @@ func _init() -> void:
 	_http.request_completed.connect(_on_request_completed)
 
 	# HTTP request for download
-	var _dl_http = HTTPRequest.new()
+	_dl_http = HTTPRequest.new()
 	_dl_http.name = "DownloadHTTP"
 	add_child(_dl_http)
 	_dl_http.request_completed.connect(_on_download_complete)
@@ -308,11 +309,10 @@ func _start_download() -> void:
 	_upgrade_btn.text = "Downloading..."
 	_upgrade_btn.disabled = true
 	
-	var dl = find_child("DownloadHTTP") as HTTPRequest
-	if not dl:
+	if not _dl_http:
 		_status_label.text = "Internal error."
 		return
-	var err = dl.request(zip_url)
+	var err = _dl_http.request(zip_url)
 	if err != OK:
 		_status_label.text = "Failed to start download."
 		_upgrade_btn.disabled = false
