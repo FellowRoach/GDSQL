@@ -16,16 +16,16 @@ while read local_ref local_sha remote_ref remote_sha; do
 		PREV_TAG=$(git tag --sort=-version:refname | grep -E '^v' | sed -n '2p')
 
 		if [ -n "$PREV_TAG" ]; then
-			echo "Updating manifest: $PREV_TAG → $TAG"
+			echo "Diffing $PREV_TAG → $TAG"
 
 			grep -v "^[+-],$VER," "$MANIFEST" > "${MANIFEST}.tmp" 2>/dev/null && mv "${MANIFEST}.tmp" "$MANIFEST"
 
 			while IFS= read -r f; do
 				[ -n "$f" ] && echo "+,$VER,$f" >> "$MANIFEST"
-			done < <(git diff --name-only --diff-filter=A "$PREV_TAG"...HEAD -- addons/gdsql/)
+			done < <(git diff --name-only --diff-filter=A "$PREV_TAG"...HEAD -- addons/gdsql/ | grep -v '\.import$\|\.translation$')
 			while IFS= read -r f; do
 				[ -n "$f" ] && echo "-,$VER,$f" >> "$MANIFEST"
-			done < <(git diff --name-only --diff-filter=D "$PREV_TAG"...HEAD -- addons/gdsql/)
+			done < <(git diff --name-only --diff-filter=D "$PREV_TAG"...HEAD -- addons/gdsql/ | grep -v '\.import$\|\.translation$')
 		else
 			echo "No previous tag. Creating initial manifest."
 			find addons/gdsql/ -type f \
