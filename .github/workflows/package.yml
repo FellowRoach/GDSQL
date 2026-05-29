@@ -30,10 +30,12 @@ jobs:
 
             # New files
             while IFS= read -r f; do
+              f="${f//\"}"
               [ -n "$f" ] && echo "+,$VER,$f" >> "$MANIFEST"
             done < <(git diff --name-only --diff-filter=A "$PREV_TAG"...HEAD -- addons/gdsql/ | grep -v '\.import$\|\.translation$')
             # Removed files
             while IFS= read -r f; do
+              f="${f//\"}"
               [ -n "$f" ] && echo "-,$VER,$f" >> "$MANIFEST"
             done < <(git diff --name-only --diff-filter=D "$PREV_TAG"...HEAD -- addons/gdsql/ | grep -v '\.import$\|\.translation$')
           else

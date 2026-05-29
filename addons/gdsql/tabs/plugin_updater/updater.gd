@@ -366,6 +366,8 @@ func _start_download() -> void:
 		if dp:
 			dp.remove(tmp_path.get_file())
 
+	_download_pct = -2
+	_download_size = ""
 	_status_label.text = "Upgrade complete! (%d files updated) Please restart Godot." % extracted
 	_upgrade_btn.disabled = true
 	_upgrade_btn.text = "Done"
@@ -445,6 +447,8 @@ func _download_with_progress(url: String) -> PackedByteArray:
 
 
 func _process(_delta: float) -> void:
+	if _download_pct == -2:
+		return
 	if _download_pct >= 0:
 		if _status_label:
 			_status_label.text = "Downloading... " + str(_download_pct) + "% (" + _download_size + ")"

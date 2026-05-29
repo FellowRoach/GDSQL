@@ -9,7 +9,6 @@ while read local_ref local_sha remote_ref remote_sha; do
 		TAG="${local_ref#refs/tags/}"
 		VER="${TAG#v}"
 
-		# Save original tag message before any changes
 		TAG_MSG=$(git tag -l --format='%(contents)' "$TAG" 2>/dev/null)
 
 		PREV_TAG=$(git tag --sort=-version:refname | grep -E '^v' | sed -n '2p')
@@ -20,9 +19,11 @@ while read local_ref local_sha remote_ref remote_sha; do
 			grep -v "^[+-],$VER," "$MANIFEST" > "${MANIFEST}.tmp" 2>/dev/null && mv "${MANIFEST}.tmp" "$MANIFEST"
 
 			while IFS= read -r f; do
+				f="${f//\"/}"
 				[ -n "$f" ] && echo "+,$VER,$f" >> "$MANIFEST"
 			done < <(git diff --name-only --diff-filter=A "$PREV_TAG"...HEAD -- addons/gdsql/ | grep -v '\.import$\|\.translation$')
 			while IFS= read -r f; do
+				f="${f//\"/}"
 				[ -n "$f" ] && echo "-,$VER,$f" >> "$MANIFEST"
 			done < <(git diff --name-only --diff-filter=D "$PREV_TAG"...HEAD -- addons/gdsql/ | grep -v '\.import$\|\.translation$')
 		else
@@ -45,7 +46,6 @@ if [ "$CHANGED" -eq 1 ]; then
 	git add "$MANIFEST"
 	git commit -m "Update file_manifest for $TAG"
 	git tag -d "$TAG"
-	# Re-create tag preserving original message
 	if [ -n "$TAG_MSG" ]; then
 		git tag -a "$TAG" -m "$TAG_MSG"
 	else
