@@ -34,21 +34,6 @@ shadow_size = 5
 corner_radius_top_left = 15
 corner_radius_top_right = 15
 
-[sub_resource type="Gradient" id="Gradient_eplp7"]
-colors = PackedColorArray(0.29268384, 0.7849823, 0.55131197, 1, 0.023928065, 0.26535943, 0.32024193, 1)
-
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_4uue8"]
-gradient = SubResource("Gradient_eplp7")
-fill_to = Vector2(1, 1)
-
-[sub_resource type="Gradient" id="Gradient_ilb7s"]
-colors = PackedColorArray(0.28918967, 0.76862043, 1.2474049, 1, 1.0085651, 0.4881915, 1.2326523, 1)
-
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_bmgg2"]
-gradient = SubResource("Gradient_ilb7s")
-fill_from = Vector2(0.21652421, 0.3903134)
-fill_to = Vector2(0.997151, 1)
-
 [sub_resource type="Gradient" id="Gradient_ntqe3"]
 colors = PackedColorArray(0.2784314, 0.54901963, 0.7490196, 1, 0.3437118, 0.23492959, 0.6227616, 1)
 
@@ -91,46 +76,6 @@ stacked_shadow_1/offset = Vector2(0, 5)
 stacked_shadow_1/outline_size = 15
 stacked_shadow_2/offset = Vector2(0, 10)
 stacked_shadow_2/outline_size = 20
-
-[sub_resource type="FontVariation" id="FontVariation_3tgy8"]
-variation_transform = Transform2D(1, -0.235, 0.31, 1, 0, 0)
-baseline_offset = 0.11
-
-[sub_resource type="LabelSettings" id="LabelSettings_eplp7"]
-font = SubResource("FontVariation_3tgy8")
-font_size = 72
-stacked_outline_count = 3
-stacked_shadow_count = 2
-stacked_outline_0/size = 15
-stacked_outline_0/color = Color(0.30196083, 0.7603859, 1, 1)
-stacked_outline_1/size = 10
-stacked_outline_1/color = Color(1, 0.41568625, 0.42085248, 1)
-stacked_outline_2/size = 5
-stacked_outline_2/color = Color(1, 1, 1, 1)
-stacked_shadow_0/offset = Vector2(4, 4)
-stacked_shadow_0/color = Color(1, 0.27978832, 0, 0.263)
-stacked_shadow_0/outline_size = 60
-stacked_shadow_1/offset = Vector2(-4, -4)
-stacked_shadow_1/color = Color(0, 1, 0.28493494, 0.21200001)
-stacked_shadow_1/outline_size = 60
-
-[sub_resource type="LabelSettings" id="LabelSettings_3tgy8"]
-font = SubResource("FontVariation_3tgy8")
-font_size = 72
-stacked_outline_count = 3
-stacked_shadow_count = 2
-stacked_outline_0/size = 15
-stacked_outline_0/color = Color(0.3019608, 0.6431373, 1, 1)
-stacked_outline_1/size = 10
-stacked_outline_1/color = Color(0.6901961, 0.41568628, 1, 1)
-stacked_outline_2/size = 5
-stacked_outline_2/color = Color(1, 1, 1, 1)
-stacked_shadow_0/offset = Vector2(4, 4)
-stacked_shadow_0/color = Color(1, 0, 0, 0.293)
-stacked_shadow_0/outline_size = 60
-stacked_shadow_1/offset = Vector2(-4, -4)
-stacked_shadow_1/color = Color(0, 0.9251009, 1, 0.62200004)
-stacked_shadow_1/outline_size = 60
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_h306i"]
 content_margin_left = 15.0
@@ -181,6 +126,45 @@ corner_radius_bottom_right = 12
 corner_radius_bottom_left = 12
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_ilb7s"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ntqe3"]
+bg_color = Color(0.24261475, 0.1854655, 0.4140625, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.12296459, 0.11545139, 0.3333333, 1)
+border_blend = true
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_m5llx"]
+bg_color = Color(0.20526151, 0.1414388, 0.4114583, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.08235294, 0.07058824, 0.16078432, 1)
+border_blend = true
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sxl0p"]
+bg_color = Color(0.35686275, 0.29411766, 0.5254902, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.08627451, 0.07058824, 0.16862746, 1)
+border_blend = true
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
 
 [node name="Welcome" type="PanelContainer" unique_id=529169008]
 clip_contents = true
@@ -237,27 +221,10 @@ custom_minimum_size = Vector2(0, 150)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_3tgy8")
 
-[node name="TopBg" type="TextureRect" parent="CenterContainer/PanelContainer/Content/Top" unique_id=877289620]
-visible = false
-custom_minimum_size = Vector2(0, 150)
-layout_mode = 2
-texture = SubResource("GradientTexture2D_4uue8")
-
-[node name="TopBg2" type="TextureRect" parent="CenterContainer/PanelContainer/Content/Top" unique_id=746752840]
-visible = false
-custom_minimum_size = Vector2(0, 150)
-layout_mode = 2
-texture = SubResource("GradientTexture2D_bmgg2")
-
 [node name="TopBg3" type="TextureRect" parent="CenterContainer/PanelContainer/Content/Top" unique_id=1179558171]
 custom_minimum_size = Vector2(0, 150)
 layout_mode = 2
 texture = SubResource("GradientTexture2D_m5llx")
-
-[node name="ColorRect" type="ColorRect" parent="CenterContainer/PanelContainer/Content/Top" unique_id=49184632]
-visible = false
-layout_mode = 2
-color = Color(0.8784314, 0.8784314, 0.8784314, 1)
 
 [node name="CenterContainer" type="CenterContainer" parent="CenterContainer/PanelContainer/Content/Top" unique_id=377519169]
 layout_mode = 2
@@ -282,23 +249,18 @@ text = "SQL"
 label_settings = SubResource("LabelSettings_1camd")
 horizontal_alignment = 1
 
-[node name="Label" type="Label" parent="CenterContainer/PanelContainer/Content/Top" unique_id=1398103295]
-visible = false
+[node name="HFlowContainer" type="HFlowContainer" parent="CenterContainer/PanelContainer/Content/Top" unique_id=1351826360]
 layout_mode = 2
-tooltip_text = "Welcome to GDSQL, a plugin that lets you easily manage datas for your game or software!"
-mouse_filter = 1
-text = "GDSQL"
-label_settings = SubResource("LabelSettings_eplp7")
-horizontal_alignment = 1
+alignment = 2
+reverse_fill = true
 
-[node name="Label2" type="Label" parent="CenterContainer/PanelContainer/Content/Top" unique_id=1802572026]
-visible = false
+[node name="SettingsButton" type="Button" parent="CenterContainer/PanelContainer/Content/Top/HFlowContainer" unique_id=2117045278]
+unique_name_in_owner = true
 layout_mode = 2
-tooltip_text = "Welcome to GDSQL, a plugin that lets you easily manage datas for your game or software!"
-mouse_filter = 1
-text = "GDSQL"
-label_settings = SubResource("LabelSettings_3tgy8")
-horizontal_alignment = 1
+size_flags_horizontal = 8
+tooltip_text = "Settings"
+icon = ExtResource("6_ntqe3")
+flat = true
 
 [node name="Bottom" type="PanelContainer" parent="CenterContainer/PanelContainer/Content" unique_id=1816127561]
 layout_mode = 2
@@ -553,16 +515,18 @@ layout_mode = 2
 
 [node name="RandomTip" type="Label" parent="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Right/VBoxContainer/HBoxContainer" unique_id=1834238884]
 layout_mode = 2
-size_flags_horizontal = 3
 text = "Random Tip"
 label_settings = SubResource("LabelSettings_h306i")
 
-[node name="Button" type="Button" parent="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Right/VBoxContainer/HBoxContainer" unique_id=985433786]
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Right/VBoxContainer/HBoxContainer" unique_id=1754696965]
+layout_mode = 2
+theme_override_constants/margin_left = -21
+
+[node name="Button" type="Button" parent="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Right/VBoxContainer/HBoxContainer/MarginContainer" unique_id=985433786]
 layout_mode = 2
 icon = ExtResource("5_ntqe3")
 flat = true
 alignment = 0
-icon_alignment = 2
 
 [node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Right/VBoxContainer" unique_id=1176927398]
 layout_mode = 2
@@ -590,20 +554,21 @@ fit_content = true
 layout_mode = 2
 alignment = 2
 
-[node name="Version" type="Label" parent="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Right/HBoxContainer" unique_id=1643781930]
+[node name="Version" type="Button" parent="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Right/HBoxContainer" unique_id=1294032391]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.6227616, 0.6089944, 0.6089944, 1)
+tooltip_text = "Check updates."
+theme_override_styles/pressed = SubResource("StyleBoxFlat_ntqe3")
+theme_override_styles/hover = SubResource("StyleBoxFlat_m5llx")
+theme_override_styles/hover_mirrored = SubResource("StyleBoxFlat_m5llx")
+theme_override_styles/hover_pressed = SubResource("StyleBoxFlat_ntqe3")
+theme_override_styles/hover_pressed_mirrored = SubResource("StyleBoxFlat_ntqe3")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_sxl0p")
 text = "v0.5.0"
-horizontal_alignment = 2
-
-[node name="SettingsButton" type="Button" parent="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Right/HBoxContainer" unique_id=2117045278]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 8
-tooltip_text = "Settings"
-icon = ExtResource("6_ntqe3")
 flat = true
 
 [connection signal="pressed" from="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Left/MarginContainer6/HBoxContainer/ThankButton" to="." method="_on_license_button_pressed"]
 [connection signal="resized" from="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Right/VBoxContainer/MarginContainer/PanelContainer/RandomTipLabel" to="." method="_on_random_tip_label_resized"]
+[connection signal="mouse_entered" from="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Right/HBoxContainer/Version" to="." method="_on_version_mouse_entered"]
+[connection signal="mouse_exited" from="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Right/HBoxContainer/Version" to="." method="_on_version_mouse_exited"]
+[connection signal="pressed" from="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Right/HBoxContainer/Version" to="." method="_on_update_button_pressed"]

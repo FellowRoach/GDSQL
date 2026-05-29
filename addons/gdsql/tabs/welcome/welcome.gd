@@ -4,29 +4,27 @@ extends PanelContainer
 @onready var center_container: CenterContainer = %CenterContainer
 @onready var content: VBoxContainer = %Content
 @onready var random_tip_label: RichTextLabel = %RandomTipLabel
-@onready var version: Label = %Version
+@onready var version: Button = %Version
 @onready var settings_button: Button = %SettingsButton
 
+var _version: String
+var _updater: AcceptDialog
 
 func _ready() -> void:
 	var plugin_cfg := ConfigFile.new()
 	plugin_cfg.load("res://addons/gdsql/plugin.cfg")
-	version.text = "v" + plugin_cfg.get_value('plugin', 'version', 'unknown version')
-
+	_version = "v" + plugin_cfg.get_value('plugin', 'version', 'unknown version')
+	version.text = _version
 	if settings_button:
 		settings_button.pressed.connect(_on_settings_button_pressed)
 
-	_add_license_button()
 
-
-func _add_license_button() -> void:
-	# 找到 "Other Addons" 的父容器，在其后添加 License 按钮
-	var other_addons = find_child("OtherAddonsLink", true, false)
-	if not other_addons:
-		return
-	var parent = other_addons.get_parent()
-	if not parent:
-		return
+func _on_update_button_pressed() -> void:
+	if _updater:
+		_updater.queue_free()
+	_updater = preload("res://addons/gdsql/tabs/plugin_updater/updater.gd").new()
+	add_child(_updater)
+	_updater.popup_centered()
 
 
 func _on_license_button_pressed() -> void:
@@ -42,3 +40,13 @@ func _on_random_tip_label_resized() -> void:
 func _on_settings_button_pressed() -> void:
 	if GDSQL.WorkbenchManager:
 		GDSQL.WorkbenchManager.open_settings_tab.emit()
+
+
+func _on_version_mouse_entered() -> void:
+	version.flat = false
+	version.text = tr("Check updates")
+
+
+func _on_version_mouse_exited() -> void:
+	version.flat = true
+	version.text = _version
