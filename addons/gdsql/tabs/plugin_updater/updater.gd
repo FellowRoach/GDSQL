@@ -296,7 +296,7 @@ func _on_upgrade() -> void:
 	
 	
 func _start_download() -> void:
-	var zip_url = _release_info.get("zipball_url", "")
+	var zip_url = "https://github.com/jinyangcruise/GDSQL/releases/download/v%s/gdsql-v%s.zip" % [_latest_version, _latest_version]
 	if zip_url.is_empty():
 		_status_label.text = "Error: No download URL found."
 		return
@@ -337,19 +337,15 @@ func _start_download() -> void:
 		return
 
 	var zip_files = reader.get_files()
-	var prefix = ""
-	for fp in zip_files:
-		if fp.ends_with("/"):
-			prefix = fp
-			break
-
+	var marker = "addons/gdsql/"
 	var extracted = 0
 	for fp in zip_files:
-		if not fp.begins_with(prefix + "addons/gdsql/"):
+		var idx = fp.find(marker)
+		if idx < 0:
 			continue
 		if fp.ends_with("/"):
 			continue
-		var rel = fp.trim_prefix(prefix)
+		var rel = fp.substr(idx)
 		var target = "res://" + rel
 		var data = reader.read_file(fp)
 		if fp.ends_with(".import"):
