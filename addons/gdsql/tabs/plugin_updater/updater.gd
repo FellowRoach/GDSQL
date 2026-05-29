@@ -196,7 +196,7 @@ func _collect_files(dir: DirAccess, prefix: String, known: Dictionary, result: A
 		if f in [".", "..", ".git"]:
 			f = dir.get_next()
 			continue
-		var rel = "addons/" + prefix + f
+		var rel = prefix + f
 		if dir.current_is_dir():
 			var sub = DirAccess.open("res://" + prefix + f)
 			if sub:
