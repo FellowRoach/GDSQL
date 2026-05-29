@@ -312,6 +312,8 @@ func _start_download() -> void:
 		_upgrade_btn.text = "Retry"
 		return
 
+	if not is_inside_tree():
+		return
 	_status_label.text = "Extracting..."
 
 	# Save to temp file
