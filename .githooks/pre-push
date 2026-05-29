@@ -4,8 +4,11 @@
 ##
 ## Detects if a tag is being pushed, diffs against the last tag,
 ## and appends added/removed file entries to file_manifest.txt.
+## If the manifest changed, the push is aborted so the user can
+## commit the manifest update and push again.
 
 MANIFEST="addons/gdsql/tabs/plugin_updater/file_manifest.txt"
+CHANGED=0
 
 # Read stdin to check if a tag is being pushed
 while read local_ref local_sha remote_ref remote_sha; do
@@ -36,9 +39,21 @@ while read local_ref local_sha remote_ref remote_sha; do
 		fi
 
 		git add "$MANIFEST"
-		echo "Manifest updated. Please commit and push again."
+
+		if ! git diff --cached --quiet "$MANIFEST"; then
+			CHANGED=1
+		fi
 		break
 	fi
 done
+
+if [ "$CHANGED" -eq 1 ]; then
+	echo ""
+	echo "=== file_manifest.txt updated and staged ==="
+	echo "Commit it, then push again:"
+	echo "  git commit -m \"Update file_manifest for $TAG\""
+	echo "  git push origin $TAG"
+	exit 1
+fi
 
 exit 0
