@@ -1,20 +1,16 @@
 #!/bin/bash
 ## Git pre-push hook: auto-update file_manifest.txt before pushing a tag.
-## Install: git config core.hooksPath .githooks
-##
-## Detects if a tag is being pushed, diffs against the last tag,
-## and appends added/removed file entries to file_manifest.txt.
-## If the manifest changed, the push is aborted so the user can
-## commit the manifest update and push again.
 
 MANIFEST="addons/gdsql/tabs/plugin_updater/file_manifest.txt"
 CHANGED=0
 
-# Read stdin to check if a tag is being pushed
 while read local_ref local_sha remote_ref remote_sha; do
 	if [[ "$local_ref" == refs/tags/v* ]]; then
 		TAG="${local_ref#refs/tags/}"
 		VER="${TAG#v}"
+
+		# Save original tag message before any changes
+		TAG_MSG=$(git tag -l --format='%(contents)' "$TAG" 2>/dev/null)
 
 		PREV_TAG=$(git tag --sort=-version:refname | grep -E '^v' | sed -n '2p')
 
@@ -38,9 +34,7 @@ while read local_ref local_sha remote_ref remote_sha; do
 				| sed "s|^|+,$VER,|" > "$MANIFEST"
 		fi
 
-		git add "$MANIFEST"
-
-		if ! git diff --cached --quiet "$MANIFEST"; then
+		if ! git diff --quiet "$MANIFEST"; then
 			CHANGED=1
 		fi
 		break
@@ -48,10 +42,18 @@ while read local_ref local_sha remote_ref remote_sha; do
 done
 
 if [ "$CHANGED" -eq 1 ]; then
+	git add "$MANIFEST"
+	git commit -m "Update file_manifest for $TAG"
+	git tag -d "$TAG"
+	# Re-create tag preserving original message
+	if [ -n "$TAG_MSG" ]; then
+		git tag -a "$TAG" -m "$TAG_MSG"
+	else
+		git tag "$TAG"
+	fi
 	echo ""
-	echo "=== file_manifest.txt updated and staged ==="
-	echo "Commit it, then push again:"
-	echo "  git commit -m \"Update file_manifest for $TAG\""
+	echo "=== file_manifest.txt updated, committed, and tag recreated ==="
+	echo "Push again:"
 	echo "  git push origin $TAG"
 	exit 1
 fi
