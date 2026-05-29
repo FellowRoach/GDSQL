@@ -155,6 +155,12 @@ GDSQL.BaseDao.new()
 
 ---
 
+## 贡献指南
+
+详见 [CONTRIBUTING.md](CONTRIBUTING.md)，包含 pre-push Git 钩子的设置说明。
+
+---
+
 ## 快速开始
 
 1. 将本仓库放到 Godot 项目的 `addons/` 目录下

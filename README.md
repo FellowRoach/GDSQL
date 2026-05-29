@@ -154,6 +154,12 @@ A drag-and-drop graph editor for designing table relationships:
 
 ---
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, including the pre-push git hook for manifest management.
+
+---
+
 ## Quick Start
 
 1. Place this repository into your Godot project's `addons/` directory
