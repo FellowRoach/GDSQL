@@ -14,22 +14,22 @@ signal change_tab_title(page: Control, title: String)
 
 var SQLGraphNode = preload("res://addons/gdsql/tabs/sql_graph_node/graph_node.tscn")
 
-const SB_PANEL = preload("res://addons/gdsql/tabs/sql_graph_node/sb_panel.stylebox")
-const SB_PANEL_SELECTED = preload("res://addons/gdsql/tabs/sql_graph_node/sb_panel_selected.stylebox")
-const SB_SELECT_TITLEBAR = preload("res://addons/gdsql/tabs/sql_graph_node/sb_select_titlebar.stylebox")
-const SB_SELECT_TITLEBAR_SELECTED = preload("res://addons/gdsql/tabs/sql_graph_node/sb_select_titlebar_selected.stylebox")
-const SB_DELETE_TITLEBAR = preload("res://addons/gdsql/tabs/sql_graph_node/sb_delete_titlebar.stylebox")
-const SB_DELETE_TITLEBAR_SELECTED = preload("res://addons/gdsql/tabs/sql_graph_node/sb_delete_titlebar_selected.stylebox")
-const SB_INSERT_TITLEBAR = preload("res://addons/gdsql/tabs/sql_graph_node/sb_insert_titlebar.stylebox")
-const SB_INSERT_TITLEBAR_SELECTED = preload("res://addons/gdsql/tabs/sql_graph_node/sb_insert_titlebar_selected.stylebox")
-const SB_LEFT_JOIN_TITLEBAR = preload("res://addons/gdsql/tabs/sql_graph_node/sb_left_join_titlebar.stylebox")
-const SB_LEFT_JOIN_TITLEBAR_SELECTED = preload("res://addons/gdsql/tabs/sql_graph_node/sb_left_join_titlebar_selected.stylebox")
-const SB_UPDATE_TITLEBAR = preload("res://addons/gdsql/tabs/sql_graph_node/sb_update_titlebar.stylebox")
-const SB_UPDATE_TITLEBAR_SELECTED = preload("res://addons/gdsql/tabs/sql_graph_node/sb_update_titlebar_selected.stylebox")
-const SB_RESULT_TITLEBAR = preload("res://addons/gdsql/tabs/sql_graph_node/sb_result_titlebar.stylebox")
-const SB_RESULT_TITLEBAR_SELECTED = preload("res://addons/gdsql/tabs/sql_graph_node/sb_result_titlebar_selected.stylebox")
-const SB_SQL_TITLEBAR = preload("res://addons/gdsql/tabs/sql_graph_node/sb_sql_titlebar.stylebox")
-const SB_SQL_TITLEBAR_SELECTED = preload("res://addons/gdsql/tabs/sql_graph_node/sb_sql_titlebar_selected.stylebox")
+const SB_PANEL = preload("res://addons/gdsql/tabs/sql_graph_node/sb_panel.tres")
+const SB_PANEL_SELECTED = preload("res://addons/gdsql/tabs/sql_graph_node/sb_panel_selected.tres")
+const SB_SELECT_TITLEBAR = preload("res://addons/gdsql/tabs/sql_graph_node/sb_select_titlebar.tres")
+const SB_SELECT_TITLEBAR_SELECTED = preload("res://addons/gdsql/tabs/sql_graph_node/sb_select_titlebar_selected.tres")
+const SB_DELETE_TITLEBAR = preload("res://addons/gdsql/tabs/sql_graph_node/sb_delete_titlebar.tres")
+const SB_DELETE_TITLEBAR_SELECTED = preload("res://addons/gdsql/tabs/sql_graph_node/sb_delete_titlebar_selected.tres")
+const SB_INSERT_TITLEBAR = preload("res://addons/gdsql/tabs/sql_graph_node/sb_insert_titlebar.tres")
+const SB_INSERT_TITLEBAR_SELECTED = preload("res://addons/gdsql/tabs/sql_graph_node/sb_insert_titlebar_selected.tres")
+const SB_LEFT_JOIN_TITLEBAR = preload("res://addons/gdsql/tabs/sql_graph_node/sb_left_join_titlebar.tres")
+const SB_LEFT_JOIN_TITLEBAR_SELECTED = preload("res://addons/gdsql/tabs/sql_graph_node/sb_left_join_titlebar_selected.tres")
+const SB_UPDATE_TITLEBAR = preload("res://addons/gdsql/tabs/sql_graph_node/sb_update_titlebar.tres")
+const SB_UPDATE_TITLEBAR_SELECTED = preload("res://addons/gdsql/tabs/sql_graph_node/sb_update_titlebar_selected.tres")
+const SB_RESULT_TITLEBAR = preload("res://addons/gdsql/tabs/sql_graph_node/sb_result_titlebar.tres")
+const SB_RESULT_TITLEBAR_SELECTED = preload("res://addons/gdsql/tabs/sql_graph_node/sb_result_titlebar_selected.tres")
+const SB_SQL_TITLEBAR = preload("res://addons/gdsql/tabs/sql_graph_node/sb_sql_titlebar.tres")
+const SB_SQL_TITLEBAR_SELECTED = preload("res://addons/gdsql/tabs/sql_graph_node/sb_sql_titlebar_selected.tres")
 
 static var copied_nodes: Dictionary
 
@@ -2895,7 +2895,7 @@ func on_link_node_query(node: GraphNode):
 				var right_datas = right_query_ret.get_data()
 				var right_key_index = find_col_index.call(right_columns, right_link_prop_dict_obj._get("LinkColumnName"))
 				assert(right_key_index != -1, "Error of right_key_index.")
-				var detail_panel_scene = preload("res://addons/gdsql/detail_panel.tscn")
+				var detail_panel_scene = load("res://addons/gdsql/tabs/sql_graph/detail_panel.tscn")
 				for row: Array in left_datas:
 					# 包含左数据、右数据和按钮
 					var a_row = []

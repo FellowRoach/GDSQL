@@ -4,7 +4,7 @@ extends TabContainer
 var mgr: GDSQL.WorkbenchManagerClass:
 	get: return GDSQL.WorkbenchManager
 	
-var SQLGraph = load("res://addons/gdsql/tabs/sql_graph.tscn")
+var SQLGraph = load("res://addons/gdsql/tabs/sql_graph/sql_graph.tscn")
 var MAPPER_GRAPH = load("res://addons/gdsql/tabs/mapper_graph.tscn")
 
 @onready var welcome_page: PanelContainer = %Welcome

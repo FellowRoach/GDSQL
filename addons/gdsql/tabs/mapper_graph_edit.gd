@@ -8,10 +8,10 @@ signal tree_node_list_item_added
 
 var SQLGraphNode = preload("res://addons/gdsql/tabs/sql_graph_node/graph_node.tscn")
 
-const SB_PANEL = preload("res://addons/gdsql/tabs/sql_graph_node/sb_panel.stylebox")
-const SB_PANEL_SELECTED = preload("res://addons/gdsql/tabs/sql_graph_node/sb_panel_selected.stylebox")
-const SB_SELECT_TITLEBAR = preload("res://addons/gdsql/tabs/sql_graph_node/sb_select_titlebar.stylebox")
-const SB_SELECT_TITLEBAR_SELECTED = preload("res://addons/gdsql/tabs/sql_graph_node/sb_select_titlebar_selected.stylebox")
+const SB_PANEL = preload("res://addons/gdsql/tabs/sql_graph_node/sb_panel.tres")
+const SB_PANEL_SELECTED = preload("res://addons/gdsql/tabs/sql_graph_node/sb_panel_selected.tres")
+const SB_SELECT_TITLEBAR = preload("res://addons/gdsql/tabs/sql_graph_node/sb_select_titlebar.tres")
+const SB_SELECT_TITLEBAR_SELECTED = preload("res://addons/gdsql/tabs/sql_graph_node/sb_select_titlebar_selected.tres")
 
 const TEXT_ENUM = preload("res://addons/gdsql/custom_control/text_enum.tscn")
 

@@ -12,10 +12,10 @@ extends PanelContainer
 @onready var texture_rect_model: TextureRect = $Models/TextureRectModel
 @onready var check_box_model: CheckBox = $Models/CheckBoxModel
 
-const DETAIL_PANEL_CHECKED = preload("res://addons/gdsql/detail_panel_checked.stylebox")
-const DETAIL_PANEL_UNCHECKED = preload("res://addons/gdsql/detail_panel_unchecked.stylebox")
-const DETAIL_PANEL_NORMAL_CHECKED = preload("res://addons/gdsql/detail_panel_normal_checked.stylebox")
-const DETAIL_PANEL_NORMAL_UNCHECKED = preload("res://addons/gdsql/detail_panel_normal_unchecked.stylebox")
+const DETAIL_PANEL_CHECKED = preload("res://addons/gdsql/tabs/sql_graph/detail_panel_checked.tres")
+const DETAIL_PANEL_UNCHECKED = preload("res://addons/gdsql/tabs/sql_graph/detail_panel_unchecked.tres")
+const DETAIL_PANEL_NORMAL_CHECKED = preload("res://addons/gdsql/tabs/sql_graph/detail_panel_normal_checked.tres")
+const DETAIL_PANEL_NORMAL_UNCHECKED = preload("res://addons/gdsql/tabs/sql_graph/detail_panel_normal_unchecked.tres")
 
 var status: String:
 	set(val):
