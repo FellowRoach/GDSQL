@@ -186,6 +186,29 @@ Auto-upgrading to v%s instead. After that, you can manually upgrade further.
 	get_ok_button().text = "Close"
 
 
+## Walk directory and collect files not in the expected set.
+func _collect_obsolete(dir: DirAccess, prefix: String, expected: Dictionary, result: Array) -> void:
+	dir.list_dir_begin()
+	var f = dir.get_next()
+	while f != "":
+		if f in [".", "..", ".git"]:
+			f = dir.get_next()
+			continue
+		var rel = prefix + f
+		if dir.current_is_dir():
+			var sub = DirAccess.open("res://addons/gdsql/" + prefix + f)
+			if sub:
+				_collect_obsolete(sub, prefix + f + "/", expected, result)
+		else:
+			if f.ends_with(".import") or f.ends_with(".uid") or f.ends_with(".translation"):
+				f = dir.get_next()
+				continue
+			if not expected.has("addons/gdsql/" + rel):
+				result.push_back("addons/gdsql/" + rel)
+		f = dir.get_next()
+	dir.list_dir_end()
+
+
 ## Parse upgrade_ranges from release body and return max version the current ver can reach.
 ## Format: upgrade_ranges: 0.5.0-0.5.99|0.6.0-999.999.999
 func _parse_max_upgrade(body: String, current_ver: String) -> String:
@@ -434,9 +457,23 @@ func _start_download() -> void:
 		if dp:
 			dp.remove(tmp_path.get_file())
 
+	# Remove files that belong to an older version but not the target
+	var expected = _files_for_version(_target_version)
+	var to_remove = []
+	var cleanup_dir = DirAccess.open("res://addons/gdsql/")
+	if cleanup_dir:
+		_collect_obsolete(cleanup_dir, "", expected, to_remove)
+	for r in to_remove:
+		var abs = ProjectSettings.globalize_path("res://" + r)
+		if DirAccess.dir_exists_absolute(abs):
+			var cd = DirAccess.open(abs.get_base_dir())
+			if cd: cd.remove(abs.get_file())
+		elif FileAccess.file_exists(abs):
+			var cd = DirAccess.open(abs.get_base_dir())
+			if cd: cd.remove(abs.get_file())
 	_download_pct = -2
 	_download_size = ""
-	_status_label.text = "Upgrade complete! (%d files updated) Please restart Godot." % extracted
+	_status_label.text = "Upgrade complete! (%d files updated, %d cleaned up) Please restart Godot." % [extracted, to_remove.size()]
 	_upgrade_btn.disabled = true
 	_upgrade_btn.text = "Done"
 
