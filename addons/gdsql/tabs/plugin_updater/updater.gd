@@ -24,6 +24,8 @@ var _info_label: Label
 var _notes_rt: RichTextLabel
 var _upgrade_btn: Button
 var _http: HTTPRequest
+var _http_notes: HTTPRequest
+var _max_upgrade: String = ""
 
 
 func _init() -> void:
@@ -72,6 +74,11 @@ func _init() -> void:
 	add_child(_http)
 	_http.request_completed.connect(_on_request_completed)
 
+	# HTTP request for target version release notes
+	_http_notes = HTTPRequest.new()
+	add_child(_http_notes)
+	_http_notes.request_completed.connect(_on_notes_completed)
+
 
 
 
@@ -91,7 +98,7 @@ func _cmp_version(a: String, b: String) -> int:
 	return 0
 
 
-## Called when HTTP request completes.
+## Called when the latest-release HTTP request completes.
 func _on_request_completed(result: int, _code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
 	if result != HTTPRequest.RESULT_SUCCESS:
 		_status_label.text = "Failed to check for updates (network error: %d)." % result
@@ -120,66 +127,102 @@ func _on_request_completed(result: int, _code: int, _headers: PackedStringArray,
 
 	_status_label.text = "Latest version: v%s" % _latest_version
 
-	# Release notes
-	var notes = data.get("body", "No release notes.")
-	if notes == null:
-		notes = "No release notes."
-	# Truncate very long notes
-	if notes.length() > 10000:
-		notes = notes.substr(0, 10000) + "\n... (truncated)"
-	_notes_rt.text = "[b]Release notes:[/b]\n" + notes
+	# Release notes from latest (may be replaced if target differs)
+	var latest_notes = data.get("body", "No release notes.")
+	if latest_notes == null:
+		latest_notes = "No release notes."
+	if latest_notes.length() > 10000:
+		latest_notes = latest_notes.substr(0, 10000) + "\n... (truncated)"
 
-	# Parse upgrade ranges from release body
-	var max_upgrade = _parse_max_upgrade(notes, _current_version)
+	# Parse upgrade ranges from latest release body
+	_max_upgrade = _parse_max_upgrade(latest_notes, _current_version)
 
-	# Compare versions
+	# Determine target version
+	var cmp = _cmp_version(_current_version, _latest_version)
+	if cmp > 0 or cmp == 0 or _max_upgrade == "" or (_cmp_version(_current_version, _max_upgrade) >= 0 and _cmp_version(_latest_version, _max_upgrade) > 0):
+		_target_version = ""
+	elif _cmp_version(_latest_version, _max_upgrade) > 0:
+		_target_version = _max_upgrade
+	else:
+		_target_version = _latest_version
+
+	# If target differs from latest, fetch target release notes
+	if not _target_version.is_empty() and _target_version != _latest_version:
+		_status_label.text = "Fetching release notes for v%s..." % _target_version
+		var tag_url = "https://api.github.com/repos/jinyangcruise/GDSQL/releases/tags/v" + _target_version
+		_http_notes.request(tag_url)
+		return
+
+	# Otherwise use latest notes directly
+	_finalize_version_info(latest_notes)
+
+
+## Called when the target-version release notes HTTP request completes.
+func _on_notes_completed(result: int, _code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+	if result != HTTPRequest.RESULT_SUCCESS or body.is_empty():
+		var fallback = _release_info.get("body", "No release notes.")
+		if fallback == null: fallback = ""
+		_finalize_version_info(fallback)
+		return
+
+	var json = JSON.new()
+	var err = json.parse(body.get_string_from_utf8())
+	if err != OK:
+		var fallback = _release_info.get("body", "No release notes.")
+		if fallback == null: fallback = ""
+		_finalize_version_info(fallback)
+		return
+
+	var data = json.data
+	if not data is Dictionary:
+		var fallback = _release_info.get("body", "No release notes.")
+		if fallback == null: fallback = ""
+		_finalize_version_info(fallback)
+		return
+
+	var target_notes = data.get("body", "No release notes.")
+	if target_notes == null:
+		target_notes = "No release notes."
+	if target_notes.length() > 10000:
+		target_notes = target_notes.substr(0, 10000) + "\n... (truncated)"
+
+	_finalize_version_info(target_notes)
+
+
+## Show the final version info UI once we have the correct release notes.
+func _finalize_version_info(notes: String) -> void:
 	var cmp = _cmp_version(_current_version, _latest_version)
 	if cmp > 0:
 		_status_label.text = "Your version (v%s) is ahead of the latest release (v%s)." % [_current_version, _latest_version]
 		_upgrade_btn.disabled = true
 		_upgrade_btn.text = "Up to date"
+		_notes_rt.text = "[b]Release notes:[/b]\n" + notes
 	elif cmp == 0:
 		_status_label.text = "You're up to date! (v%s)" % _current_version
 		_upgrade_btn.disabled = true
 		_upgrade_btn.text = "Up to date"
-	elif max_upgrade == "":
+		_notes_rt.text = "[b]Release notes:[/b]\n" + notes
+	elif _max_upgrade == "":
 		_status_label.text = "Current version v%s is not in any upgrade path." % _current_version
-		_notes_rt.text = "[b]No upgrade path[/b]
-
-Your version (v%s) does not fall into any supported upgrade range.
-
-Please check GitHub Releases for manual upgrade options.
-
-" % _current_version + _notes_rt.text
+		_notes_rt.text = "[b]No upgrade path[/b]\n\nYour version (v%s) does not fall into any supported upgrade range.\n\nPlease check GitHub Releases for manual upgrade options.\n\n" % _current_version + "[b]Release notes:[/b]\n" + notes
 		_upgrade_btn.disabled = true
 		_upgrade_btn.text = "No upgrade path"
-	elif _cmp_version(_latest_version, max_upgrade) > 0:
-		if _cmp_version(_current_version, max_upgrade) >= 0:
+	elif _cmp_version(_latest_version, _max_upgrade) > 0:
+		if _cmp_version(_current_version, _max_upgrade) >= 0:
 			_status_label.text = "No compatible upgrade available for v%s." % _current_version
-			_notes_rt.text = "[b]Breaking change detected[/b]
-
-Latest version v%s has breaking changes that are incompatible with your current version (v%s).
-
-Your version has reached the maximum upgrade path. Please check GitHub Releases for any newer compatible version.
-
-" % [_latest_version, _current_version] + _notes_rt.text
+			_notes_rt.text = "[b]Breaking change detected[/b]\n\nLatest version v%s has breaking changes that are incompatible with your current version (v%s).\n\nYour version has reached the maximum upgrade path. Please check GitHub Releases for any newer compatible version.\n\n" % [_latest_version, _current_version] + "[b]Release notes:[/b]\n" + notes
 			_upgrade_btn.disabled = true
 			_upgrade_btn.text = "No upgrade path"
 		else:
-			_target_version = max_upgrade
-			_status_label.text = "Latest v%s has breaking changes. Upgrading to compatible v%s instead." % [_latest_version, max_upgrade]
-			_notes_rt.text = "[b]Breaking change detected[/b]
-
-Latest version v%s changes the data format and is incompatible with your current version (v%s).
-
-Auto-upgrading to v%s instead. After that, you can manually upgrade further.
-
-" % [_latest_version, _current_version, max_upgrade] + _notes_rt.text
+			_target_version = _max_upgrade
+			_status_label.text = "Latest v%s has breaking changes. Upgrading to compatible v%s instead." % [_latest_version, _max_upgrade]
+			_notes_rt.text = "[b]Breaking change detected[/b]\n\nLatest version v%s changes the data format and is incompatible with your current version (v%s).\n\nAuto-upgrading to v%s instead. After that, you can manually upgrade further.\n\n" % [_latest_version, _current_version, _max_upgrade] + "[b]Release notes (v%s):[/b]\n" % _target_version + notes
 			_upgrade_btn.disabled = false
-			_upgrade_btn.text = "Upgrade to v%s" % max_upgrade
+			_upgrade_btn.text = "Upgrade to v%s" % _max_upgrade
 	else:
 		_target_version = _latest_version
-		_status_label.text = "A new version is available: v%s → v%s" % [_current_version, _latest_version]
+		_status_label.text = "A new version is available: v%s" % _latest_version
+		_notes_rt.text = "[b]Release notes:[/b]\n" + notes
 		_upgrade_btn.disabled = false
 		_upgrade_btn.text = "Upgrade to v%s" % _latest_version
 
