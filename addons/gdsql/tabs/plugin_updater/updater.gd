@@ -158,7 +158,7 @@ Please check GitHub Releases for manual upgrade options.
 			_status_label.text = "No compatible upgrade available for v%s." % _current_version
 			_notes_rt.text = "[b]Breaking change detected[/b]
 
-Version v%s has breaking changes that are incompatible with your current version (v%s).
+Latest version v%s has breaking changes that are incompatible with your current version (v%s).
 
 Your version has reached the maximum upgrade path. Please check GitHub Releases for any newer compatible version.
 
@@ -170,7 +170,7 @@ Your version has reached the maximum upgrade path. Please check GitHub Releases 
 			_status_label.text = "Latest v%s has breaking changes. Upgrading to compatible v%s instead." % [_latest_version, max_upgrade]
 			_notes_rt.text = "[b]Breaking change detected[/b]
 
-Version v%s changes the data format and is incompatible with your current version (v%s).
+Latest version v%s changes the data format and is incompatible with your current version (v%s).
 
 Auto-upgrading to v%s instead. After that, you can manually upgrade further.
 
