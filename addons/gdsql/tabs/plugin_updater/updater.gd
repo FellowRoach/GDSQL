@@ -137,7 +137,12 @@ func _on_request_completed(result: int, _code: int, _headers: PackedStringArray,
 	# Parse upgrade ranges from latest release body
 	_max_upgrade = _parse_max_upgrade(latest_notes, _current_version)
 
-	# Determine target version
+	# Determine target version — set to "" (no upgrade) in 4 cases:
+	#   1. cmp > 0:  current is ahead of latest (dev version)
+	#   2. cmp == 0: already up to date
+	#   3. _max_upgrade == "": current version not in any upgrade range
+	#   4. current >= max_upgrade AND latest > max_upgrade:
+	#      current already at or past the range ceiling, and latest is beyond that ceiling
 	var cmp = _cmp_version(_current_version, _latest_version)
 	if cmp > 0 or cmp == 0 or _max_upgrade == "" or (_cmp_version(_current_version, _max_upgrade) >= 0 and _cmp_version(_latest_version, _max_upgrade) > 0):
 		_target_version = ""
