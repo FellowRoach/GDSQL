@@ -186,8 +186,8 @@ Auto-upgrading to v%s instead. After that, you can manually upgrade further.
 	get_ok_button().text = "Close"
 
 
-## Remove files in addons/gdsql/ that were not just extracted.
-func _remove_extra(dir: DirAccess, prefix: String, extracted: Dictionary, cleaned: int) -> int:
+## Collect files in addons/gdsql/ that were not just extracted (recursive).
+func _collect_extra(dir: DirAccess, prefix: String, extracted: Dictionary, to_delete: Array) -> void:
 	dir.list_dir_begin()
 	var f = dir.get_next()
 	while f != "":
@@ -198,17 +198,27 @@ func _remove_extra(dir: DirAccess, prefix: String, extracted: Dictionary, cleane
 		if dir.current_is_dir():
 			var sub = DirAccess.open("res://" + rel)
 			if sub:
-				cleaned = _remove_extra(sub, prefix + f + "/", extracted, cleaned)
+				_collect_extra(sub, prefix + f + "/", extracted, to_delete)
 		else:
 			if not extracted.has(rel):
-				var abs = ProjectSettings.globalize_path("res://" + rel)
-				var dp = DirAccess.open(abs.get_base_dir())
-				if dp:
-					dp.remove(abs.get_file())
-					cleaned += 1
+				to_delete.push_back(rel)
 		f = dir.get_next()
 	dir.list_dir_end()
-	return cleaned
+
+
+## Delete a list of files collected by _collect_extra.
+func _delete_collected(to_delete: Array) -> int:
+	var n = 0
+	for rel in to_delete:
+		var abs = ProjectSettings.globalize_path("res://" + rel)
+		var dp = DirAccess.open(abs.get_base_dir())
+		if dp:
+			var err = dp.remove(abs.get_file())
+			if err == OK:
+				n += 1
+			else:
+				push_error("Cannot delete file: %s, error: %s" % [rel, error_string(err)])
+	return n
 
 
 ## Parse upgrade_ranges from release body and return max version the current ver can reach.
@@ -462,10 +472,11 @@ func _start_download() -> void:
 			dp.remove(tmp_path.get_file())
 
 	# Remove files that belong to an older version but not the target
-	var cleaned = 0
+	var to_delete = []
 	var clean_dir = DirAccess.open("res://addons/gdsql/")
 	if clean_dir:
-		cleaned = _remove_extra(clean_dir, "", extracted_paths, cleaned)
+		_collect_extra(clean_dir, "", extracted_paths, to_delete)
+	var cleaned = _delete_collected(to_delete)
 
 	_download_pct = -2
 	_download_size = ""
