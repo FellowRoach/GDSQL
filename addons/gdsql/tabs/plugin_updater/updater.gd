@@ -17,6 +17,7 @@ var _latest_version: String = ""
 var _release_info: Dictionary = {}
 var _download_pct: int = -1
 var _download_size: String = ""
+var _target_version: String = ""
 var _vbox: VBoxContainer
 var _status_label: Label
 var _info_label: Label
@@ -124,9 +125,12 @@ func _on_request_completed(result: int, _code: int, _headers: PackedStringArray,
 	if notes == null:
 		notes = "No release notes."
 	# Truncate very long notes
-	if notes.length() > 3000:
-		notes = notes.substr(0, 3000) + "\n... (truncated)"
+	if notes.length() > 10000:
+		notes = notes.substr(0, 10000) + "\n... (truncated)"
 	_notes_rt.text = "[b]Release notes:[/b]\n" + notes
+
+	# Parse upgrade ranges from release body
+	var max_upgrade = _parse_max_upgrade(notes, _current_version)
 
 	# Compare versions
 	var cmp = _cmp_version(_current_version, _latest_version)
@@ -138,12 +142,76 @@ func _on_request_completed(result: int, _code: int, _headers: PackedStringArray,
 		_status_label.text = "You're up to date! (v%s)" % _current_version
 		_upgrade_btn.disabled = true
 		_upgrade_btn.text = "Up to date"
+	elif max_upgrade == "":
+		_status_label.text = "Current version v%s is not in any upgrade path." % _current_version
+		_notes_rt.text = "[b]No upgrade path[/b]
+
+Your version (v%s) does not fall into any supported upgrade range.
+
+Please check GitHub Releases for manual upgrade options.
+
+" % _current_version + _notes_rt.text
+		_upgrade_btn.disabled = true
+		_upgrade_btn.text = "No upgrade path"
+	elif _cmp_version(_latest_version, max_upgrade) > 0:
+		if _cmp_version(_current_version, max_upgrade) >= 0:
+			_status_label.text = "No compatible upgrade available for v%s." % _current_version
+			_notes_rt.text = "[b]Breaking change detected[/b]
+
+Version v%s has breaking changes that are incompatible with your current version (v%s).
+
+Your version has reached the maximum upgrade path. Please check GitHub Releases for any newer compatible version.
+
+" % [_latest_version, _current_version] + _notes_rt.text
+			_upgrade_btn.disabled = true
+			_upgrade_btn.text = "No upgrade path"
+		else:
+			_target_version = max_upgrade
+			_status_label.text = "Latest v%s has breaking changes. Upgrading to compatible v%s instead." % [_latest_version, max_upgrade]
+			_notes_rt.text = "[b]Breaking change detected[/b]
+
+Version v%s changes the data format and is incompatible with your current version (v%s).
+
+Auto-upgrading to v%s instead. After that, you can manually upgrade further.
+
+" % [_latest_version, _current_version, max_upgrade] + _notes_rt.text
+			_upgrade_btn.disabled = false
+			_upgrade_btn.text = "Upgrade to v%s" % max_upgrade
 	else:
+		_target_version = _latest_version
 		_status_label.text = "A new version is available: v%s → v%s" % [_current_version, _latest_version]
 		_upgrade_btn.disabled = false
 		_upgrade_btn.text = "Upgrade to v%s" % _latest_version
 
 	get_ok_button().text = "Close"
+
+
+## Parse upgrade_ranges from release body and return max version the current ver can reach.
+## Format: upgrade_ranges: 0.5.0-0.5.99|0.6.0-999.999.999
+func _parse_max_upgrade(body: String, current_ver: String) -> String:
+	if body.is_empty():
+		return ""
+	# Find the line starting with upgrade_ranges:
+	var lines = body.split("
+")
+	var range_line = ""
+	for l in lines:
+		if l.trim_prefix(" ").trim_prefix("	").begins_with("upgrade_ranges:"):
+			range_line = l.trim_prefix(" ").trim_prefix("	").trim_prefix("upgrade_ranges:").strip_edges()
+			break
+	if range_line.is_empty():
+		return ""
+
+	var ranges = range_line.split("|")
+	for r in ranges:
+		var parts = r.split("-")
+		if parts.size() != 2:
+			continue
+		var from_v = parts[0].strip_edges()
+		var to_v = parts[1].strip_edges()
+		if _cmp_version(current_ver, from_v) >= 0 and _cmp_version(current_ver, to_v) <= 0:
+			return to_v
+	return ""
 
 
 ## Build the set of files a given version should have, based on the manifest.
@@ -296,7 +364,7 @@ func _on_upgrade() -> void:
 	
 	
 func _start_download() -> void:
-	var zip_url = "https://github.com/jinyangcruise/GDSQL/releases/download/v%s/gdsql-v%s.zip" % [_latest_version, _latest_version]
+	var zip_url = "https://github.com/jinyangcruise/GDSQL/releases/download/v%s/gdsql-v%s.zip" % [_target_version, _target_version]
 	if zip_url.is_empty():
 		_status_label.text = "Error: No download URL found."
 		return

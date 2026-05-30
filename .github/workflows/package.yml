@@ -25,15 +25,12 @@ jobs:
           if [ -n "$PREV_TAG" ]; then
             echo "Diffing $PREV_TAG → $TAG"
 
-            # Remove any previous entries for this tag (in case workflow runs twice)
             grep -v "^[+-],$VER," "$MANIFEST" > "${MANIFEST}.tmp" && mv "${MANIFEST}.tmp" "$MANIFEST"
 
-            # New files
             while IFS= read -r f; do
               f="${f//\"}"
               [ -n "$f" ] && echo "+,$VER,$f" >> "$MANIFEST"
             done < <(git diff --name-only --diff-filter=A "$PREV_TAG"...HEAD -- addons/gdsql/ | grep -v '\.import$\|\.translation$')
-            # Removed files
             while IFS= read -r f; do
               f="${f//\"}"
               [ -n "$f" ] && echo "-,$VER,$f" >> "$MANIFEST"
@@ -47,6 +44,12 @@ jobs:
               | sed "s|^|+,$VER,|" > "$MANIFEST"
           fi
 
+      - name: Build release body
+        run: |
+          RANGES=$(cat addons/gdsql/upgrade_ranges.txt 2>/dev/null || echo "")
+          echo "upgrade_ranges: $RANGES" > release_body.txt
+          echo "" >> release_body.txt
+
       - name: Package addon
         run: |
           mkdir -p dist/addons
@@ -57,4 +60,6 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
+          body_path: release_body.txt
+          generate_release_notes: true
           files: gdsql-${{ github.ref_name }}.zip
