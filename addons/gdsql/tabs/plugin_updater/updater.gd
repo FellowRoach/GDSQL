@@ -186,27 +186,29 @@ Auto-upgrading to v%s instead. After that, you can manually upgrade further.
 	get_ok_button().text = "Close"
 
 
-## Walk directory and collect files not in the expected set.
-func _collect_obsolete(dir: DirAccess, prefix: String, expected: Dictionary, result: Array) -> void:
+## Remove files in addons/gdsql/ that were not just extracted.
+func _remove_extra(dir: DirAccess, prefix: String, extracted: Dictionary, cleaned: int) -> int:
 	dir.list_dir_begin()
 	var f = dir.get_next()
 	while f != "":
 		if f in [".", "..", ".git"]:
 			f = dir.get_next()
 			continue
-		var rel = prefix + f
+		var rel = "addons/gdsql/" + prefix + f
 		if dir.current_is_dir():
-			var sub = DirAccess.open("res://addons/gdsql/" + prefix + f)
+			var sub = DirAccess.open("res://" + rel)
 			if sub:
-				_collect_obsolete(sub, prefix + f + "/", expected, result)
+				cleaned = _remove_extra(sub, prefix + f + "/", extracted, cleaned)
 		else:
-			if f.ends_with(".import") or f.ends_with(".uid") or f.ends_with(".translation"):
-				f = dir.get_next()
-				continue
-			if not expected.has("addons/gdsql/" + rel):
-				result.push_back("addons/gdsql/" + rel)
+			if not extracted.has(rel):
+				var abs = ProjectSettings.globalize_path("res://" + rel)
+				var dp = DirAccess.open(abs.get_base_dir())
+				if dp:
+					dp.remove(abs.get_file())
+					cleaned += 1
 		f = dir.get_next()
 	dir.list_dir_end()
+	return cleaned
 
 
 ## Parse upgrade_ranges from release body and return max version the current ver can reach.
@@ -430,6 +432,7 @@ func _start_download() -> void:
 	var zip_files = reader.get_files()
 	var marker = "addons/gdsql/"
 	var extracted = 0
+	var extracted_paths = {}
 	for fp in zip_files:
 		var idx = fp.find(marker)
 		if idx < 0:
@@ -449,6 +452,7 @@ func _start_download() -> void:
 			wf.store_buffer(data)
 			wf.close()
 			extracted += 1
+			extracted_paths[rel] = true
 
 	reader.close()
 	var global_path = ProjectSettings.globalize_path(tmp_path)
@@ -458,22 +462,14 @@ func _start_download() -> void:
 			dp.remove(tmp_path.get_file())
 
 	# Remove files that belong to an older version but not the target
-	var expected = _files_for_version(_target_version)
-	var to_remove = []
-	var cleanup_dir = DirAccess.open("res://addons/gdsql/")
-	if cleanup_dir:
-		_collect_obsolete(cleanup_dir, "", expected, to_remove)
-	for r in to_remove:
-		var abs = ProjectSettings.globalize_path("res://" + r)
-		if DirAccess.dir_exists_absolute(abs):
-			var cd = DirAccess.open(abs.get_base_dir())
-			if cd: cd.remove(abs.get_file())
-		elif FileAccess.file_exists(abs):
-			var cd = DirAccess.open(abs.get_base_dir())
-			if cd: cd.remove(abs.get_file())
+	var cleaned = 0
+	var clean_dir = DirAccess.open("res://addons/gdsql/")
+	if clean_dir:
+		cleaned = _remove_extra(clean_dir, "", extracted_paths, cleaned)
+
 	_download_pct = -2
 	_download_size = ""
-	_status_label.text = "Upgrade complete! (%d files updated, %d cleaned up) Please restart Godot." % [extracted, to_remove.size()]
+	_status_label.text = "Upgrade complete! (%d files updated, %d cleaned up) Please restart Godot." % [extracted, cleaned]
 	_upgrade_btn.disabled = true
 	_upgrade_btn.text = "Done"
 
@@ -569,71 +565,3 @@ func _format_size(b: int) -> String:
 	if b < 1024: return "%d B" % b
 	if b < 1048576: return "%.1f KB" % (b / 1024.0)
 	return "%.1f MB" % (b / 1048576.0)
-func _on_download_complete(result: int, _code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
-	if result != HTTPRequest.RESULT_SUCCESS:
-		_status_label.text = "Download failed."
-		_upgrade_btn.disabled = false
-		_upgrade_btn.text = "Retry"
-		return
-		_status_label.text = "Extracting..."
-		
-		# Save to temp file
-		var tmp_path = "user://gdsql_update_%s.zip" % _latest_version
-		var f = FileAccess.open(tmp_path, FileAccess.WRITE)
-		if not f:
-			_status_label.text = "Failed to write temp file."
-			_upgrade_btn.disabled = false
-			_upgrade_btn.text = "Retry"
-			return
-		f.store_buffer(body)
-		f.close()
-		
-		# Extract using ZIPReader
-		var reader = ZIPReader.new()
-		var open_err = reader.open(tmp_path)
-		if open_err != OK:
-			_status_label.text = "Failed to open zip."
-			_upgrade_btn.disabled = false
-			_upgrade_btn.text = "Retry"
-			return
-			
-		var zip_files = reader.get_files()
-		# GitHub zipball has a top-level dir like "repo-tag-commit/"
-		var prefix = ""
-		for fp in zip_files:
-			if fp.ends_with("/"):
-				prefix = fp
-				break
-				
-		var extracted = 0
-		for fp in zip_files:
-			if not fp.begins_with(prefix + "addons/gdsql/"):
-				continue
-			if fp.ends_with("/"):
-				continue
-			var rel = fp.trim_prefix(prefix)
-			var target = "res://" + rel
-			var data = reader.read_file(fp)
-			if fp.ends_with(".import"):
-				continue
-			# Ensure dir exists
-			var d = DirAccess.open("res://")
-			if d:
-				d.make_dir_recursive(target.get_base_dir())
-			var wf = FileAccess.open(target, FileAccess.WRITE)
-			if wf:
-				wf.store_buffer(data)
-				wf.close()
-				extracted += 1
-				
-		reader.close()
-		# Cleanup temp zip
-		var global_path = ProjectSettings.globalize_path(tmp_path)
-		if DirAccess.dir_exists_absolute(global_path):
-			var dp = DirAccess.open(tmp_path.get_base_dir())
-			if dp:
-				dp.remove(tmp_path.get_file())
-				
-		_status_label.text = "Upgrade complete! (%d files updated) Please restart Godot." % extracted
-		_upgrade_btn.disabled = true
-		_upgrade_btn.text = "Done"
