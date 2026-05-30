@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://c3bjm6oe0687p"]
 
-[ext_resource type="Script" uid="uid://cux8i7ttu5uij" path="res://addons/gdsql/tree_databases.gd" id="1_e77h1"]
+[ext_resource type="Script" uid="uid://cux8i7ttu5uij" path="res://addons/gdsql/main/tree_databases.gd" id="1_e77h1"]
 [ext_resource type="Texture2D" uid="uid://c626kxjb1d402" path="res://addons/gdsql/img/copy.svg" id="2_lxxmd"]
 [ext_resource type="Texture2D" uid="uid://cndh7yh8acyoj" path="res://addons/gdsql/img/plus.svg" id="3_lxxmd"]
 [ext_resource type="Texture2D" uid="uid://b8nvrn4yyle36" path="res://addons/gdsql/img/trash-can.svg" id="4_lxxmd"]

@@ -1431,7 +1431,7 @@ func reset_content(item: TreeItem, editor, arr_editor = null, show_diff: bool = 
 			_refresh_diff_show(editor.text_editor, arr_editor[1].text_editor)
 			
 func popup_edit_dialog(item: TreeItem):
-	var editor = preload("res://addons/gdsql/gxml/editor/xml_editor.tscn").instantiate()
+	var editor = load("res://addons/gdsql/gxml/editor/xml_editor.tscn").instantiate()
 	editor.ready.connect(func():
 		editor.get_parent_control().size_flags_vertical = Control.SIZE_EXPAND_FILL
 		editor.toggle_scripts_button.hide()
@@ -1512,7 +1512,7 @@ func popup_diff_dialog(arr_content: Array, show_diff = false):
 	if arr_content.is_empty():
 		return
 		
-	var table = preload("res://addons/gdsql/table.tscn").instantiate()
+	var table = load("res://addons/gdsql/tabs/table/table.tscn").instantiate()
 	table.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	table.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	table.row_expend_and_fill = true
@@ -1533,7 +1533,7 @@ func popup_diff_dialog(arr_content: Array, show_diff = false):
 		vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		
-		var editor = preload("res://addons/gdsql/gxml/editor/xml_editor.tscn").instantiate()
+		var editor = load("res://addons/gdsql/gxml/editor/xml_editor.tscn").instantiate()
 		vbox.add_child(editor)
 		arr_editor.push_back(editor)
 		editor.size_flags_horizontal = Control.SIZE_EXPAND_FILL

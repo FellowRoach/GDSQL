@@ -4,7 +4,7 @@ extends EditorPlugin
 ## Icon already has plugin name, so we give it an invisible name.
 ## We can use ramdom combinations of invisible characters.
 const PLUGIN_NAME = "\u200e\u200f\u2060"
-const MainPanel = preload("res://addons/gdsql/index.tscn")
+const MainPanel = preload("res://addons/gdsql/main/index.tscn")
 
 var main_panel_instance
 var dictionary_object_inspector_plugin
