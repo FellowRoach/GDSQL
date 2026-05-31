@@ -513,8 +513,7 @@ func _start_download() -> void:
 			extracted_paths[rel] = true
 
 	reader.close()
-	var global_path = ProjectSettings.globalize_path(tmp_path)
-	if DirAccess.dir_exists_absolute(global_path):
+	if FileAccess.file_exists(tmp_path):
 		var dp = DirAccess.open(tmp_path.get_base_dir())
 		if dp:
 			dp.remove(tmp_path.get_file())
