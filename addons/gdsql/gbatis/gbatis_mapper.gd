@@ -1,4 +1,4 @@
-@icon("res://addons/gdsql/gbatis/img/GBatisMapper.png")
+@icon("res://addons/gdsql/gbatis/img/GBatisMapper.svg")
 @tool
 ## 数据访问类
 extends Resource
