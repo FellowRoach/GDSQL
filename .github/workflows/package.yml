@@ -14,35 +14,35 @@ jobs:
         with:
           fetch-depth: 0
 
-#      - name: Update file manifest
-#        run: |
-#          MANIFEST="addons/gdsql/tabs/plugin_updater/file_manifest.txt"
-#          TAG="${{ github.ref_name }}"
-#          VER="${TAG#v}"
-#
-#          PREV_TAG=$(git tag --sort=-version:refname | grep -E '^v' | sed -n '2p')
-#
-#          if [ -n "$PREV_TAG" ]; then
-#            echo "Diffing $PREV_TAG → $TAG"
-#
-#            grep -v "^[+-],$VER," "$MANIFEST" > "${MANIFEST}.tmp" && mv "${MANIFEST}.tmp" "$MANIFEST"
-#
-#            while IFS= read -r f; do
-#              f="${f//\"}"
-#              [ -n "$f" ] && echo "+,$VER,$f" >> "$MANIFEST"
-#            done < <(git diff --name-only --diff-filter=A "$PREV_TAG"...HEAD -- addons/gdsql/ | grep -v '\.import$\|\.translation$')
-#            while IFS= read -r f; do
-#              f="${f//\"}"
-#              [ -n "$f" ] && echo "-,$VER,$f" >> "$MANIFEST"
-#            done < <(git diff --name-only --diff-filter=D "$PREV_TAG"...HEAD -- addons/gdsql/ | grep -v '\.import$\|\.translation$')
-#          else
-#            echo "No previous tag. Creating initial manifest."
-#            find addons/gdsql/ -type f \
-#              ! -name '*.import' \
-#              ! -name '*.translation' \
-#              | sort \
-#              | sed "s|^|+,$VER,|" > "$MANIFEST"
-#          fi
+      - name: Update file manifest
+        run: |
+          MANIFEST="addons/gdsql/tabs/plugin_updater/file_manifest.txt"
+          TAG="${{ github.ref_name }}"
+          VER="${TAG#v}"
+
+          PREV_TAG=$(git tag --sort=-version:refname | grep -E '^v' | sed -n '2p')
+
+          if [ -n "$PREV_TAG" ]; then
+            echo "Diffing $PREV_TAG → $TAG"
+
+            grep -v "^[+-],$VER," "$MANIFEST" > "${MANIFEST}.tmp" && mv "${MANIFEST}.tmp" "$MANIFEST"
+
+            while IFS= read -r f; do
+              f="${f//\"}"
+              [ -n "$f" ] && echo "+,$VER,$f" >> "$MANIFEST"
+            done < <(git diff --name-only --diff-filter=A "$PREV_TAG"...HEAD -- addons/gdsql/ | grep -v '\.import$\|\.translation$')
+            while IFS= read -r f; do
+              f="${f//\"}"
+              [ -n "$f" ] && echo "-,$VER,$f" >> "$MANIFEST"
+            done < <(git diff --name-only --diff-filter=D "$PREV_TAG"...HEAD -- addons/gdsql/ | grep -v '\.import$\|\.translation$')
+          else
+            echo "No previous tag. Creating initial manifest."
+            find addons/gdsql/ -type f \
+              ! -name '*.import' \
+              ! -name '*.translation' \
+              | sort \
+              | sed "s|^|+,$VER,|" > "$MANIFEST"
+          fi
 
       - name: Build release body
         run: |

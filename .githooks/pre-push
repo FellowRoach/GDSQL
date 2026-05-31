@@ -1,9 +1,6 @@
 #!/bin/bash
 ## Git pre-push hook: auto-update file_manifest.txt before pushing a tag.
 
-# TEMP DISABLED: manifest auto-generation
-exit 0
-
 MANIFEST="addons/gdsql/tabs/plugin_updater/file_manifest.txt"
 CHANGED=0
 
