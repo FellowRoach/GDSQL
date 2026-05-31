@@ -22,7 +22,7 @@ func _ready() -> void:
 	vbox.add_child(title)
 
 	var desc = Label.new()
-	desc.text = "This addon uses icons from the following sources. Each icon is listed with its original name, author, source link, and license."
+	desc.text = "This addon uses icons from the following sources. Each icon is listed with its original name, author, source link, license, and any modifications made."
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_margin(vbox, 4)
 	vbox.add_child(desc)
@@ -49,8 +49,8 @@ func _ready() -> void:
 
 
 func _parse_line(line: String) -> Dictionary:
-	# Format: path,icon_url,attribution_text,license
-	var parts = line.split(",", false, 4)
+	# Format: path,icon_url,attribution_text,license,modification_notes
+	var parts = line.split(",", false, 5)
 	if parts.size() < 3:
 		return {}
 
@@ -58,6 +58,7 @@ func _parse_line(line: String) -> Dictionary:
 	var icon_url = parts[1].strip_edges()
 	var rest = parts[2].strip_edges()
 	var license_text = parts[3].strip_edges() if parts.size() >= 4 else "CC BY 4.0"
+	var mod_notes = parts[4].strip_edges() if parts.size() >= 5 else ""
 
 	# Parse attribution: "name by author on <a href="url">site</a>"
 	var on_pos = rest.find(" on <a href=")
@@ -104,6 +105,7 @@ func _parse_line(line: String) -> Dictionary:
 		"source_url": source_url,
 		"site": site,
 		"license": license_text,
+		"mod_notes": mod_notes,
 	}
 
 
@@ -176,6 +178,15 @@ func _make_item(item: Dictionary) -> Control:
 	top.add_child(badge_panel)
 
 	vbox.add_child(top)
+
+	# Row 2: modification notes
+	if not item["mod_notes"].is_empty():
+		var mod_label = Label.new()
+		mod_label.text = item["mod_notes"]
+		mod_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+		mod_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		vbox.add_child(mod_label)
+
 	return margin
 
 

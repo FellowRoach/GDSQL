@@ -32,44 +32,48 @@
      inkscape:window-y="-11"
      inkscape:window-maximized="1"
      inkscape:current-layer="svg5" />
-  <path
-     d="M2 13.03V15C2 20 4 22 9 22H15C20 22 22 20 22 15V9C22 4 20 2 15 2H9C4 2 2 4 2 9"
-     stroke="#292D32"
-     stroke-width="1.5"
-     stroke-linecap="round"
-     stroke-linejoin="round"
-     id="path1"
-     style="stroke:#d7dbe4;stroke-opacity:1;stroke-width:2.2;stroke-dasharray:none" />
-  <path
-     d="M12 12L6 18"
-     stroke="#292D32"
-     stroke-width="1.5"
-     stroke-linecap="round"
-     stroke-linejoin="round"
-     id="path2"
-     style="stroke:#d7dbe4;stroke-opacity:1;stroke-width:2.2;stroke-dasharray:none" />
-  <path
-     d="M17.9998 6L15.0098 8.99"
-     stroke="#292D32"
-     stroke-width="1.5"
-     stroke-linecap="round"
-     stroke-linejoin="round"
-     id="path3"
-     style="stroke:#d7dbe4;stroke-opacity:1;stroke-width:2.2;stroke-dasharray:none" />
-  <path
-     d="M18 10V6H14"
-     stroke="#292D32"
-     stroke-width="1.5"
-     stroke-linecap="round"
-     stroke-linejoin="round"
-     id="path4"
-     style="stroke:#d7dbe4;stroke-opacity:1;stroke-width:2.2;stroke-dasharray:none" />
-  <path
-     d="M6 14V18H10"
-     stroke="#292D32"
-     stroke-width="1.5"
-     stroke-linecap="round"
-     stroke-linejoin="round"
-     id="path5"
-     style="stroke:#d7dbe4;stroke-opacity:1;stroke-width:2.2;stroke-dasharray:none" />
+  <g
+     id="g1"
+     transform="translate(2.1,2.1000001)">
+    <path
+       d="m 1.7918919,10.735135 v 1.597297 c 0,4.054054 1.6216216,5.675676 5.6756756,5.675676 h 4.8648645 c 4.054054,0 5.675676,-1.621622 5.675676,-5.675676 V 7.4675675 c 0,-4.054054 -1.621622,-5.6756756 -5.675676,-5.6756756 H 7.4675675 c -4.054054,0 -5.6756756,1.6216216 -5.6756756,5.6756756"
+       stroke="#292D32"
+       stroke-width="1.5"
+       stroke-linecap="round"
+       stroke-linejoin="round"
+       id="path1"
+       style="stroke:#d7dbe4;stroke-width:1.78378;stroke-dasharray:none;stroke-opacity:1" />
+    <path
+       d="M 9.9,9.9 5.0351351,14.764865"
+       stroke="#292D32"
+       stroke-width="1.5"
+       stroke-linecap="round"
+       stroke-linejoin="round"
+       id="path2"
+       style="stroke:#d7dbe4;stroke-width:1.78378;stroke-dasharray:none;stroke-opacity:1" />
+    <path
+       d="M 14.764703,5.0351351 12.340378,7.4594594"
+       stroke="#292D32"
+       stroke-width="1.5"
+       stroke-linecap="round"
+       stroke-linejoin="round"
+       id="path3"
+       style="stroke:#d7dbe4;stroke-width:1.78378;stroke-dasharray:none;stroke-opacity:1" />
+    <path
+       d="M 14.764865,8.2783784 V 5.0351351 h -3.243243"
+       stroke="#292D32"
+       stroke-width="1.5"
+       stroke-linecap="round"
+       stroke-linejoin="round"
+       id="path4"
+       style="stroke:#d7dbe4;stroke-width:1.78378;stroke-dasharray:none;stroke-opacity:1" />
+    <path
+       d="m 5.0351351,11.521622 v 3.243243 h 3.2432433"
+       stroke="#292D32"
+       stroke-width="1.5"
+       stroke-linecap="round"
+       stroke-linejoin="round"
+       id="path5"
+       style="stroke:#d7dbe4;stroke-width:1.78378;stroke-dasharray:none;stroke-opacity:1" />
+  </g>
 </svg>
