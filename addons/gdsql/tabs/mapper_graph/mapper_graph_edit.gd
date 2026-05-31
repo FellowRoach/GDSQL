@@ -6,19 +6,19 @@ extends GraphEdit
 signal change_tab_title(page: Control, title: String)
 signal tree_node_list_item_added
 
-var SQLGraphNode = preload("res://addons/gdsql/tabs/sql_graph_node/graph_node.tscn")
+var SQLGraphNode = load("res://addons/gdsql/tabs/sql_graph_node/graph_node.tscn")
 
-const SB_PANEL = preload("res://addons/gdsql/tabs/sql_graph_node/sb_panel.tres")
-const SB_PANEL_SELECTED = preload("res://addons/gdsql/tabs/sql_graph_node/sb_panel_selected.tres")
-const SB_SELECT_TITLEBAR = preload("res://addons/gdsql/tabs/sql_graph_node/sb_select_titlebar.tres")
-const SB_SELECT_TITLEBAR_SELECTED = preload("res://addons/gdsql/tabs/sql_graph_node/sb_select_titlebar_selected.tres")
+var SB_PANEL = load("res://addons/gdsql/tabs/sql_graph_node/sb_panel.tres")
+var SB_PANEL_SELECTED = load("res://addons/gdsql/tabs/sql_graph_node/sb_panel_selected.tres")
+var SB_SELECT_TITLEBAR = load("res://addons/gdsql/tabs/sql_graph_node/sb_select_titlebar.tres")
+var SB_SELECT_TITLEBAR_SELECTED = load("res://addons/gdsql/tabs/sql_graph_node/sb_select_titlebar_selected.tres")
 
-const TEXT_ENUM = preload("res://addons/gdsql/custom_control/text_enum.tscn")
+var TEXT_ENUM = load("res://addons/gdsql/tabs/mapper_graph/custom_control/text_enum.tscn")
 
 static var copied_nodes: Dictionary
 
-const SHORTCUT_SELECTALL = preload("res://addons/gdsql/tabs/sql_graph_node/shortcut_selectall.tres")
-const SHORTCUT_UNDO = preload("res://addons/gdsql/tabs/sql_graph_node/shortcut_undo.tres")
+var SHORTCUT_SELECTALL = load("res://addons/gdsql/tabs/sql_graph_node/shortcut_selectall.tres")
+var SHORTCUT_UNDO = load("res://addons/gdsql/tabs/sql_graph_node/shortcut_undo.tres")
 
 const VALID_PORT_COLOR = {
 	TYPE_NIL: Color.ALICE_BLUE,

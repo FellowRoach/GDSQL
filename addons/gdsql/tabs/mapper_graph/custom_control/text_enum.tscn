@@ -1,9 +1,9 @@
 [gd_scene format=3 uid="uid://3imb6uxofehr"]
 
-[ext_resource type="Script" uid="uid://cb12x8g5l8x2r" path="res://addons/gdsql/custom_control/text_enum.gd" id="1_7pw25"]
-[ext_resource type="Texture2D" uid="uid://bc0of00ct61xs" path="res://addons/gdsql/custom_control/img/edit_pencil.svg" id="2_5fywh"]
-[ext_resource type="Texture2D" uid="uid://c4x8mvoc6vohq" path="res://addons/gdsql/custom_control/img/check.svg" id="3_5fywh"]
-[ext_resource type="Texture2D" uid="uid://cncsyde268k38" path="res://addons/gdsql/custom_control/img/fail.svg" id="4_xr74o"]
+[ext_resource type="Script" uid="uid://cb12x8g5l8x2r" path="res://addons/gdsql/tabs/mapper_graph/custom_control/text_enum.gd" id="1_7pw25"]
+[ext_resource type="Texture2D" uid="uid://bc0of00ct61xs" path="res://addons/gdsql/tabs/mapper_graph/custom_control/img/edit_pencil.svg" id="2_5fywh"]
+[ext_resource type="Texture2D" uid="uid://c4x8mvoc6vohq" path="res://addons/gdsql/tabs/mapper_graph/custom_control/img/check.svg" id="3_5fywh"]
+[ext_resource type="Texture2D" uid="uid://cncsyde268k38" path="res://addons/gdsql/tabs/mapper_graph/custom_control/img/fail.svg" id="4_xr74o"]
 
 [node name="TextEnum" type="HBoxContainer" unique_id=535562875]
 anchors_preset = 15

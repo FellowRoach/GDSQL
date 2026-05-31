@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://dryqmdnjvj0rt"]
 
-[ext_resource type="Script" uid="uid://wm8q6ctsmlk7" path="res://addons/gdsql/tabs/mapper_graph.gd" id="1_skh3h"]
-[ext_resource type="Script" uid="uid://1uifvxy4j0kw" path="res://addons/gdsql/tabs/mapper_graph_edit.gd" id="2_455wi"]
+[ext_resource type="Script" uid="uid://wm8q6ctsmlk7" path="res://addons/gdsql/tabs/mapper_graph/mapper_graph.gd" id="1_skh3h"]
+[ext_resource type="Script" uid="uid://1uifvxy4j0kw" path="res://addons/gdsql/tabs/mapper_graph/mapper_graph_edit.gd" id="2_455wi"]
 [ext_resource type="Texture2D" uid="uid://caxb01gsgiywd" path="res://addons/gdsql/img/folder.svg" id="2_iwaq8"]
 [ext_resource type="Texture2D" uid="uid://4swt8gii0lii" path="res://addons/gdsql/img/floppy_disk.svg" id="3_rpwxo"]
 [ext_resource type="Texture2D" uid="uid://cndh7yh8acyoj" path="res://addons/gdsql/img/plus.svg" id="4_iwaq8"]
