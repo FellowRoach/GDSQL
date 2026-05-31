@@ -317,7 +317,7 @@ func test_evaluate_command_script_dictionary_literal() -> void:
 
 ## 测试: res://路径简化
 func test_globalize_path_res_simplify() -> void:
-	var path = "res://addons/gdsql/gdsql_utils.gd"
+	var path = "res://addons/gdsql/basic/gdsql_utils.gd"
 	var result = GDSQL.GDSQLUtils.globalize_path(path)
 	assert_str(result).is_equal(path.simplify_path())
 
@@ -403,7 +403,7 @@ func test_globalize_path_empty_string() -> void:
 
 ## 测试: 文件存在返回true
 func test_file_exists_res_path_true() -> void:
-	var path = "res://addons/gdsql/gdsql_utils.gd"
+	var path = "res://addons/gdsql/basic/gdsql_utils.gd"
 	assert_bool(GDSQL.GDSQLUtils.file_exists(path)).is_true()
 
 
@@ -422,7 +422,7 @@ func test_file_exists_install_path_translated() -> void:
 
 ## 测试: 绝对路径文件存在
 func test_file_exists_absolute_path() -> void:
-	var path = "res://addons/gdsql/gdsql_utils.gd"
+	var path = "res://addons/gdsql/basic/gdsql_utils.gd"
 	assert_bool(GDSQL.GDSQLUtils.file_exists(path)).is_true()
 
 
