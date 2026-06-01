@@ -490,8 +490,8 @@ func _on_button_clicked(item: TreeItem, column: int, id: int, _mouse_button_inde
 				var exe_select = func():
 					mgr.send_to_editor_and_execute.emit(item.get_meta("display_name"), {
 						"cmd": "select",
-						"db_name": item.get_meta("db_name"),
-						"table_name": item.get_meta("table_name"),
+						"db_name": GDSQL.RootConfig.get_database_display_name(item.get_meta("db_name")),
+						"table_name": item.get_meta("display_name"),
 						"fields": "*"
 					})
 				deal_password_before_table_cmd(item, "", exe_select)
@@ -564,8 +564,8 @@ func _on_popup_menu_table_item_index_pressed(index: int) -> void:
 				var exe_select = func():
 					mgr.send_to_editor_and_execute.emit(item.get_meta("display_name"), {
 						"cmd": "select",
-						"db_name": item.get_meta("db_name"),
-						"table_name": item.get_meta("table_name"),
+						"db_name": GDSQL.RootConfig.get_database_display_name(item.get_meta("db_name")),
+						"table_name": item.get_meta("display_name"),
 						"fields": "*"
 					})
 				deal_password_before_table_cmd(item, "", exe_select)
