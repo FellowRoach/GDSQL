@@ -385,7 +385,8 @@ func gen_select_node() -> GraphNode:
 		match prop:
 			"Schema":
 				base_dao.use_db(mgr.databases[GDSQL.RootConfig.validate_name(new_val)]["data_path"])
-				var tables = mgr.databases[GDSQL.RootConfig.validate_name(new_val)]["tables"].keys()
+				var db_key = GDSQL.RootConfig.validate_name(new_val)
+				var tables = mgr.databases[db_key]["tables"].keys().map(func(t): return mgr.databases[db_key]["tables"][t].get("display_name", t))
 				table_dict_obj.reset_hint(
 					{"Table": {"hint": PROPERTY_HINT_ENUM, "hint_string": ",".join(tables)}, 
 					"_alias": {"hint": PROPERTY_HINT_PLACEHOLDER_TEXT, "hint_string": "alias"}})
@@ -397,7 +398,7 @@ func gen_select_node() -> GraphNode:
 		graph_node.push_redraw_slot_control(3, 2)
 		match prop:
 			"Table":
-				base_dao.set_table(new_val)
+				base_dao.set_table(GDSQL.RootConfig.validate_name(new_val))
 			"_alias":
 				base_dao.set_table_alias(new_val)
 	)
@@ -554,7 +555,8 @@ func gen_left_join_node() -> GraphNode:
 		match prop:
 			"Schema":
 				left_join_obj.set_db(mgr.databases[GDSQL.RootConfig.validate_name(new_val)]["data_path"])
-				var tables = mgr.databases[GDSQL.RootConfig.validate_name(new_val)]["tables"].keys()
+				var db_key = GDSQL.RootConfig.validate_name(new_val)
+				var tables = mgr.databases[db_key]["tables"].keys().map(func(t): return mgr.databases[db_key]["tables"][t].get("display_name", t))
 				table_dict_obj.reset_hint(
 					{"Table": {"hint": PROPERTY_HINT_ENUM, "hint_string": ",".join(tables)}, 
 					"_alias": {"hint": PROPERTY_HINT_PLACEHOLDER_TEXT, "hint_string": "alias"}})
@@ -566,7 +568,7 @@ func gen_left_join_node() -> GraphNode:
 		graph_node.push_redraw_slot_control(2, 2) # table是第3行第3个控件。
 		match prop:
 			"Table":
-				left_join_obj.set_table(new_val)
+				left_join_obj.set_table(GDSQL.RootConfig.validate_name(new_val))
 			"_alias":
 				left_join_obj.set_alias(new_val)
 	)
@@ -1354,7 +1356,8 @@ func gen_insert_node() -> GraphNode:
 		match prop:
 			"Schema":
 				base_dao.use_db(mgr.databases[GDSQL.RootConfig.validate_name(new_val)]["data_path"])
-				var tables = mgr.databases[GDSQL.RootConfig.validate_name(new_val)]["tables"].keys()
+				var db_key = GDSQL.RootConfig.validate_name(new_val)
+				var tables = mgr.databases[db_key]["tables"].keys().map(func(t): return mgr.databases[db_key]["tables"][t].get("display_name", t))
 				table_dict_obj.reset_hint(
 					{"Table": {"hint": PROPERTY_HINT_ENUM, "hint_string": ",".join(tables)}})
 				table_dict_obj._set("Table", "", true)
@@ -1365,11 +1368,11 @@ func gen_insert_node() -> GraphNode:
 		graph_node.push_redraw_slot_control(1, 2)
 		match prop:
 			"Table":
-				base_dao.set_table(new_val)
-				if new_val != "" and mgr.databases[GDSQL.RootConfig.validate_name(schema_dict_obj._get("Schema"))]["tables"].has(new_val):
+				base_dao.set_table(GDSQL.RootConfig.validate_name(new_val))
+				if new_val != "" and mgr.databases[GDSQL.RootConfig.validate_name(schema_dict_obj._get("Schema"))]["tables"].has(GDSQL.RootConfig.validate_name(new_val)):
 					var data = {}
 					var hints = {}
-					for col in mgr.databases[GDSQL.RootConfig.validate_name(schema_dict_obj._get("Schema"))]["tables"][new_val]["columns"]:
+					for col in mgr.databases[GDSQL.RootConfig.validate_name(schema_dict_obj._get("Schema"))]["tables"][GDSQL.RootConfig.validate_name(new_val)]["columns"]:
 						data[col["Column Name"]] = GDSQL.DataTypeDef.DEFUALT_VALUES[col["Data Type"]]
 						hints[col["Column Name"]] = {"hint": col["Hint"], "hint_string": col["Hint String"], "type": col["Data Type"]}
 					fields_dict_obj.reset_data(data, hints)
@@ -1496,7 +1499,8 @@ func gen_update_node() -> GraphNode:
 		match prop:
 			"Schema":
 				base_dao.use_db(mgr.databases[GDSQL.RootConfig.validate_name(new_val)]["data_path"])
-				var tables = mgr.databases[GDSQL.RootConfig.validate_name(new_val)]["tables"].keys()
+				var db_key = GDSQL.RootConfig.validate_name(new_val)
+				var tables = mgr.databases[db_key]["tables"].keys().map(func(t): return mgr.databases[db_key]["tables"][t].get("display_name", t))
 				table_dict_obj.reset_hint(
 					{"Table": {"hint": PROPERTY_HINT_ENUM, "hint_string": ",".join(tables)}})
 				table_dict_obj._set("Table", "", true)
@@ -1507,11 +1511,11 @@ func gen_update_node() -> GraphNode:
 		graph_node.push_redraw_slot_control(1, 2)
 		match prop:
 			"Table":
-				base_dao.set_table(new_val)
-				if new_val != "" and mgr.databases[GDSQL.RootConfig.validate_name(schema_dict_obj._get("Schema"))]["tables"].has(new_val):
+				base_dao.set_table(GDSQL.RootConfig.validate_name(new_val))
+				if new_val != "" and mgr.databases[GDSQL.RootConfig.validate_name(schema_dict_obj._get("Schema"))]["tables"].has(GDSQL.RootConfig.validate_name(new_val)):
 					var data = {}
 					var hints = {}
-					for col in mgr.databases[GDSQL.RootConfig.validate_name(schema_dict_obj._get("Schema"))]["tables"][new_val]["columns"]:
+					for col in mgr.databases[GDSQL.RootConfig.validate_name(schema_dict_obj._get("Schema"))]["tables"][GDSQL.RootConfig.validate_name(new_val)]["columns"]:
 						data[col["Column Name"]] = GDSQL.DataTypeDef.DEFUALT_VALUES[col["Data Type"]]
 						hints[col["Column Name"]] = {"hint": col["Hint"], "hint_string": col["Hint String"], "type": col["Data Type"]}
 					fields_dict_obj.reset_data(data, hints)
@@ -1630,7 +1634,8 @@ func gen_delete_node() -> GraphNode:
 		match prop:
 			"Schema":
 				base_dao.use_db(mgr.databases[GDSQL.RootConfig.validate_name(new_val)]["data_path"])
-				var tables = mgr.databases[GDSQL.RootConfig.validate_name(new_val)]["tables"].keys()
+				var db_key = GDSQL.RootConfig.validate_name(new_val)
+				var tables = mgr.databases[db_key]["tables"].keys().map(func(t): return mgr.databases[db_key]["tables"][t].get("display_name", t))
 				table_dict_obj.reset_hint(
 					{"Table": {"hint": PROPERTY_HINT_ENUM, "hint_string": ",".join(tables)}})
 				table_dict_obj._set("Table", "", true)
@@ -1641,7 +1646,7 @@ func gen_delete_node() -> GraphNode:
 		graph_node.push_redraw_slot_control(1, 2)
 		match prop:
 			"Table":
-				base_dao.set_table(new_val)
+				base_dao.set_table(GDSQL.RootConfig.validate_name(new_val))
 	)
 	where_dict_obj.value_changed.connect(func(prop, new_val, _old_val):
 		graph_node.push_redraw_slot_control(2, 2)
@@ -1957,7 +1962,8 @@ func gen_link_node() -> GraphNode:
 		match prop:
 			"Schema":
 				data.set_meta("link_db", mgr.databases[GDSQL.RootConfig.validate_name(new_val)]["data_path"])
-				var tables = mgr.databases[GDSQL.RootConfig.validate_name(new_val)]["tables"].keys()
+				var db_key = GDSQL.RootConfig.validate_name(new_val)
+				var tables = mgr.databases[db_key]["tables"].keys().map(func(t): return mgr.databases[db_key]["tables"][t].get("display_name", t))
 				table_dict_obj.reset_hint(
 					{"Table": {"hint": PROPERTY_HINT_ENUM, "hint_string": ",".join(tables)},})
 				table_dict_obj._set("Table", "", true) # 强制设置（可以避免值没变化导致没有发出信号）
@@ -1970,8 +1976,8 @@ func gen_link_node() -> GraphNode:
 			"Table":
 				data.set_meta("link_table", new_val)
 				var hints = []
-				if new_val != "" and mgr.databases[GDSQL.RootConfig.validate_name(schema_dict_obj._get("Schema"))]["tables"].has(new_val):
-					for col in mgr.databases[GDSQL.RootConfig.validate_name(schema_dict_obj._get("Schema"))]["tables"][new_val]["columns"]:
+				if new_val != "" and mgr.databases[GDSQL.RootConfig.validate_name(schema_dict_obj._get("Schema"))]["tables"].has(GDSQL.RootConfig.validate_name(new_val)):
+					for col in mgr.databases[GDSQL.RootConfig.validate_name(schema_dict_obj._get("Schema"))]["tables"][GDSQL.RootConfig.validate_name(new_val)]["columns"]:
 						hints.push_back(col["Column Name"])
 				hints = ",".join(hints)
 				link_prop_dict_obj.reset_hint({
@@ -2025,7 +2031,8 @@ func gen_link_node() -> GraphNode:
 		match prop:
 			"Schema1":
 				data.set_meta("left_db", mgr.databases[GDSQL.RootConfig.validate_name(new_val)]["data_path"])
-				var tables = mgr.databases[GDSQL.RootConfig.validate_name(new_val)]["tables"].keys()
+				var db_key = GDSQL.RootConfig.validate_name(new_val)
+				var tables = mgr.databases[db_key]["tables"].keys().map(func(t): return mgr.databases[db_key]["tables"][t].get("display_name", t))
 				var hint = left_table_dict_obj._hint
 				hint["Table1"] = {"hint": PROPERTY_HINT_ENUM, "hint_string": ",".join(tables)}
 				left_table_dict_obj.reset_hint(hint)
@@ -2038,7 +2045,8 @@ func gen_link_node() -> GraphNode:
 		match prop:
 			"Schema2":
 				data.set_meta("right_db", mgr.databases[GDSQL.RootConfig.validate_name(new_val)]["data_path"])
-				var tables = mgr.databases[GDSQL.RootConfig.validate_name(new_val)]["tables"].keys()
+				var db_key = GDSQL.RootConfig.validate_name(new_val)
+				var tables = mgr.databases[db_key]["tables"].keys().map(func(t): return mgr.databases[db_key]["tables"][t].get("display_name", t))
 				var hint = right_table_dict_obj._hint
 				hint["Table2"] = {"hint": PROPERTY_HINT_ENUM, "hint_string": ",".join(tables)}
 				right_table_dict_obj.reset_hint(hint)
@@ -2051,11 +2059,11 @@ func gen_link_node() -> GraphNode:
 		match prop:
 			"Table1":
 				data.set_meta("left_table", new_val)
-				if new_val != "" and mgr.databases[GDSQL.RootConfig.validate_name(left_schema_dict_obj._get("Schema1"))]["tables"].has(new_val):
+				if new_val != "" and mgr.databases[GDSQL.RootConfig.validate_name(left_schema_dict_obj._get("Schema1"))]["tables"].has(GDSQL.RootConfig.validate_name(new_val)):
 					var adata = {}
 					var hints = {}
 					var pk = ""
-					for col in mgr.databases[GDSQL.RootConfig.validate_name(left_schema_dict_obj._get("Schema1"))]["tables"][new_val]["columns"]:
+					for col in mgr.databases[GDSQL.RootConfig.validate_name(left_schema_dict_obj._get("Schema1"))]["tables"][GDSQL.RootConfig.validate_name(new_val)]["columns"]:
 						if col["PK"]:
 							pk = col["Column Name"]
 						adata[col["Column Name"]] = true
@@ -2077,11 +2085,11 @@ func gen_link_node() -> GraphNode:
 		match prop:
 			"Table2":
 				data.set_meta("right_table", new_val)
-				if new_val != "" and mgr.databases[GDSQL.RootConfig.validate_name(right_schema_dict_obj._get("Schema2"))]["tables"].has(new_val):
+				if new_val != "" and mgr.databases[GDSQL.RootConfig.validate_name(right_schema_dict_obj._get("Schema2"))]["tables"].has(GDSQL.RootConfig.validate_name(new_val)):
 					var adata = {}
 					var hints = {}
 					var pk = ""
-					for col in mgr.databases[GDSQL.RootConfig.validate_name(right_schema_dict_obj._get("Schema2"))]["tables"][new_val]["columns"]:
+					for col in mgr.databases[GDSQL.RootConfig.validate_name(right_schema_dict_obj._get("Schema2"))]["tables"][GDSQL.RootConfig.validate_name(new_val)]["columns"]:
 						if col["PK"]:
 							pk = col["Column Name"]
 						adata[col["Column Name"]] = true
