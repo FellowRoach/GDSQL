@@ -649,8 +649,16 @@ func need_password(db_name: String, table_name: String, try_password: String, re
 							var ret = _need_password(table_item, try_password)
 							result.push_back(ret)
 							return ret
-	result.push_back(true) # TODO FIXME 没找到db和table? 基于tree的，好像不太好，如果以后支持表筛选的话不就找不到了
-	return true
+	# 在树中找不到表（可能是新建表还没刷新），直接检查数据库加密
+	if mgr and mgr.databases.has(db_name) and mgr.databases[db_name]["encrypted"] != "":
+		var db_path = GDSQL.RootConfig.get_database_data_path(db_name)
+		if _password_correct.has(db_path):
+			result.push_back(false)
+			return false
+		result.push_back(true)
+		return true
+	result.push_back(false)
+	return false
 	
 func _need_password(table_item: TreeItem, try_password: String) -> bool:
 	var db_name = table_item.get_meta("db_name")
