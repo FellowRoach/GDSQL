@@ -178,8 +178,7 @@ func _create_database_impl(db_name: String, path: String) -> Error:
 			msgs.push_back(tr("Failed! Database path `%s`(%s) already exist!") % [path, a_db_name])
 			return _error_occur(action, msgs)
 			
-	GDSQL.RootConfig.set_database_data(db_name, path_bak, "")
-	GDSQL.RootConfig.set_value(db_name, "display_name", original_db_name)
+	GDSQL.RootConfig.set_database_data(db_name, path_bak, "", original_db_name)
 	GDSQL.RootConfig.save()
 	msgs.push_back(tr("1 file: %s has been modified.") % GDSQL.GDSQLUtils.localize_path(GDSQL.RootConfig.path))
 	
@@ -237,8 +236,7 @@ func _alter_database_impl(old_db_name: String, new_db_name: String) -> Error:
 		return _error_occur(action, msgs)
 		
 	var old_data = databases[old_db_name]
-	GDSQL.RootConfig.set_database_data(new_db_name, old_data["data_path"], old_data["encrypted"])
-	GDSQL.RootConfig.set_value(new_db_name, "display_name", original_new_name)
+	GDSQL.RootConfig.set_database_data(new_db_name, old_data["data_path"], old_data["encrypted"], original_new_name)
 	GDSQL.RootConfig.erase_database(old_db_name)
 	GDSQL.RootConfig.save()
 	msgs.push_back(tr("1 file: %s has been modified.") % GDSQL.GDSQLUtils.localize_path(GDSQL.RootConfig.path))

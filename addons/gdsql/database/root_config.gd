@@ -218,10 +218,12 @@ func get_databases_info() -> Dictionary:
 			
 	return databases
 	
-func set_database_data(db_name: String, data_path: String, encypted_dek: String):
+func set_database_data(db_name: String, data_path: String, encypted_dek: String, display_name: String = ""):
 	db_name = validate_name(db_name)
 	set_value(db_name, "data_path", data_path)
 	set_value(db_name, "encrypted", encypted_dek)
+	if display_name != "":
+		set_value(db_name, "display_name", display_name)
 	
 func set_database_data_path(db_name: String, data_path: String):
 	db_name = validate_name(db_name)
