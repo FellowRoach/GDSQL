@@ -81,7 +81,12 @@ static func decrypt_dek64(encrypted_dek_info: String, user_password: String) -> 
 	return ""
 	
 static func decrypt_dek(encrypted_dek_info: String, user_password: String) -> PackedByteArray:
+	if encrypted_dek_info.is_empty() or user_password.is_empty():
+		return PackedByteArray()
 	var parts = encrypted_dek_info.split("|")
+	if parts.size() < 5:
+		return PackedByteArray()
+	
 	var encrypted_dek_b64 = parts[0]
 	var iv_b64 = parts[1]
 	var salt_b64 = parts[2]
@@ -94,12 +99,18 @@ static func decrypt_dek(encrypted_dek_info: String, user_password: String) -> Pa
 	var verify_code = Marshalls.base64_to_raw(verify_code64)
 	var iv_verify = Marshalls.base64_to_raw(iv_verify_code64)
 	
+	if salt.is_empty():
+		return PackedByteArray()
+	
 	var crypto = Crypto.new()
 	var key = crypto.hmac_digest(
 		HashingContext.HASH_SHA256,
 		salt,
 		user_password.to_utf8_buffer()
 	).slice(0, 32)
+	
+	if key.size() != 32:
+		return PackedByteArray()
 	
 	var aes = AESContext.new()
 	aes.start(AESContext.MODE_CBC_DECRYPT, key, iv_verify)
