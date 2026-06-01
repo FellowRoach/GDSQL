@@ -506,8 +506,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 				leading_result_map_id = result_map_id
 				leading_mapper_n = result_map_id.capitalize().replace(" ", "") + "Mapper"
 				leading_entity_n = entity_name
-				leading_db_name = db_name
-				leading_table_name = table_name
+				leading_db_name = GDSQL.RootConfig.get_database_display_name(db_name)
+				leading_table_name = GDSQL.RootConfig.get_table_display_name(db_name, table_name)
 				leading_table_name_snake = table_name.to_snake_case()
 				
 			var arr_col = []
@@ -596,8 +596,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 								"result_map": a_result_map_id,
 								"arg_names": by,
 								"arg_types": arg_types,
-								"db_name": info.db_name,
-								"namespace": info.db_name + "." + info.table_name,
+								"db_name": GDSQL.RootConfig.get_database_display_name(info.db_name),
+								"namespace": GDSQL.RootConfig.get_database_display_name(info.db_name) + "." + GDSQL.RootConfig.get_table_display_name(info.db_name, info.table_name),
 								"node_name": to_node_name,
 								"info": info,
 								"from_helper": ainfo.is_helper,
@@ -763,8 +763,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 					continue
 					
 				var data = nodes_map[node_name].get_meta("data") as Dictionary
-				var db_name = data.db_name as String
-				var table_name = data.table_name as String
+				var db_name = GDSQL.RootConfig.get_database_display_name(data.db_name)
+				var table_name = GDSQL.RootConfig.get_table_display_name(data.db_name, data.table_name)
 				var ns = db_name + "." + table_name
 				var id = graph_edit.get_node_extra(nodes_map[node_name]).link_prop_type.to_camel_case()
 				if not vo_ids.has(ns):
@@ -820,8 +820,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 					for f in node_pair:
 						for t in node_pair[f]:
 							if t == node_name:
-								db_name = node_pair[f][t].db_name
-								table_name = node_pair[f][t].table_name
+								db_name = GDSQL.RootConfig.get_database_display_name(node_pair[f][t].db_name)
+								table_name = GDSQL.RootConfig.get_table_display_name(node_pair[f][t].db_name, node_pair[f][t].table_name)
 								var alias0 = table_alias[f].substr(0, 2)
 								var alias1 = table_alias[t].substr(0, 2)
 								for k in node_pair[f][t].link_col:
