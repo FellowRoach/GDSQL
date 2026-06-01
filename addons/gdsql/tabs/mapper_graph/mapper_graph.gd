@@ -508,7 +508,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 				leading_entity_n = entity_name
 				leading_db_name = GDSQL.RootConfig.get_database_display_name(db_name)
 				leading_table_name = GDSQL.RootConfig.get_table_display_name(db_name, table_name)
-				leading_table_name_snake = table_name.to_snake_case()
+				leading_table_name_snake = leading_table_name.to_snake_case()
 				
 			var arr_col = []
 			var arr_col_name = []
