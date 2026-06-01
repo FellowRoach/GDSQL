@@ -201,8 +201,9 @@ func alter_database(old_name: String, new_name: String) -> Error:
 		func(): return _alter_database_impl(old_name, new_name))
 		
 func _alter_database_impl(old_db_name: String, new_db_name: String) -> Error:
-	old_db_name = _validate_name(old_db_name)
+	var original_old_name = old_db_name
 	var original_new_name = new_db_name
+	old_db_name = _validate_name(old_db_name)
 	new_db_name = _validate_name(new_db_name)
 	
 	var action = "ALTER DATABASE `%s` RENAME `%s`;" % [old_db_name, new_db_name]
@@ -212,7 +213,7 @@ func _alter_database_impl(old_db_name: String, new_db_name: String) -> Error:
 		msgs.push_back(tr("Failed! Database name `%s` is invalid!") % new_db_name)
 		return _error_occur(action, msgs)
 		
-	if old_db_name == new_db_name:
+	if original_old_name == original_new_name:
 		msgs.push_back(tr("Nothing changed!"))
 		return _error_occur(action, msgs)
 		
@@ -221,9 +222,16 @@ func _alter_database_impl(old_db_name: String, new_db_name: String) -> Error:
 		msgs.push_back(tr("Database [%s] not exist!") % old_db_name)
 		return _error_occur(action, msgs)
 		
-	if databases.has(new_db_name):
+	if new_db_name != old_db_name and databases.has(new_db_name):
 		msgs.push_back(tr("Database's name [%s] has been occupied!") % new_db_name)
 		return _error_occur(action, msgs)
+		
+	if old_db_name == new_db_name:
+		# 仅大小写变化，只更新 display_name
+		GDSQL.RootConfig.set_value(new_db_name, "display_name", original_new_name)
+		GDSQL.RootConfig.save()
+		msgs.push_back(tr("1 file: %s has been modified.") % GDSQL.GDSQLUtils.localize_path(GDSQL.RootConfig.path))
+		return _success(action, msgs)
 		
 	var old_config_path = GDSQL.RootConfig.get_database_config_path(old_db_name)
 	if not _can_path_be_modified(old_config_path):
