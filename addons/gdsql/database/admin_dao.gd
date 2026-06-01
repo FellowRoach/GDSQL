@@ -179,14 +179,14 @@ func _create_database_impl(db_name: String, path: String) -> Error:
 			
 	GDSQL.RootConfig.set_database_data(db_name, path_bak, "")
 	GDSQL.RootConfig.save()
-	msgs.push_back(tr("1 file: %s has been modified.") % GDSQL.RootConfig.path)
+	msgs.push_back(tr("1 file: %s has been modified.") % GDSQL.GDSQLUtils.localize_path(GDSQL.RootConfig.path))
 	
 	var config_path = GDSQL.RootConfig.get_database_config_path(db_name)
 	var abs_config_path = ProjectSettings.globalize_path(config_path)
 	if not DirAccess.dir_exists_absolute(abs_config_path):
 		var err = DirAccess.make_dir_recursive_absolute(abs_config_path)
 		if err == OK:
-			msgs.push_back(tr("Dir: %s has been made.") % config_path)
+			msgs.push_back(tr("Dir: %s has been made.") % GDSQL.GDSQLUtils.localize_path(config_path))
 		else:
 			msgs.push_back(tr("Failed! Cannot make dir %s ! Err: %s.") % [config_path, err])
 			return _error_occur(action, msgs)
@@ -237,7 +237,7 @@ func _alter_database_impl(old_db_name: String, new_db_name: String) -> Error:
 	GDSQL.RootConfig.set_database_data(new_db_name, old_data["data_path"], old_data["encrypted"])
 	GDSQL.RootConfig.erase_database(old_db_name)
 	GDSQL.RootConfig.save()
-	msgs.push_back(tr("1 file: %s has been modified.") % GDSQL.RootConfig.path)
+	msgs.push_back(tr("1 file: %s has been modified.") % GDSQL.GDSQLUtils.localize_path(GDSQL.RootConfig.path))
 	
 	var dir = DirAccess.open(GDSQL.RootConfig.get_base_dir())
 	if dir == null:
@@ -248,14 +248,14 @@ func _alter_database_impl(old_db_name: String, new_db_name: String) -> Error:
 	if dir.dir_exists(old_config_path):
 		var err = dir.rename(old_config_path, new_config_path)
 		if err == OK:
-			msgs.push_back(tr("1 file: %s has been renamed to %s.") % [old_config_path, new_config_path])
+			msgs.push_back(tr("1 file: %s has been renamed to %s.") % [GDSQL.GDSQLUtils.localize_path(old_config_path), GDSQL.GDSQLUtils.localize_path(new_config_path)])
 		else:
-			msgs.push_back(tr("Failed! Cannot rename dir from %s to %s ! Err: %s.") % [old_config_path, new_config_path, err])
+			msgs.push_back(tr("Failed! Cannot rename dir from %s to %s ! Err: %s.") % [GDSQL.GDSQLUtils.localize_path(old_config_path), GDSQL.GDSQLUtils.localize_path(new_config_path), err])
 			return _error_occur(action, msgs)
 	else:
 		var err = dir.make_dir_recursive(new_config_path)
 		if err == OK:
-			msgs.push_back(tr("Dir: %s has been made.") % new_config_path)
+			msgs.push_back(tr("Dir: %s has been made.") % GDSQL.GDSQLUtils.localize_path(new_config_path))
 		else:
 			msgs.push_back(tr("Failed! Cannot make dir %s ! Err: %s.") % [new_config_path, err])
 			return _error_occur(action, msgs)
@@ -310,7 +310,7 @@ func _drop_database_impl(db_name: String) -> Error:
 	GDSQL.RootConfig.set_database_dek(db_name, null)
 	GDSQL.RootConfig.erase_database(db_name)
 	GDSQL.RootConfig.save()
-	msgs.push_back(tr("1 file: %s has been modified") % GDSQL.RootConfig.path)
+	msgs.push_back(tr("1 file: %s has been modified") % GDSQL.GDSQLUtils.localize_path(GDSQL.RootConfig.path))
 	return _success(action, msgs)
 	
 # ----- Table Operations -----
@@ -384,13 +384,13 @@ comment: String = "", password: String = "", valid_if_not_exist: bool = false) -
 	if not DirAccess.dir_exists_absolute(db_absolute_path):
 		var err = DirAccess.make_dir_recursive_absolute(db_absolute_path)
 		if err == OK:
-			msgs.push_back(tr("Dir: %s has been made.") % db_absolute_path)
+			msgs.push_back(tr("Dir: %s has been made.") % GDSQL.GDSQLUtils.localize_path(db_absolute_path))
 		else:
 			msgs.push_back(tr("Failed! Cannot make dir %s ! Err: %s.") % [db_absolute_path, err])
 			return _error_occur(action, msgs)
 	else:
 		if GDSQL.GDSQLUtils.file_exists(table_data_path):
-			msgs.push_back(tr("Failed! Data file [%s] already exist!") % table_data_path)
+			msgs.push_back(tr("Failed! Data file [%s] already exist!") % GDSQL.GDSQLUtils.localize_path(table_data_path))
 			return _error_occur(action, msgs)
 			
 	# 不记录path、database等信息，是方便转移数据表时，直接剪切文件到对应的数据库目录即可（配置文件和数据文件分别到各自目录）
@@ -402,7 +402,7 @@ comment: String = "", password: String = "", valid_if_not_exist: bool = false) -
 	config_file.set_value(table_name, "valid_if_not_exist", valid_if_not_exist)
 	config_file.set_value(table_name, "columns", column_infos)
 	config_file.save(table_conf_path)
-	msgs.push_back(tr("1 file: %s has been saved.") % table_conf_path)
+	msgs.push_back(tr("1 file: %s has been saved.") % GDSQL.GDSQLUtils.localize_path(table_conf_path))
 	
 	# 先设置成虚拟的文件，便于首次保存
 	GDSQL.ConfManager.mark_valid_if_not_exit(table_data_path)
@@ -413,12 +413,12 @@ comment: String = "", password: String = "", valid_if_not_exist: bool = false) -
 		GDSQL.ConfManager.save_conf_by_dek(table_data_path, dek64)
 		GDSQL.RootConfig.set_table_dek(db_name, table_name, dek64)
 		GDSQL.RootConfig.save()
-		msgs.push_back(tr("1 file: %s has been modified.") % GDSQL.RootConfig.path)
+		msgs.push_back(tr("1 file: %s has been modified.") % GDSQL.GDSQLUtils.localize_path(GDSQL.RootConfig.path))
 	else:
 		GDSQL.ConfManager.save_conf_by_origin_password_or_dek(table_data_path)
 	if not valid_if_not_exist:
 		GDSQL.ConfManager.mark_invalid_if_not_exist(table_data_path)
-	msgs.push_back(tr("1 file: %s has been saved.") % table_data_path)
+	msgs.push_back(tr("1 file: %s has been saved.") % GDSQL.GDSQLUtils.localize_path(table_data_path))
 	
 	return _success(action, msgs)
 	
@@ -486,19 +486,19 @@ column_infos: Array, comments: String = "", valid_if_not_exist: bool = false) ->
 		config_file.set_value(new_table_name, "valid_if_not_exist", valid_if_not_exist)
 		config_file.set_value(new_table_name, "columns", column_infos)
 		config_file.save(table_conf_path) # 如果新路径和旧路径一致，就会覆盖掉，也是我们所期待的
-		msgs.push_back(tr("1 file: %s has been saved.") % table_conf_path)
+		msgs.push_back(tr("1 file: %s has been saved.") % GDSQL.GDSQLUtils.localize_path(table_conf_path))
 		
 		if old_table_data_path != new_table_data_path:
 			var old_table_conf_path = GDSQL.RootConfig.get_table_config_path(db_name, old_table_name)
 			var old_table_conf_path_abs = GDSQL.GDSQLUtils.globalize_path(old_table_conf_path)
 			if GDSQL.GDSQLUtils.file_exists(old_table_conf_path_abs):
 				OS.move_to_trash(old_table_conf_path_abs) # 删配置
-				msgs.push_back(tr("1 file: %s has been moved to trash.") % old_table_conf_path_abs)
+				msgs.push_back(tr("1 file: %s has been moved to trash.") % GDSQL.GDSQLUtils.localize_path(old_table_conf_path_abs))
 				
 		return _success(action, msgs)
 		
 	if new_table_data_path != old_table_data_path and GDSQL.GDSQLUtils.file_exists(new_table_data_path):
-		msgs.push_back(tr("Failed! File [%s] already exist!") % new_table_data_path)
+		msgs.push_back(tr("Failed! File [%s] already exist!") % GDSQL.GDSQLUtils.localize_path(new_table_data_path))
 		return _error_occur(action, msgs)
 		
 	# 检查是否有重复的字段
@@ -590,7 +590,7 @@ column_infos: Array, comments: String = "", valid_if_not_exist: bool = false) ->
 				new_table_data_file.set_value(primary_value, col_name, i.get(col_name, default_value))
 				
 		GDSQL.ConfManager.save_conf_by_same_password_or_dek(new_table_data_path, old_table_data_path)
-		msgs.push_back(tr("1 file: %s has been saved.") % new_table_data_path)
+		msgs.push_back(tr("1 file: %s has been saved.") % GDSQL.GDSQLUtils.localize_path(new_table_data_path))
 		if new_table_data_path != old_table_data_path:
 			GDSQL.ConfManager.remove_conf(old_table_data_path)
 			
@@ -601,7 +601,7 @@ column_infos: Array, comments: String = "", valid_if_not_exist: bool = false) ->
 		config_file.set_value(new_table_name, "valid_if_not_exist", valid_if_not_exist)
 		config_file.set_value(new_table_name, "columns", column_infos)
 		config_file.save(table_conf_path) # 如果新路径和旧路径一致，就会覆盖掉，也是我们所期待的
-		msgs.push_back(tr("1 file: %s has been saved.") % table_conf_path)
+		msgs.push_back(tr("1 file: %s has been saved.") % GDSQL.GDSQLUtils.localize_path(table_conf_path))
 		
 		# 设置缓存
 		new_table_data_file.set_indexed_props(column_infos.filter(func(v): return v.Index).map(func(v):
@@ -614,10 +614,10 @@ column_infos: Array, comments: String = "", valid_if_not_exist: bool = false) ->
 			var old_table_data_path_abs = GDSQL.GDSQLUtils.globalize_path(old_table_data_path)
 			if GDSQL.GDSQLUtils.file_exists(old_table_conf_path_abs):
 				OS.move_to_trash(old_table_conf_path_abs) # 删配置
-				msgs.push_back(tr("1 file: %s has been moved to trash.") % old_table_conf_path_abs)
+				msgs.push_back(tr("1 file: %s has been moved to trash.") % GDSQL.GDSQLUtils.localize_path(old_table_conf_path_abs))
 			if GDSQL.GDSQLUtils.file_exists(old_table_data_path_abs):
 				OS.move_to_trash(old_table_data_path_abs) # 删数据
-				msgs.push_back(tr("1 file: %s has been moved to trash.") % old_table_data_path_abs)
+				msgs.push_back(tr("1 file: %s has been moved to trash.") % GDSQL.GDSQLUtils.localize_path(old_table_data_path_abs))
 				
 		return _success(action, msgs)
 		
@@ -662,18 +662,18 @@ func _drop_table_impl(db_name: String, table_name: String) -> Error:
 	var conf_path = GDSQL.GDSQLUtils.globalize_path(table_conf_path)
 	if GDSQL.GDSQLUtils.file_exists(table_conf_path):
 		OS.move_to_trash(conf_path)
-		msgs.push_back(tr("1 file: %s has been moved to trash.") % conf_path)
+		msgs.push_back(tr("1 file: %s has been moved to trash.") % GDSQL.GDSQLUtils.localize_path(conf_path))
 	else:
-		msgs.push_back(tr("1 file: %s could not be found when attempting to move to trash.") % conf_path)
+		msgs.push_back(tr("1 file: %s could not be found when attempting to move to trash.") % GDSQL.GDSQLUtils.localize_path(conf_path))
 	GDSQL.ConfManager.remove_conf(table_conf_path)
 	
 	# remove data file
 	var data_path = GDSQL.GDSQLUtils.globalize_path(GDSQL.RootConfig.get_table_data_path(db_name, table_name))
 	if GDSQL.GDSQLUtils.file_exists(data_path):
 		OS.move_to_trash(data_path)
-		msgs.push_back(tr("1 file: %s has been moved to trash.") % data_path)
+		msgs.push_back(tr("1 file: %s has been moved to trash.") % GDSQL.GDSQLUtils.localize_path(data_path))
 	else:
-		msgs.push_back(tr("1 file: %s could not be found when attempting to move to trash.") % data_path)
+		msgs.push_back(tr("1 file: %s could not be found when attempting to move to trash.") % GDSQL.GDSQLUtils.localize_path(data_path))
 		
 	var dek64 = GDSQL.RootConfig.get_table_dek64(db_name, table_name)
 	if dek64:
@@ -689,7 +689,7 @@ func _drop_table_impl(db_name: String, table_name: String) -> Error:
 			
 		GDSQL.RootConfig.set_table_dek(db_name, table_name, null)
 		GDSQL.RootConfig.save()
-		msgs.push_back(tr("1 file: %s has been modified") % GDSQL.RootConfig.path)
+		msgs.push_back(tr("1 file: %s has been modified") % GDSQL.GDSQLUtils.localize_path(GDSQL.RootConfig.path))
 		
 	GDSQL.ConfManager.remove_conf(data_path)
 	
@@ -730,9 +730,9 @@ func _truncate_table_impl(db_name: String, table_name: String) -> Error:
 	var data_path = GDSQL.GDSQLUtils.globalize_path(GDSQL.RootConfig.get_table_data_path(db_name, table_name))
 	if GDSQL.GDSQLUtils.file_exists(data_path):
 		OS.move_to_trash(data_path) # users can get their old data file in trash can
-		msgs.push_back(tr("1 file: %s has been moved to trash.") % data_path)
+		msgs.push_back(tr("1 file: %s has been moved to trash.") % GDSQL.GDSQLUtils.localize_path(data_path))
 	else:
-		msgs.push_back(tr("1 file: %s could not be found when attempting to move to trash.") % data_path)
+		msgs.push_back(tr("1 file: %s could not be found when attempting to move to trash.") % GDSQL.GDSQLUtils.localize_path(data_path))
 		
 	# create empty file
 	var data_file = ConfigFile.new()
@@ -749,7 +749,7 @@ func _truncate_table_impl(db_name: String, table_name: String) -> Error:
 		GDSQL.ConfManager.save_conf_by_dek(data_path, dek64)
 	else:
 		GDSQL.ConfManager.save_conf_by_password(data_path, "")
-	msgs.push_back(tr("1 file: %s has been overwritten with an empty file.") % data_path)
+	msgs.push_back(tr("1 file: %s has been overwritten with an empty file.") % GDSQL.GDSQLUtils.localize_path(data_path))
 	
 	return _success(action, msgs)
 	
@@ -787,14 +787,14 @@ func set_db_password(db_name: String, password: String) -> Error:
 	GDSQL.RootConfig.set_database_encrypted(db_name, GDSQL.CryptoUtil.encrypt_dek(dek64, password))
 	GDSQL.RootConfig.set_database_dek(db_name, dek64)
 	GDSQL.RootConfig.save()
-	msgs.push_back(tr("1 file: %s has been modified.") % GDSQL.RootConfig.path)
+	msgs.push_back(tr("1 file: %s has been modified.") % GDSQL.GDSQLUtils.localize_path(GDSQL.RootConfig.path))
 	
 	for table_name in databases[db_name]["tables"]:
 		var table_data_path = GDSQL.RootConfig.get_table_data_path(db_name, table_name)
 		var table_data_file_exist = GDSQL.GDSQLUtils.file_exists(table_data_path)
 		if table_data_file_exist:
 			if not GDSQL.ConfManager.get_conf(table_data_path, ""): # load data
-				msgs.push_back(tr("Failed! Get file %s content failed!") % table_data_path)
+				msgs.push_back(tr("Failed! Get file %s content failed!") % GDSQL.GDSQLUtils.localize_path(table_data_path))
 				return _error_occur(action, msgs)
 				
 	for table_name in databases[db_name]["tables"]:
@@ -802,7 +802,7 @@ func set_db_password(db_name: String, password: String) -> Error:
 		var table_data_file_exist = GDSQL.GDSQLUtils.file_exists(table_data_path)
 		if table_data_file_exist:
 			GDSQL.ConfManager.save_conf_by_dek(table_data_path, dek64)
-			msgs.push_back(tr("1 file: %s has been encrypted.") % table_data_path)
+			msgs.push_back(tr("1 file: %s has been encrypted.") % GDSQL.GDSQLUtils.localize_path(table_data_path))
 			
 		# 清除该表数据的缓存，可以让用户使用该表时必须输入密码，以加深印象
 		GDSQL.ConfManager.remove_conf(table_data_path)
@@ -846,7 +846,7 @@ func change_db_password(db_name: String, password: String) -> Error:
 		
 	GDSQL.RootConfig.set_database_encrypted(db_name, GDSQL.CryptoUtil.encrypt_dek(dek64, password))
 	GDSQL.RootConfig.save()
-	msgs.push_back(tr("1 file: %s has been modified.") % GDSQL.RootConfig.path)
+	msgs.push_back(tr("1 file: %s has been modified.") % GDSQL.GDSQLUtils.localize_path(GDSQL.RootConfig.path))
 	
 	# 修改密码不会导致dek变化，所以文件也不变化，变化的是dek的加密字符串，这样达到最大效率。
 	# 因此这里不会把数据文件重新加密。
@@ -885,7 +885,7 @@ func clear_db_password(db_name: String) -> Error:
 	GDSQL.RootConfig.set_database_encrypted(db_name, "")
 	GDSQL.RootConfig.set_database_dek(db_name, null)
 	GDSQL.RootConfig.save()
-	msgs.push_back(tr("1 file: %s has been modified.") % GDSQL.RootConfig.path)
+	msgs.push_back(tr("1 file: %s has been modified.") % GDSQL.GDSQLUtils.localize_path(GDSQL.RootConfig.path))
 	
 	for table_name in databases[db_name]["tables"]:
 		var table_data_path = GDSQL.RootConfig.get_table_data_path(db_name, table_name)
@@ -894,7 +894,7 @@ func clear_db_password(db_name: String) -> Error:
 		if table_data_file_exist:
 			GDSQL.ConfManager.get_conf(table_data_path, dek)
 			GDSQL.ConfManager.save_conf_by_password(table_data_path, "")
-			msgs.push_back(tr("1 file: %s has been decrypted.") % table_data_path)
+			msgs.push_back(tr("1 file: %s has been decrypted.") % GDSQL.GDSQLUtils.localize_path(table_data_path))
 			
 	return _success(action, msgs)
 	
@@ -938,7 +938,7 @@ func set_table_password(db_name: String, table_name: String, password: String) -
 		
 	var table_conf_path = GDSQL.RootConfig.get_table_config_path(db_name, table_name)
 	if not GDSQL.GDSQLUtils.file_exists(table_conf_path):
-		msgs.push_back(tr("Failed! Table conf %s does not exist!") % table_conf_path)
+		msgs.push_back(tr("Failed! Table conf %s does not exist!") % GDSQL.GDSQLUtils.localize_path(table_conf_path))
 		return _error_occur(action, msgs)
 		
 	var table_data_path = GDSQL.GDSQLUtils.globalize_path(GDSQL.RootConfig.get_table_data_path(db_name, table_name))
@@ -947,20 +947,20 @@ func set_table_password(db_name: String, table_name: String, password: String) -
 	config_file.load(table_conf_path)
 	config_file.set_value(table_name, "encrypted", GDSQL.CryptoUtil.encrypt_dek(dek64, password))
 	config_file.save(table_conf_path)
-	msgs.push_back(tr("1 file: %s has been saved.") % table_conf_path)
+	msgs.push_back(tr("1 file: %s has been saved.") % GDSQL.GDSQLUtils.localize_path(table_conf_path))
 	
 	GDSQL.RootConfig.set_table_dek(db_name, table_name, dek64)
 	GDSQL.RootConfig.save()
-	msgs.push_back(tr("1 file: %s has been modified.") % GDSQL.RootConfig.path)
+	msgs.push_back(tr("1 file: %s has been modified.") % GDSQL.GDSQLUtils.localize_path(GDSQL.RootConfig.path))
 	
 	var table_data_file_exist = GDSQL.GDSQLUtils.file_exists(table_data_path)
 	if table_data_file_exist:
 		if not GDSQL.ConfManager.get_conf(table_data_path, ""): # load data
-			msgs.push_back(tr("Failed! Get file %s content failed!") % table_data_path)
+			msgs.push_back(tr("Failed! Get file %s content failed!") % GDSQL.GDSQLUtils.localize_path(table_data_path))
 			return _error_occur(action, msgs)
 			
 		GDSQL.ConfManager.save_conf_by_dek(table_data_path, dek64)
-		msgs.push_back(tr("1 file: %s has been encrypted.") % table_data_path)
+		msgs.push_back(tr("1 file: %s has been encrypted.") % GDSQL.GDSQLUtils.localize_path(table_data_path))
 		
 	# 清除该表数据的缓存，可以让用户使用该表时必须输入密码，以加深印象
 	GDSQL.ConfManager.remove_conf(table_data_path)
@@ -1003,7 +1003,7 @@ func change_table_password(db_name: String, table_name: String, password: String
 		
 	var table_conf_path = GDSQL.RootConfig.get_table_config_path(db_name, table_name)
 	if not GDSQL.GDSQLUtils.file_exists(table_conf_path):
-		msgs.push_back(tr("Failed! Table conf %s does not exist!") % table_conf_path)
+		msgs.push_back(tr("Failed! Table conf %s does not exist!") % GDSQL.GDSQLUtils.localize_path(table_conf_path))
 		return _error_occur(action, msgs)
 		
 	var dek = GDSQL.RootConfig.get_table_dek64(db_name, table_name)
@@ -1015,7 +1015,7 @@ func change_table_password(db_name: String, table_name: String, password: String
 	config_file.load(table_conf_path)
 	config_file.set_value(table_name, "encrypted", GDSQL.CryptoUtil.encrypt_dek(dek, password))
 	config_file.save(table_conf_path)
-	msgs.push_back(tr("1 file: %s has been saved.") % table_conf_path)
+	msgs.push_back(tr("1 file: %s has been saved.") % GDSQL.GDSQLUtils.localize_path(table_conf_path))
 	
 	# 修改密码不会导致dek变化，所以文件也不变化，变化的是dek的加密字符串，这样达到最大效率。
 	# 因此这里不会把数据文件重新加密。
@@ -1057,7 +1057,7 @@ func clear_table_password(db_name: String, table_name: String) -> Error:
 		
 	var table_conf_path = GDSQL.RootConfig.get_table_config_path(db_name, table_name)
 	if not GDSQL.GDSQLUtils.file_exists(table_conf_path):
-		msgs.push_back(tr("Failed! Table conf %s does not exist!") % table_conf_path)
+		msgs.push_back(tr("Failed! Table conf %s does not exist!") % GDSQL.GDSQLUtils.localize_path(table_conf_path))
 		return _error_occur(action, msgs)
 		
 	var table_data_path = GDSQL.GDSQLUtils.globalize_path(GDSQL.RootConfig.get_table_data_path(db_name, table_name))
@@ -1070,17 +1070,17 @@ func clear_table_password(db_name: String, table_name: String) -> Error:
 	config_file.load(table_conf_path)
 	config_file.set_value(table_name, "encrypted", "")
 	config_file.save(table_conf_path)
-	msgs.push_back(tr("1 file: %s has been saved.") % table_conf_path)
+	msgs.push_back(tr("1 file: %s has been saved.") % GDSQL.GDSQLUtils.localize_path(table_conf_path))
 	
 	GDSQL.RootConfig.set_table_dek(db_name, table_name, null)
 	GDSQL.RootConfig.save()
-	msgs.push_back(tr("1 file: %s has been modified.") % GDSQL.RootConfig.path)
+	msgs.push_back(tr("1 file: %s has been modified.") % GDSQL.GDSQLUtils.localize_path(GDSQL.RootConfig.path))
 	
 	var table_data_file_exist = GDSQL.GDSQLUtils.file_exists(table_data_path)
 	if table_data_file_exist:
 		GDSQL.ConfManager.get_conf(table_data_path, dek)
 		GDSQL.ConfManager.save_conf_by_password(table_data_path, "")
-		msgs.push_back(tr("1 file: %s has been decrypted.") % table_data_path)
+		msgs.push_back(tr("1 file: %s has been decrypted.") % GDSQL.GDSQLUtils.localize_path(table_data_path))
 		
 	return _success(action, msgs)
 	
