@@ -354,7 +354,7 @@ limit = 100, alias = "", password = "", asize = null, pos_offset = null, aname =
 	return graph_node
 	
 func gen_select_node() -> GraphNode:
-	var databases = mgr.databases.keys()
+	var databases = mgr.databases.keys().map(func(k): return mgr.databases[k].get("display_name", k))
 	
 	var schema_dict_obj = GDSQL.DictionaryObject.new(
 		{"Schema": "", "_password": ""}, 
@@ -384,8 +384,8 @@ func gen_select_node() -> GraphNode:
 		graph_node.push_redraw_slot_control(2, 2) # 如果不是通过点击的控件修改的dict obj，就需要重绘一下。这里偷个懒，直接重绘。
 		match prop:
 			"Schema":
-				base_dao.use_db(mgr.databases[new_val]["data_path"])
-				var tables = mgr.databases[new_val]["tables"].keys()
+				base_dao.use_db(mgr.databases[GDSQL.RootConfig.validate_name(new_val)]["data_path"])
+				var tables = mgr.databases[GDSQL.RootConfig.validate_name(new_val)]["tables"].keys()
 				table_dict_obj.reset_hint(
 					{"Table": {"hint": PROPERTY_HINT_ENUM, "hint_string": ",".join(tables)}, 
 					"_alias": {"hint": PROPERTY_HINT_PLACEHOLDER_TEXT, "hint_string": "alias"}})
@@ -529,7 +529,7 @@ cond = "", asize = null, pos_offset = null, aname = ""):
 	return graph_node
 	
 func gen_left_join_node() -> GraphNode:
-	var databases = mgr.databases.keys()
+	var databases = mgr.databases.keys().map(func(k): return mgr.databases[k].get("display_name", k))
 	
 	var schema_dict_obj = GDSQL.DictionaryObject.new(
 		{"Schema": "", "_password": ""}, 
@@ -553,8 +553,8 @@ func gen_left_join_node() -> GraphNode:
 		graph_node.push_redraw_slot_control(1, 2)
 		match prop:
 			"Schema":
-				left_join_obj.set_db(mgr.databases[new_val]["data_path"])
-				var tables = mgr.databases[new_val]["tables"].keys()
+				left_join_obj.set_db(mgr.databases[GDSQL.RootConfig.validate_name(new_val)]["data_path"])
+				var tables = mgr.databases[GDSQL.RootConfig.validate_name(new_val)]["tables"].keys()
 				table_dict_obj.reset_hint(
 					{"Table": {"hint": PROPERTY_HINT_ENUM, "hint_string": ",".join(tables)}, 
 					"_alias": {"hint": PROPERTY_HINT_PLACEHOLDER_TEXT, "hint_string": "alias"}})
@@ -1329,7 +1329,7 @@ asize = null, pos_offset = null, aname = ""):
 	
 	
 func gen_insert_node() -> GraphNode:
-	var databases = mgr.databases.keys()
+	var databases = mgr.databases.keys().map(func(k): return mgr.databases[k].get("display_name", k))
 	
 	var schema_dict_obj = GDSQL.DictionaryObject.new(
 		{"Schema": "", "_password": ""}, 
@@ -1353,8 +1353,8 @@ func gen_insert_node() -> GraphNode:
 		graph_node.push_redraw_slot_control(0, 2) # 如果不是通过点击的控件修改的dict obj，就需要重绘一下。这里偷个懒，直接重绘。
 		match prop:
 			"Schema":
-				base_dao.use_db(mgr.databases[new_val]["data_path"])
-				var tables = mgr.databases[new_val]["tables"].keys()
+				base_dao.use_db(mgr.databases[GDSQL.RootConfig.validate_name(new_val)]["data_path"])
+				var tables = mgr.databases[GDSQL.RootConfig.validate_name(new_val)]["tables"].keys()
 				table_dict_obj.reset_hint(
 					{"Table": {"hint": PROPERTY_HINT_ENUM, "hint_string": ",".join(tables)}})
 				table_dict_obj._set("Table", "", true)
@@ -1366,10 +1366,10 @@ func gen_insert_node() -> GraphNode:
 		match prop:
 			"Table":
 				base_dao.set_table(new_val)
-				if new_val != "" and mgr.databases[schema_dict_obj._get("Schema")]["tables"].has(new_val):
+				if new_val != "" and mgr.databases[GDSQL.RootConfig.validate_name(schema_dict_obj._get("Schema"))]["tables"].has(new_val):
 					var data = {}
 					var hints = {}
-					for col in mgr.databases[schema_dict_obj._get("Schema")]["tables"][new_val]["columns"]:
+					for col in mgr.databases[GDSQL.RootConfig.validate_name(schema_dict_obj._get("Schema"))]["tables"][new_val]["columns"]:
 						data[col["Column Name"]] = GDSQL.DataTypeDef.DEFUALT_VALUES[col["Data Type"]]
 						hints[col["Column Name"]] = {"hint": col["Hint"], "hint_string": col["Hint String"], "type": col["Data Type"]}
 					fields_dict_obj.reset_data(data, hints)
@@ -1469,7 +1469,7 @@ asize = null, pos_offset = null, aname = ""):
 	return graph_node
 	
 func gen_update_node() -> GraphNode:
-	var databases = mgr.databases.keys()
+	var databases = mgr.databases.keys().map(func(k): return mgr.databases[k].get("display_name", k))
 	
 	var schema_dict_obj = GDSQL.DictionaryObject.new(
 		{"Schema": "", "_password": ""}, 
@@ -1495,8 +1495,8 @@ func gen_update_node() -> GraphNode:
 		graph_node.push_redraw_slot_control(0, 2) # 如果不是通过点击的控件修改的dict obj，就需要重绘一下。这里偷个懒，直接重绘。
 		match prop:
 			"Schema":
-				base_dao.use_db(mgr.databases[new_val]["data_path"])
-				var tables = mgr.databases[new_val]["tables"].keys()
+				base_dao.use_db(mgr.databases[GDSQL.RootConfig.validate_name(new_val)]["data_path"])
+				var tables = mgr.databases[GDSQL.RootConfig.validate_name(new_val)]["tables"].keys()
 				table_dict_obj.reset_hint(
 					{"Table": {"hint": PROPERTY_HINT_ENUM, "hint_string": ",".join(tables)}})
 				table_dict_obj._set("Table", "", true)
@@ -1508,10 +1508,10 @@ func gen_update_node() -> GraphNode:
 		match prop:
 			"Table":
 				base_dao.set_table(new_val)
-				if new_val != "" and mgr.databases[schema_dict_obj._get("Schema")]["tables"].has(new_val):
+				if new_val != "" and mgr.databases[GDSQL.RootConfig.validate_name(schema_dict_obj._get("Schema"))]["tables"].has(new_val):
 					var data = {}
 					var hints = {}
-					for col in mgr.databases[schema_dict_obj._get("Schema")]["tables"][new_val]["columns"]:
+					for col in mgr.databases[GDSQL.RootConfig.validate_name(schema_dict_obj._get("Schema"))]["tables"][new_val]["columns"]:
 						data[col["Column Name"]] = GDSQL.DataTypeDef.DEFUALT_VALUES[col["Data Type"]]
 						hints[col["Column Name"]] = {"hint": col["Hint"], "hint_string": col["Hint String"], "type": col["Data Type"]}
 					fields_dict_obj.reset_data(data, hints)
@@ -1607,7 +1607,7 @@ asize = null, pos_offset = null, aname = ""):
 	return graph_node
 	
 func gen_delete_node() -> GraphNode:
-	var databases = mgr.databases.keys()
+	var databases = mgr.databases.keys().map(func(k): return mgr.databases[k].get("display_name", k))
 	
 	var schema_dict_obj = GDSQL.DictionaryObject.new(
 		{"Schema": "", "_password": ""}, 
@@ -1629,8 +1629,8 @@ func gen_delete_node() -> GraphNode:
 		graph_node.push_redraw_slot_control(0, 2) # 如果不是通过点击的控件修改的dict obj，就需要重绘一下。这里偷个懒，直接重绘。
 		match prop:
 			"Schema":
-				base_dao.use_db(mgr.databases[new_val]["data_path"])
-				var tables = mgr.databases[new_val]["tables"].keys()
+				base_dao.use_db(mgr.databases[GDSQL.RootConfig.validate_name(new_val)]["data_path"])
+				var tables = mgr.databases[GDSQL.RootConfig.validate_name(new_val)]["tables"].keys()
 				table_dict_obj.reset_hint(
 					{"Table": {"hint": PROPERTY_HINT_ENUM, "hint_string": ",".join(tables)}})
 				table_dict_obj._set("Table", "", true)
@@ -1929,7 +1929,7 @@ asize = null, pos_offset = null, aname = "", query = true):
 	return graph_node
 	
 func gen_link_node() -> GraphNode:
-	var databases = mgr.databases.keys()
+	var databases = mgr.databases.keys().map(func(k): return mgr.databases[k].get("display_name", k))
 	
 	var schema_dict_obj = GDSQL.DictionaryObject.new(
 		{"Schema": "", "_password": ""}, 
@@ -1956,8 +1956,8 @@ func gen_link_node() -> GraphNode:
 		graph_node.push_redraw_slot_control(1, 2) # 如果不是通过点击的控件修改的dict obj，就需要重绘一下。这里偷个懒，直接重绘。
 		match prop:
 			"Schema":
-				data.set_meta("link_db", mgr.databases[new_val]["data_path"])
-				var tables = mgr.databases[new_val]["tables"].keys()
+				data.set_meta("link_db", mgr.databases[GDSQL.RootConfig.validate_name(new_val)]["data_path"])
+				var tables = mgr.databases[GDSQL.RootConfig.validate_name(new_val)]["tables"].keys()
 				table_dict_obj.reset_hint(
 					{"Table": {"hint": PROPERTY_HINT_ENUM, "hint_string": ",".join(tables)},})
 				table_dict_obj._set("Table", "", true) # 强制设置（可以避免值没变化导致没有发出信号）
@@ -1970,8 +1970,8 @@ func gen_link_node() -> GraphNode:
 			"Table":
 				data.set_meta("link_table", new_val)
 				var hints = []
-				if new_val != "" and mgr.databases[schema_dict_obj._get("Schema")]["tables"].has(new_val):
-					for col in mgr.databases[schema_dict_obj._get("Schema")]["tables"][new_val]["columns"]:
+				if new_val != "" and mgr.databases[GDSQL.RootConfig.validate_name(schema_dict_obj._get("Schema"))]["tables"].has(new_val):
+					for col in mgr.databases[GDSQL.RootConfig.validate_name(schema_dict_obj._get("Schema"))]["tables"][new_val]["columns"]:
 						hints.push_back(col["Column Name"])
 				hints = ",".join(hints)
 				link_prop_dict_obj.reset_hint({
@@ -2024,8 +2024,8 @@ func gen_link_node() -> GraphNode:
 		graph_node.push_redraw_slot_control(5, 2) # 如果不是通过点击的控件修改的dict obj，就需要重绘一下。这里偷个懒，直接重绘。
 		match prop:
 			"Schema1":
-				data.set_meta("left_db", mgr.databases[new_val]["data_path"])
-				var tables = mgr.databases[new_val]["tables"].keys()
+				data.set_meta("left_db", mgr.databases[GDSQL.RootConfig.validate_name(new_val)]["data_path"])
+				var tables = mgr.databases[GDSQL.RootConfig.validate_name(new_val)]["tables"].keys()
 				var hint = left_table_dict_obj._hint
 				hint["Table1"] = {"hint": PROPERTY_HINT_ENUM, "hint_string": ",".join(tables)}
 				left_table_dict_obj.reset_hint(hint)
@@ -2037,8 +2037,8 @@ func gen_link_node() -> GraphNode:
 		graph_node.push_redraw_slot_control(5, 3) # 如果不是通过点击的控件修改的dict obj，就需要重绘一下。这里偷个懒，直接重绘。
 		match prop:
 			"Schema2":
-				data.set_meta("right_db", mgr.databases[new_val]["data_path"])
-				var tables = mgr.databases[new_val]["tables"].keys()
+				data.set_meta("right_db", mgr.databases[GDSQL.RootConfig.validate_name(new_val)]["data_path"])
+				var tables = mgr.databases[GDSQL.RootConfig.validate_name(new_val)]["tables"].keys()
 				var hint = right_table_dict_obj._hint
 				hint["Table2"] = {"hint": PROPERTY_HINT_ENUM, "hint_string": ",".join(tables)}
 				right_table_dict_obj.reset_hint(hint)
@@ -2051,11 +2051,11 @@ func gen_link_node() -> GraphNode:
 		match prop:
 			"Table1":
 				data.set_meta("left_table", new_val)
-				if new_val != "" and mgr.databases[left_schema_dict_obj._get("Schema1")]["tables"].has(new_val):
+				if new_val != "" and mgr.databases[GDSQL.RootConfig.validate_name(left_schema_dict_obj._get("Schema1"))]["tables"].has(new_val):
 					var adata = {}
 					var hints = {}
 					var pk = ""
-					for col in mgr.databases[left_schema_dict_obj._get("Schema1")]["tables"][new_val]["columns"]:
+					for col in mgr.databases[GDSQL.RootConfig.validate_name(left_schema_dict_obj._get("Schema1"))]["tables"][new_val]["columns"]:
 						if col["PK"]:
 							pk = col["Column Name"]
 						adata[col["Column Name"]] = true
@@ -2077,11 +2077,11 @@ func gen_link_node() -> GraphNode:
 		match prop:
 			"Table2":
 				data.set_meta("right_table", new_val)
-				if new_val != "" and mgr.databases[right_schema_dict_obj._get("Schema2")]["tables"].has(new_val):
+				if new_val != "" and mgr.databases[GDSQL.RootConfig.validate_name(right_schema_dict_obj._get("Schema2"))]["tables"].has(new_val):
 					var adata = {}
 					var hints = {}
 					var pk = ""
-					for col in mgr.databases[right_schema_dict_obj._get("Schema2")]["tables"][new_val]["columns"]:
+					for col in mgr.databases[GDSQL.RootConfig.validate_name(right_schema_dict_obj._get("Schema2"))]["tables"][new_val]["columns"]:
 						if col["PK"]:
 							pk = col["Column Name"]
 						adata[col["Column Name"]] = true
