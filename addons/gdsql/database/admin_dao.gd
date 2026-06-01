@@ -608,14 +608,16 @@ column_infos: Array, comments: String = "", valid_if_not_exist: bool = false) ->
 		if new_table_data_path != old_table_data_path:
 			GDSQL.ConfManager.remove_conf(old_table_data_path)
 			
-		var config_file = ConfigFile.new()
 		var table_conf_path = GDSQL.RootConfig.get_table_config_path(db_name, new_table_name)
+		var config_file = GDSQL.ConfManager.get_conf(table_conf_path, "") \
+			if GDSQL.GDSQLUtils.file_exists(table_conf_path) \
+			else GDSQL.ConfManager.create_conf(table_conf_path, "")
 		config_file.set_value(new_table_name, "encrypted", GDSQL.RootConfig.get_table_encrypted_dek(db_name, old_table_name)) # 保留原密码
 		config_file.set_value(new_table_name, "comment", comments)
 		config_file.set_value(new_table_name, "valid_if_not_exist", valid_if_not_exist)
 		config_file.set_value(new_table_name, "columns", column_infos)
 		config_file.set_value(new_table_name, "display_name", original_new_name)
-		config_file.save(table_conf_path) # 如果新路径和旧路径一致，就会覆盖掉，也是我们所期待的
+		GDSQL.ConfManager.save_conf_by_origin_password_or_dek(table_conf_path)
 		msgs.push_back(tr("1 file: %s has been saved.") % GDSQL.GDSQLUtils.localize_path(table_conf_path))
 		
 		# 设置缓存
