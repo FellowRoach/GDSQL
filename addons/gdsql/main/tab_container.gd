@@ -408,6 +408,23 @@ func _on_tab_right_clicked(clicked_tab: int):
 	if tab_control == null or tab_control == new_tab_button:
 		return
 	current_tab = clicked_tab
+
+	# 检查是否有“其他选项卡”
+	var has_other_tabs = false
+	var has_tabs_to_right = false
+	for i in get_tab_count():
+		if i == WELCOME_PAGE_TAB_INDEX or get_tab_control(i) == new_tab_button:
+			continue
+		if i != clicked_tab:
+			has_other_tabs = true
+		if i > clicked_tab:
+			has_tabs_to_right = true
+
+	_tab_context_menu.set_item_disabled(0, false)  # Close 永远可用
+	_tab_context_menu.set_item_disabled(1, not has_other_tabs)  # Close Other Tabs
+	_tab_context_menu.set_item_disabled(2, not has_tabs_to_right)  # Close Tabs to the Right
+	_tab_context_menu.set_item_disabled(3, false)  # Close All 永远可用
+
 	_tab_context_menu.position = DisplayServer.mouse_get_position()
 	_tab_context_menu.popup()
 	_tab_context_menu.grab_focus()
