@@ -6,6 +6,7 @@ extends PanelContainer
 @onready var random_tip_label: RichTextLabel = %RandomTipLabel
 @onready var version: Button = %Version
 @onready var settings_button: Button = %SettingsButton
+@onready var refresh_tip_button: Button = %RefreshTipButton
 @onready var prev_tip_button: Button = %PrevTipButton
 @onready var next_tip_button: Button = %NextTipButton
 
@@ -15,6 +16,10 @@ var _auto_check_http: HTTPRequest
 
 var _TIPS: Array[String] = load("res://addons/gdsql/tabs/welcome/tips.gd").TIPS
 
+var _shuffled_indices: Array[int] = []
+var _current_shuffle_pos: int = 0
+var _rng: RandomNumberGenerator
+
 func _ready() -> void:
 	var plugin_cfg := ConfigFile.new()
 	plugin_cfg.load("res://addons/gdsql/plugin.cfg")
@@ -23,17 +28,42 @@ func _ready() -> void:
 	if settings_button:
 		settings_button.pressed.connect(_on_settings_button_pressed)
 
+	# 初始化可预测的随机序列（固定种子，每次启动顺序一致）
+	_rng = RandomNumberGenerator.new()
+	_rng.seed = 42
+
 	_start_auto_update_check()
-	_show_random_tip()
+	_reshuffle_tips()
+	_show_current_tip()
 
-	# 连接刷新按钮（使用 is_connected 防止 @tool 模式下重复绑定）
-	var refresh_btn = find_child("Button", true, false)
-	if refresh_btn and refresh_btn is Button and not refresh_btn.pressed.is_connected(_show_random_tip):
-		refresh_btn.pressed.connect(_show_random_tip)
 
+func _reshuffle_tips() -> void:
+	_shuffled_indices = []
+	for i in _TIPS.size():
+		_shuffled_indices.push_back(i)
+	# Fisher-Yates 洗牌
+	for i in range(_shuffled_indices.size() - 1, 0, -1):
+		var j = _rng.randi_range(0, i)
+		var temp = _shuffled_indices[i]
+		_shuffled_indices[i] = _shuffled_indices[j]
+		_shuffled_indices[j] = temp
+	_current_shuffle_pos = 0
+
+func _show_current_tip() -> void:
+	if _shuffled_indices.is_empty():
+		_reshuffle_tips()
+	random_tip_label.text = _TIPS[_shuffled_indices[_current_shuffle_pos]]
 
 func _show_random_tip() -> void:
-	random_tip_label.text = _TIPS[randi() % _TIPS.size()]
+	# 随机按钮：重新洗牌，从头开始
+	_reshuffle_tips()
+	_show_current_tip()
+
+func _advance_tip() -> void:
+	_current_shuffle_pos += 1
+	if _current_shuffle_pos >= _shuffled_indices.size():
+		_reshuffle_tips()
+	_show_current_tip()
 
 
 func _on_update_button_pressed() -> void:
@@ -118,8 +148,10 @@ func _on_auto_check_completed(result: int, _code: int, _headers: PackedStringArr
 
 
 func _on_prev_tip_button_pressed() -> void:
-	pass # Replace with function body.
+	if _current_shuffle_pos > 0:
+		_current_shuffle_pos -= 1
+		_show_current_tip()
 
 
 func _on_next_tip_button_pressed() -> void:
-	pass # Replace with function body.
+	_advance_tip()

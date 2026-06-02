@@ -522,7 +522,8 @@ label_settings = SubResource("LabelSettings_h306i")
 layout_mode = 2
 theme_override_constants/margin_left = -21
 
-[node name="Button" type="Button" parent="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Right/VBoxContainer/HBoxContainer/MarginContainer" unique_id=985433786]
+[node name="RefreshTipButton" type="Button" parent="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Right/VBoxContainer/HBoxContainer/MarginContainer" unique_id=985433786]
+unique_name_in_owner = true
 layout_mode = 2
 icon = ExtResource("5_ntqe3")
 flat = true
@@ -554,25 +555,27 @@ fit_content = true
 layout_mode = 2
 size_flags_horizontal = 8
 size_flags_vertical = 8
-theme_override_constants/margin_right = -26
-theme_override_constants/margin_bottom = -58
+theme_override_constants/margin_right = -18
+theme_override_constants/margin_bottom = -19
 
 [node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Right/VBoxContainer/MarginContainer/PanelContainer/MarginContainer" unique_id=1996372469]
 layout_mode = 2
 size_flags_horizontal = 8
 size_flags_vertical = 8
-theme_override_constants/separation = -27
+theme_override_constants/separation = -14
 
 [node name="PrevTipButton" type="Button" parent="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Right/VBoxContainer/MarginContainer/PanelContainer/MarginContainer/HBoxContainer" unique_id=863384557]
 unique_name_in_owner = true
 layout_mode = 2
-text = "◀️"
+theme_override_font_sizes/font_size = 15
+text = "◀"
 flat = true
 
 [node name="NextTipButton" type="Button" parent="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Right/VBoxContainer/MarginContainer/PanelContainer/MarginContainer/HBoxContainer" unique_id=515016608]
 unique_name_in_owner = true
 layout_mode = 2
-text = "▶️"
+theme_override_font_sizes/font_size = 15
+text = "▶"
 flat = true
 
 [node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Right" unique_id=146371453]
@@ -593,6 +596,7 @@ text = "v0.5.3"
 flat = true
 
 [connection signal="pressed" from="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Left/MarginContainer6/HBoxContainer/ThankButton" to="." method="_on_license_button_pressed"]
+[connection signal="pressed" from="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Right/VBoxContainer/HBoxContainer/MarginContainer/RefreshTipButton" to="." method="_show_random_tip"]
 [connection signal="resized" from="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Right/VBoxContainer/MarginContainer/PanelContainer/RandomTipLabel" to="." method="_on_random_tip_label_resized"]
 [connection signal="pressed" from="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Right/VBoxContainer/MarginContainer/PanelContainer/MarginContainer/HBoxContainer/PrevTipButton" to="." method="_on_prev_tip_button_pressed"]
 [connection signal="pressed" from="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Right/VBoxContainer/MarginContainer/PanelContainer/MarginContainer/HBoxContainer/NextTipButton" to="." method="_on_next_tip_button_pressed"]
