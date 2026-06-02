@@ -6,10 +6,14 @@ extends PanelContainer
 @onready var random_tip_label: RichTextLabel = %RandomTipLabel
 @onready var version: Button = %Version
 @onready var settings_button: Button = %SettingsButton
+@onready var prev_tip_button: Button = %PrevTipButton
+@onready var next_tip_button: Button = %NextTipButton
 
 var _version: String
 var _updater: AcceptDialog
 var _auto_check_http: HTTPRequest
+
+var _TIPS: Array[String] = load("res://addons/gdsql/tabs/welcome/tips.gd").TIPS
 
 func _ready() -> void:
 	var plugin_cfg := ConfigFile.new()
@@ -20,6 +24,16 @@ func _ready() -> void:
 		settings_button.pressed.connect(_on_settings_button_pressed)
 
 	_start_auto_update_check()
+	_show_random_tip()
+
+	# 连接刷新按钮（使用 is_connected 防止 @tool 模式下重复绑定）
+	var refresh_btn = find_child("Button", true, false)
+	if refresh_btn and refresh_btn is Button and not refresh_btn.pressed.is_connected(_show_random_tip):
+		refresh_btn.pressed.connect(_show_random_tip)
+
+
+func _show_random_tip() -> void:
+	random_tip_label.text = _TIPS[randi() % _TIPS.size()]
 
 
 func _on_update_button_pressed() -> void:
@@ -101,3 +115,11 @@ func _on_auto_check_completed(result: int, _code: int, _headers: PackedStringArr
 	version.icon = preload("res://addons/gdsql/img/upgrade.svg")
 	version.icon_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	version.tooltip_text = "A new version is available."
+
+
+func _on_prev_tip_button_pressed() -> void:
+	pass # Replace with function body.
+
+
+func _on_next_tip_button_pressed() -> void:
+	pass # Replace with function body.
