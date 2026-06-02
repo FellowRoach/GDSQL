@@ -547,8 +547,33 @@ size_flags_vertical = 3
 theme_override_colors/default_color = Color(1, 1, 1, 0.7019608)
 theme_override_styles/normal = SubResource("StyleBoxEmpty_ilb7s")
 bbcode_enabled = true
-text = "This is a random tip! This is a random tip!"
+text = "[b]union_all[/b] 可以合并多个查询结果，每个子查询独立调用 [color=#8dbbe6]select_same[/color] 保持字段一致。limit 和 order_by 作用于最终合并后的数据集。"
 fit_content = true
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Right/VBoxContainer/MarginContainer/PanelContainer" unique_id=97296760]
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 8
+theme_override_constants/margin_right = -26
+theme_override_constants/margin_bottom = -58
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Right/VBoxContainer/MarginContainer/PanelContainer/MarginContainer" unique_id=1996372469]
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 8
+theme_override_constants/separation = -27
+
+[node name="PrevTipButton" type="Button" parent="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Right/VBoxContainer/MarginContainer/PanelContainer/MarginContainer/HBoxContainer" unique_id=863384557]
+unique_name_in_owner = true
+layout_mode = 2
+text = "◀️"
+flat = true
+
+[node name="NextTipButton" type="Button" parent="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Right/VBoxContainer/MarginContainer/PanelContainer/MarginContainer/HBoxContainer" unique_id=515016608]
+unique_name_in_owner = true
+layout_mode = 2
+text = "▶️"
+flat = true
 
 [node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Right" unique_id=146371453]
 layout_mode = 2
@@ -564,11 +589,13 @@ theme_override_styles/hover_mirrored = SubResource("StyleBoxFlat_m5llx")
 theme_override_styles/hover_pressed = SubResource("StyleBoxFlat_ntqe3")
 theme_override_styles/hover_pressed_mirrored = SubResource("StyleBoxFlat_ntqe3")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_sxl0p")
-text = "v0.5.0"
+text = "v0.5.3"
 flat = true
 
 [connection signal="pressed" from="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Left/MarginContainer6/HBoxContainer/ThankButton" to="." method="_on_license_button_pressed"]
 [connection signal="resized" from="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Right/VBoxContainer/MarginContainer/PanelContainer/RandomTipLabel" to="." method="_on_random_tip_label_resized"]
+[connection signal="pressed" from="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Right/VBoxContainer/MarginContainer/PanelContainer/MarginContainer/HBoxContainer/PrevTipButton" to="." method="_on_prev_tip_button_pressed"]
+[connection signal="pressed" from="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Right/VBoxContainer/MarginContainer/PanelContainer/MarginContainer/HBoxContainer/NextTipButton" to="." method="_on_next_tip_button_pressed"]
 [connection signal="mouse_entered" from="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Right/HBoxContainer/Version" to="." method="_on_version_mouse_entered"]
 [connection signal="mouse_exited" from="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Right/HBoxContainer/Version" to="." method="_on_version_mouse_exited"]
 [connection signal="pressed" from="CenterContainer/PanelContainer/Content/Bottom/HBoxContainer/Right/HBoxContainer/Version" to="." method="_on_update_button_pressed"]
