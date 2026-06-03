@@ -17,6 +17,7 @@ extends MarginContainer
 
 var xml_editor_window: Window
 var recent_files_sub_menu: PopupMenu
+var file_not_exist_dialog: AcceptDialog
 
 const RECENT_FILES_CONFIG_PATH = "user://gdsql/recent_files.cfg"
 var recent_files_config: ConfigFile
@@ -147,7 +148,7 @@ func _init_menus() -> void:
 	popup_menu_file.add_item(tr("Close Tab"), FILE_MENU.CLOSE_TAB)
 	popup_menu_file.add_separator()
 	popup_menu_file.add_item(tr("Save"), FILE_MENU.SAVE)
-	popup_menu_file.add_item(tr("Save as..."), FILE_MENU.SAVE_AS)
+	popup_menu_file.add_item(tr("Save As..."), FILE_MENU.SAVE_AS)
 	popup_menu_file.add_separator()
 	popup_menu_file.add_item(tr("Exit"), FILE_MENU.EXIT)
 	popup_menu_file.id_pressed.connect(_on_file_menu_id_pressed)
@@ -243,6 +244,10 @@ func _init_recent_files() -> void:
 	recent_files_sub_menu.index_pressed.connect(_on_recent_files_sub_menu_index_pressed)
 	refresh_recent_files_menu()
 	popup_menu_file.set_item_submenu_node(popup_menu_file.get_item_index(FILE_MENU.OPEN_RECENT), recent_files_sub_menu)
+	
+	file_not_exist_dialog = AcceptDialog.new()
+	file_not_exist_dialog.set_translation_domain("GDSQL")
+	add_child(file_not_exist_dialog)
 	
 func refresh_recent_files_menu() -> void:
 	var recent_files = recent_files_config.get_value("history", "files", [])
@@ -391,7 +396,8 @@ func _on_recent_files_sub_menu_index_pressed(index: int) -> void:
 	if not GDSQL.GDSQLUtils.file_exists(path):
 		remove_from_recent_history(path)
 		refresh_recent_files_menu()
-		# TODO: 弹出文件不存在提示对话框
+		file_not_exist_dialog.dialog_text = tr("File does not exist.") + "\n" + path
+		file_not_exist_dialog.popup_centered()
 		return
 	
 	# TODO: 打开选中的文件（需要先实现 _on_file_open 或通用打开方法）
