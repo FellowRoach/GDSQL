@@ -8,12 +8,12 @@
 [ext_resource type="PackedScene" uid="uid://dgmeafb51u3cu" path="res://addons/gdsql/tabs/welcome/welcome.tscn" id="4_ilb7s"]
 [ext_resource type="Texture2D" uid="uid://3eswwjjajdjo" path="res://addons/gdsql/img/gdsql_text_icon.svg" id="5_eplp7"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_h306i"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xeilh"]
 content_margin_left = 0.0
-content_margin_top = 0.0
-content_margin_right = 0.0
-content_margin_bottom = 0.0
-bg_color = Color(0.1, 0.1, 0.1, 0.6)
+content_margin_top = 9.0
+content_margin_right = 9.0
+content_margin_bottom = 9.0
+bg_color = Color(0.14, 0.14, 0.14, 1)
 corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
@@ -21,22 +21,22 @@ corner_detail = 5
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_2ech8"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_eplp7"]
-content_margin_left = 0.0
-content_margin_top = 0.0
-content_margin_right = 0.0
-content_margin_bottom = 0.0
-bg_color = Color(0.1, 0.1, 0.1, 0.6)
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_j6obs"]
+content_margin_left = 9.0
+content_margin_top = 9.0
+content_margin_right = 9.0
+content_margin_bottom = 9.0
+bg_color = Color(0.14, 0.14, 0.14, 1)
 corner_radius_top_left = 5
 corner_radius_bottom_left = 5
 corner_detail = 5
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4uue8"]
-content_margin_left = 0.0
-content_margin_top = 0.0
-content_margin_right = 0.0
-content_margin_bottom = 0.0
-bg_color = Color(0.1, 0.1, 0.1, 0.6)
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_vgf57"]
+content_margin_left = 9.0
+content_margin_top = 9.0
+content_margin_right = 9.0
+content_margin_bottom = 9.0
+bg_color = Color(0.14, 0.14, 0.14, 1)
 corner_radius_top_left = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
@@ -62,18 +62,41 @@ layout_mode = 2
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1605228431]
 layout_mode = 2
 
-[node name="GridContainer" type="GridContainer" parent="VBoxContainer" unique_id=1310596185]
+[node name="MenuBar" type="MenuBar" parent="VBoxContainer" unique_id=1448320666]
 layout_mode = 2
-columns = 5
+flat = true
 
-[node name="MenuButtonFile" type="MenuButton" parent="VBoxContainer/GridContainer" unique_id=2017574355]
-layout_mode = 2
-text = "File"
-
-[node name="MenuButtonSettings" type="MenuButton" parent="VBoxContainer/GridContainer" unique_id=959923669]
+[node name="PopupMenuFile" type="PopupMenu" parent="VBoxContainer/MenuBar" unique_id=1090713026]
 unique_name_in_owner = true
-layout_mode = 2
-text = "Settings"
+title = "File"
+
+[node name="PopupMenuEdit" type="PopupMenu" parent="VBoxContainer/MenuBar" unique_id=112864506]
+unique_name_in_owner = true
+title = "Edit"
+
+[node name="PopupMenuSearch" type="PopupMenu" parent="VBoxContainer/MenuBar" unique_id=718001667]
+unique_name_in_owner = true
+title = "Edit"
+
+[node name="PopupMenuView" type="PopupMenu" parent="VBoxContainer/MenuBar" unique_id=647884880]
+unique_name_in_owner = true
+title = "View"
+
+[node name="PopupMenuQuery" type="PopupMenu" parent="VBoxContainer/MenuBar" unique_id=842336952]
+unique_name_in_owner = true
+title = "Query"
+
+[node name="PopupMenuDatabase" type="PopupMenu" parent="VBoxContainer/MenuBar" unique_id=444234444]
+unique_name_in_owner = true
+title = "Database"
+
+[node name="PopupMenuTools" type="PopupMenu" parent="VBoxContainer/MenuBar" unique_id=1315332737]
+unique_name_in_owner = true
+title = "Tools"
+
+[node name="PopupMenuHelp" type="PopupMenu" parent="VBoxContainer/MenuBar" unique_id=326510339]
+unique_name_in_owner = true
+title = "Help"
 
 [node name="HSplitContainer" type="HSplitContainer" parent="VBoxContainer" unique_id=1575290738]
 layout_mode = 2
@@ -88,7 +111,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_type_variation = &"PanelForeground"
-theme_override_styles/panel = SubResource("StyleBoxFlat_h306i")
+theme_override_styles/panel = SubResource("StyleBoxFlat_xeilh")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/HSplitContainer/PanelContainer" unique_id=262444778]
 layout_mode = 2
@@ -129,7 +152,7 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 size_flags_stretch_ratio = 4.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_eplp7")
+theme_override_styles/panel = SubResource("StyleBoxFlat_j6obs")
 current_tab = 0
 drag_to_rearrange_enabled = true
 tab_0/icon = ExtResource("5_eplp7")
@@ -151,7 +174,7 @@ metadata/_tab_index = 1
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_styles/panel = SubResource("StyleBoxFlat_4uue8")
+theme_override_styles/panel = SubResource("StyleBoxFlat_vgf57")
 
 [node name="Control" type="MarginContainer" parent="VBoxContainer/HSplitContainer/VSplitContainer/PanelContainer2" unique_id=1996873378]
 layout_mode = 2

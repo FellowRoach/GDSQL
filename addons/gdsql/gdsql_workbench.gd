@@ -35,6 +35,7 @@ func _enter_tree():
 	EditorInterface.get_base_control().add_child(xml_editor_window)
 	xml_inspector_plugin = preload("res://addons/gdsql/inspector_plugin/xml_inspector_plugin.gd").new()
 	xml_inspector_plugin.xml_editor_window = xml_editor_window
+	
 	add_tool_menu_item("XML Editor", xml_editor_window.open_file.bind(""))
 	add_inspector_plugin(xml_inspector_plugin)
 	get_window().theme_changed.connect(xml_editor_window.theme_changed.emit)
@@ -44,6 +45,7 @@ func _enter_tree():
 	
 	# 进入界面
 	main_panel_instance = MainPanel.instantiate()
+	main_panel_instance.xml_editor_window = xml_editor_window
 	GDSQL.WorkbenchManager.main_panel = main_panel_instance
 	# Add the main panel to the editor's main viewport.
 	EditorInterface.get_editor_main_screen().add_child(main_panel_instance)
