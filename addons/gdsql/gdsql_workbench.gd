@@ -210,7 +210,7 @@ func set_up_textfile_extensions():
 	var settings = EditorInterface.get_editor_settings()
 	var old: String = settings.get_setting("docks/filesystem/textfile_extensions")
 	var old_extendsions = Array(old.split(",", false)).map(func(v: String): return v.strip_edges())
-	var new_valid_extensions = ["xml", "gsql", "gdmappergraph", "gdsqlgraph"]
+	var new_valid_extensions = ["cfg", "xml", "gsql", "gdmappergraph", "gdsqlgraph"]
 	for extension in new_valid_extensions:
 		if not extension in old_extendsions:
 			old_extendsions.push_back(extension)
