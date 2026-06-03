@@ -223,6 +223,7 @@ func _init_menus() -> void:
 	
 	# Tools menu
 	popup_menu_tools.add_item(tr("XML Editor"), TOOLS_MENU.XML_EDITOR)
+	popup_menu_tools.set_item_icon(popup_menu_tools.get_item_index(TOOLS_MENU.XML_EDITOR), load("res://addons/gdsql/gbatis/img/xml.svg"))
 	popup_menu_tools.id_pressed.connect(_on_tools_menu_id_pressed)
 	
 	# Help menu
