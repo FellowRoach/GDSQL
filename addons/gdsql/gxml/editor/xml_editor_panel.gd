@@ -32,7 +32,7 @@ var sub_menu: PopupMenu
 var zoom_factor: float = 1.0
 var _file_modified_times: Dictionary # {path: FileAccess.get_modified_time(path)}
 
-const config_path = "user://xml_editor.cfg"
+const config_path = "user://gdsql/xml_editor.cfg"
 var config: ConfigFile
 
 enum FILE_MANU_OPTION {
@@ -130,12 +130,14 @@ func _ready() -> void:
 	xml_editor_container.add_theme_stylebox_override(&"panel", get_theme_stylebox(&"ScriptEditor", &"EditorStyles"))
 	
 	config = ConfigFile.new()
+	if not DirAccess.dir_exists_absolute("user://gdsql"):
+		DirAccess.make_dir_absolute("user://gdsql")
 	config.load(config_path)
 	
 	sub_menu = PopupMenu.new()
 	sub_menu.index_pressed.connect(_on_sub_menu_index_pressed)
 	refresh_sub_menu()
-	file_menu.set_item_submenu_node(FILE_MANU_OPTION.OPEN_RECENT, sub_menu)
+	file_menu.set_item_submenu_node(file_menu.get_item_index(FILE_MANU_OPTION.OPEN_RECENT), sub_menu)
 	
 	filter_file.right_icon = get_theme_icon("Search", "EditorIcons")
 	filter_name.right_icon = get_theme_icon("Search", "EditorIcons")

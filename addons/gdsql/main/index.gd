@@ -16,6 +16,10 @@ extends MarginContainer
 @onready var popup_menu_help: PopupMenu = %PopupMenuHelp
 
 var xml_editor_window: Window
+var recent_files_sub_menu: PopupMenu
+
+const RECENT_FILES_CONFIG_PATH = "user://gdsql/recent_files.cfg"
+var recent_files_config: ConfigFile
 
 enum FILE_MENU {
 	NEW_QUERY_TAB = 0,
@@ -147,6 +151,7 @@ func _init_menus() -> void:
 	popup_menu_file.add_separator()
 	popup_menu_file.add_item(tr("Exit"), FILE_MENU.EXIT)
 	popup_menu_file.id_pressed.connect(_on_file_menu_id_pressed)
+	_init_recent_files()
 	
 	# Edit menu
 	popup_menu_edit.add_item(tr("Undo"), EDIT_MENU.UNDO)
@@ -227,6 +232,50 @@ func _init_menus() -> void:
 	popup_menu_help.add_item(tr("About GDSQL..."), HELP_MENU.ABOUT_GDSQL)
 	popup_menu_help.add_item(tr("Support GDSQL Development"), HELP_MENU.SUPPORT_GDSQL_DEVELOPMENT)
 	popup_menu_help.id_pressed.connect(_on_help_menu_id_pressed)
+	
+func _init_recent_files() -> void:
+	if not DirAccess.dir_exists_absolute("user://gdsql"):
+		DirAccess.make_dir_absolute("user://gdsql")
+	recent_files_config = ConfigFile.new()
+	recent_files_config.load(RECENT_FILES_CONFIG_PATH)
+	
+	recent_files_sub_menu = PopupMenu.new()
+	recent_files_sub_menu.index_pressed.connect(_on_recent_files_sub_menu_index_pressed)
+	refresh_recent_files_menu()
+	popup_menu_file.set_item_submenu_node(popup_menu_file.get_item_index(FILE_MENU.OPEN_RECENT), recent_files_sub_menu)
+	
+func refresh_recent_files_menu() -> void:
+	var recent_files = recent_files_config.get_value("history", "files", [])
+	recent_files_sub_menu.clear()
+	for path in recent_files:
+		recent_files_sub_menu.add_item(path)
+	recent_files_sub_menu.add_separator()
+	recent_files_sub_menu.add_item(tr("Clear Recent Files"))
+	if recent_files.is_empty():
+		recent_files_sub_menu.set_item_disabled(recent_files_sub_menu.get_item_count() - 1, true)
+		
+func add_to_recent_history(path: String) -> void:
+	var recent_files = recent_files_config.get_value("history", "files", []) as Array
+	if recent_files.has(path):
+		recent_files.erase(path)
+	recent_files.push_front(path)
+	# 最多保留 20 个最近文件
+	if recent_files.size() > 20:
+		recent_files.resize(20)
+	recent_files_config.set_value("history", "files", recent_files)
+	recent_files_config.save(RECENT_FILES_CONFIG_PATH)
+	refresh_recent_files_menu()
+	
+func remove_from_recent_history(path: String) -> void:
+	var recent_files = recent_files_config.get_value("history", "files", []) as Array
+	if recent_files.has(path):
+		recent_files.erase(path)
+		recent_files_config.set_value("history", "files", recent_files)
+		recent_files_config.save(RECENT_FILES_CONFIG_PATH)
+		
+func clear_recent_history() -> void:
+	recent_files_config.set_value("history", "files", [])
+	recent_files_config.save(RECENT_FILES_CONFIG_PATH)
 	
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_THEME_CHANGED:
@@ -327,8 +376,26 @@ func _on_file_open() -> void:
 	pass
 
 func _on_file_open_recent() -> void:
-	# TODO: Implement open recent files
+	# This is now handled by the recent_files_sub_menu submenu node.
+	# Kept as a no-op for backward compatibility.
 	pass
+
+func _on_recent_files_sub_menu_index_pressed(index: int) -> void:
+	# 最后一项是 "Clear Recent Files"
+	if index == recent_files_sub_menu.get_item_count() - 1:
+		clear_recent_history()
+		refresh_recent_files_menu()
+		return
+	
+	var path = recent_files_sub_menu.get_item_text(index)
+	if not GDSQL.GDSQLUtils.file_exists(path):
+		remove_from_recent_history(path)
+		refresh_recent_files_menu()
+		# TODO: 弹出文件不存在提示对话框
+		return
+	
+	# TODO: 打开选中的文件（需要先实现 _on_file_open 或通用打开方法）
+	add_to_recent_history(path) # 移到最前
 
 func _on_file_close_tab() -> void:
 	# TODO: Implement close current tab
