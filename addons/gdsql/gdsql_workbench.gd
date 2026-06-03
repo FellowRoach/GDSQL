@@ -14,6 +14,7 @@ var xml_editor_window
 
 func _enter_tree():
 	set_up_localization()
+	set_up_textfile_extensions()
 	
 	var err = init_settings()
 	if err != OK:
@@ -204,3 +205,13 @@ func init_settings() -> Error:
 				return FAILED
 				
 	return OK
+	
+func set_up_textfile_extensions():
+	var settings = EditorInterface.get_editor_settings()
+	var old: String = settings.get_setting("docks/filesystem/textfile_extensions")
+	var old_extendsions = Array(old.split(",", false)).map(func(v: String): return v.strip_edges())
+	var new_valid_extensions = ["xml", "gsql", "gdmappergraph", "gdsqlgraph"]
+	for extension in new_valid_extensions:
+		if not extension in old_extendsions:
+			old_extendsions.push_back(extension)
+	settings.set_setting("docks/filesystem/textfile_extensions", ",".join(old_extendsions))
