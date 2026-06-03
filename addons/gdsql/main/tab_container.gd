@@ -38,6 +38,8 @@ func _ready() -> void:
 		mgr.open_select_data_export_tab.connect(add_tab_select_data_export, CONNECT_DEFERRED)
 	if not mgr.open_mapper_graph_tab.is_connected(add_tab_mapper_graph):
 		mgr.open_mapper_graph_tab.connect(add_tab_mapper_graph, CONNECT_DEFERRED)
+	if not mgr.open_sql_graph_file_tab.is_connected(add_tab_graph_file):
+		mgr.open_sql_graph_file_tab.connect(add_tab_graph_file)
 	if not mgr.open_mapper_graph_file_tab.is_connected(add_tab_mapper_graph_file):
 		mgr.open_mapper_graph_file_tab.connect(add_tab_mapper_graph_file)
 	if not mgr.open_settings_tab.is_connected(add_tab_settings):
@@ -90,6 +92,8 @@ func _exit_tree():
 		mgr.open_table_data_import_tab.disconnect(add_tab_table_data_import)
 	if mgr.open_select_data_export_tab.is_connected(add_tab_select_data_export):
 		mgr.open_select_data_export_tab.disconnect(add_tab_select_data_export)
+	if mgr.open_sql_graph_tab.is_connected(add_tab_graph_file):
+		mgr.open_sql_graph_tab.disconnect(add_tab_graph_file)
 	if mgr.open_mapper_graph_tab.is_connected(add_tab_mapper_graph):
 		mgr.open_mapper_graph_tab.disconnect(add_tab_mapper_graph)
 	if mgr.open_mapper_graph_file_tab.is_connected(add_tab_mapper_graph_file):

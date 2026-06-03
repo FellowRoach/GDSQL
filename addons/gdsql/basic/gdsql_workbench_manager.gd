@@ -46,6 +46,9 @@ signal need_user_enter_password(db_name: String, table_name: String, try_passwor
 ## 打开临时数据导出页签的信号
 signal open_select_data_export_tab(columns: Array, datas: Array)
 
+## 打开 SQL Graph 文件的信号
+signal open_sql_graph_file_tab(path: String)
+
 ## 打开生成Mapper页签的信号
 signal open_mapper_graph_tab(info: Dictionary)
 
