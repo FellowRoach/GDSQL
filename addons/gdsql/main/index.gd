@@ -260,6 +260,7 @@ func refresh_recent_files_menu() -> void:
 		recent_files_sub_menu.set_item_disabled(recent_files_sub_menu.get_item_count() - 1, true)
 		
 func add_to_recent_history(path: String) -> void:
+	path = GDSQL.GDSQLUtils.localize_path(path)
 	var recent_files = recent_files_config.get_value("history", "files", []) as Array
 	if recent_files.has(path):
 		recent_files.erase(path)
@@ -272,6 +273,7 @@ func add_to_recent_history(path: String) -> void:
 	refresh_recent_files_menu()
 	
 func remove_from_recent_history(path: String) -> void:
+	path = GDSQL.GDSQLUtils.localize_path(path)
 	var recent_files = recent_files_config.get_value("history", "files", []) as Array
 	if recent_files.has(path):
 		recent_files.erase(path)
@@ -386,13 +388,14 @@ func _on_file_open_recent() -> void:
 	pass
 
 func _on_recent_files_sub_menu_index_pressed(index: int) -> void:
+	var text = recent_files_sub_menu.get_item_text(index)
 	# 最后一项是 "Clear Recent Files"
-	if index == recent_files_sub_menu.get_item_count() - 1:
+	if text in ["Clear Recent Files", tr("Clear Recent Files")]:
 		clear_recent_history()
 		refresh_recent_files_menu()
 		return
 	
-	var path = recent_files_sub_menu.get_item_text(index)
+	var path = text
 	if not GDSQL.GDSQLUtils.file_exists(path):
 		remove_from_recent_history(path)
 		refresh_recent_files_menu()

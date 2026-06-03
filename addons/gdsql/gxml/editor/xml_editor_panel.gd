@@ -186,6 +186,7 @@ func refresh_sub_menu():
 		sub_menu.set_item_disabled(sub_menu.get_child_count()-1, true)
 		
 func remove_from_recent_history(path: String):
+	path = GDSQL.GDSQLUtils.localize_path(path)
 	var recent_files = config.get_value("history", "primary", []) as Array
 	if recent_files.has(path):
 		recent_files.erase(path)
@@ -197,6 +198,7 @@ func clear_recent_history():
 	config.save(config_path)
 	
 func add_to_recent_history(path: String):
+	path = GDSQL.GDSQLUtils.localize_path(path)
 	var recent_files = config.get_value("history", "primary", []) as Array
 	if recent_files.has(path):
 		recent_files.erase(path)
@@ -205,6 +207,7 @@ func add_to_recent_history(path: String):
 	config.save(config_path)
 	
 func remove_from_unclosed_files(path: String):
+	path = GDSQL.GDSQLUtils.localize_path(path)
 	var unclosed_files = config.get_value("history", "unclosed", []) as Array
 	unclosed_files.erase(path)
 	config.set_value("history", "unclosed", unclosed_files)
@@ -217,6 +220,7 @@ func clear_unclosed_files():
 	refresh_sub_menu()
 	
 func add_to_unclosed_files(path: String):
+	path = GDSQL.GDSQLUtils.localize_path(path)
 	var unclosed_files = config.get_value("history", "unclosed", []) as Array
 	unclosed_files.push_back(path)
 	config.set_value("history", "unclosed", unclosed_files)
@@ -372,13 +376,13 @@ func _on_rmb_menu_index_pressed(index: int) -> void:
 				
 func _on_sub_menu_index_pressed(index: int) -> void:
 	_recover_on_top()
-	if index == sub_menu.get_child_count() - 1:
-		for i in index:
-			sub_menu.remove_item(i)
+	var text = sub_menu.get_item_text(index)
+	if text in ["Clear Recent Files", tr("Clear Recent Files")]:
 		clear_recent_history()
+		refresh_sub_menu()
 		return
-		
-	var path = sub_menu.get_item_text(index)
+	
+	var path = text
 	if not GDSQL.GDSQLUtils.file_exists(path):
 		remove_from_recent_history(path)
 		file_not_exist_dialog.popup_centered()
