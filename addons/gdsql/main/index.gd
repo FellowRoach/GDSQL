@@ -145,7 +145,9 @@ func _init_menus() -> void:
 	# File menu
 	popup_menu_file.add_item(tr("New Query Tab"), FILE_MENU.NEW_QUERY_TAB)
 	popup_menu_file.add_item(tr("New Graph Tab"), FILE_MENU.NEW_GRAPH_TAB)
+	popup_menu_file.set_item_icon(popup_menu_file.get_item_index(FILE_MENU.NEW_GRAPH_TAB), load("res://addons/gdsql/img/GDSQLGraph.svg"))
 	popup_menu_file.add_item(tr("New Mapper Tab"), FILE_MENU.NEW_MAPPER_TAB)
+	popup_menu_file.set_item_icon(popup_menu_file.get_item_index(FILE_MENU.NEW_MAPPER_TAB), load("res://addons/gdsql/gbatis/img/GBMapperGraph.svg"))
 	popup_menu_file.add_separator()
 	popup_menu_file.add_item(tr("Open..."), FILE_MENU.OPEN)
 	popup_menu_file.add_item(tr("Open Recent"), FILE_MENU.OPEN_RECENT)
@@ -257,8 +259,16 @@ func _init_recent_files() -> void:
 func refresh_recent_files_menu() -> void:
 	var recent_files = recent_files_config.get_value("history", "files", [])
 	recent_files_sub_menu.clear()
-	for path in recent_files:
-		recent_files_sub_menu.add_item(path)
+	var id = -1
+	for path: String in recent_files:
+		id += 1
+		recent_files_sub_menu.add_item(path, id)
+		match path.get_extension().to_lower():
+			"gdsqlgraph":
+				recent_files_sub_menu.set_item_icon(recent_files_sub_menu.get_item_index(id), load("res://addons/gdsql/img/GDSQLGraph.svg"))
+			"gdmappergraph":
+				recent_files_sub_menu.set_item_icon(recent_files_sub_menu.get_item_index(id), load("res://addons/gdsql/gbatis/img/GBMapperGraph.svg"))
+				
 	recent_files_sub_menu.add_separator()
 	recent_files_sub_menu.add_item(tr("Clear Recent Files"))
 	if recent_files.is_empty():

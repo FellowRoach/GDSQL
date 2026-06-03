@@ -132,12 +132,13 @@ func _on_tab_clicked(tab: int) -> void:
 		sql_file.change_tab_title.connect(func(page, title):
 			var idx = get_tab_idx_from_control(page)
 			if idx >= 0:
-				set_tab_title(idx, title)
+				set_tab_title(idx, title.get_basename())
 		)
 		add_child(sql_file)
 		move_child(new_tab_button, get_child_count() - 1)
 		current_tab = get_child_count() - 2
 		set_tab_title(current_tab, "SQL File %d" % _tab_index)
+		set_tab_icon(current_tab, load("res://addons/gdsql/img/GDSQLGraph.svg"))
 		_tab_index += 1
 		
 func add_tab_graph_file(path: String) -> void:
@@ -153,12 +154,13 @@ func add_tab_graph_file(path: String) -> void:
 	sql_file.change_tab_title.connect(func(page, title):
 		var idx = get_tab_idx_from_control(page)
 		if idx >= 0:
-			set_tab_title(idx, title)
+			set_tab_title(idx, title.get_basename())
 	)
 	add_child(sql_file)
 	move_child(new_tab_button, get_child_count() - 1)
 	current_tab = get_child_count() - 2
-	set_tab_title(current_tab, path.get_file())
+	set_tab_title(current_tab, path.get_file().get_basename())
+	set_tab_icon(current_tab, load("res://addons/gdsql/img/GDSQLGraph.svg"))
 	_tab_index += 1
 	sql_file.load_graph_file(path)
 	mgr.file_tab_opened.emit(path)
@@ -306,7 +308,8 @@ func add_tab_mapper_graph_file(path: String):
 	add_child(mapper_file)
 	move_child(new_tab_button, get_child_count() - 1)
 	current_tab = get_child_count() - 2
-	set_tab_title(current_tab, path.get_file())
+	set_tab_title(current_tab, path.get_file().get_basename())
+	set_tab_icon(current_tab, load("res://addons/gdsql/gbatis/img/GBMapperGraph.svg"))
 	_tab_index += 1
 	mapper_file.load_mapper_file(path)
 	mgr.file_tab_opened.emit(path)
