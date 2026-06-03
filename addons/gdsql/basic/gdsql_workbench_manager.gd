@@ -55,6 +55,12 @@ signal open_mapper_graph_tab(info: Dictionary)
 ## 打开生成Mapper文件的信号
 signal open_mapper_graph_file_tab(path: String)
 
+## 文件被打开
+signal file_tab_opened(path: String)
+
+## 文件被关闭
+signal file_tab_closed(path: String)
+
 ## 打开设置页签的信号
 signal open_settings_tab
 

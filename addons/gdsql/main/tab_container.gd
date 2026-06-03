@@ -161,6 +161,7 @@ func add_tab_graph_file(path: String) -> void:
 	set_tab_title(current_tab, path.get_file())
 	_tab_index += 1
 	sql_file.load_graph_file(path)
+	mgr.file_tab_opened.emit(path)
 	
 func add_tab_new_schema() -> void:
 	var new_schema = load("res://addons/gdsql/tabs/new_schema/new_schema.tscn").instantiate()
@@ -308,6 +309,7 @@ func add_tab_mapper_graph_file(path: String):
 	set_tab_title(current_tab, path.get_file())
 	_tab_index += 1
 	mapper_file.load_mapper_file(path)
+	mgr.file_tab_opened.emit(path)
 	
 func add_tab_settings() -> void:
 	# 检查是否已经打开了设置页签，直接激活
@@ -450,6 +452,11 @@ func _close_tab(tab_idx: int):
 	var child = get_tab_control(tab_idx)
 	if child == new_tab_button or tab_idx == WELCOME_PAGE_TAB_INDEX:
 		return
+		
+	if child.get_meta("type") in ["sql_graph", "mapper_graph"]:
+		if child.get_meta("file_path", ""):
+			mgr.file_tab_closed.emit(child.get_meta("file_path"))
+			
 	_switch_to_previous_page(child)
 	remove_child(child)
 	child.queue_free()

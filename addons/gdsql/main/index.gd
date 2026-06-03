@@ -108,6 +108,11 @@ func _ready() -> void:
 	if not GDSQL.WorkbenchManager.add_log_history.is_connected(add_a_log):
 		GDSQL.WorkbenchManager.add_log_history.connect(add_a_log)
 		
+	if not GDSQL.WorkbenchManager.file_tab_opened.is_connected(remove_from_recent_history):
+		GDSQL.WorkbenchManager.file_tab_opened.connect(remove_from_recent_history)
+	if not GDSQL.WorkbenchManager.file_tab_closed.is_connected(add_to_recent_history):
+		GDSQL.WorkbenchManager.file_tab_closed.connect(add_to_recent_history)
+		
 	var sb: StyleBoxFlat = get_theme_stylebox(&"panel", &"TabContainer").duplicate()
 	sb.corner_radius_top_left = 0
 	sb.corner_radius_top_right = 5
@@ -279,6 +284,7 @@ func remove_from_recent_history(path: String) -> void:
 		recent_files.erase(path)
 		recent_files_config.set_value("history", "files", recent_files)
 		recent_files_config.save(RECENT_FILES_CONFIG_PATH)
+		refresh_recent_files_menu()
 		
 func clear_recent_history() -> void:
 	recent_files_config.set_value("history", "files", [])
@@ -315,6 +321,11 @@ func _exit_tree():
 		
 	if GDSQL.WorkbenchManager.add_log_history.is_connected(add_a_log):
 		GDSQL.WorkbenchManager.add_log_history.disconnect(add_a_log)
+		
+	if GDSQL.WorkbenchManager.file_tab_opened.is_connected(remove_from_recent_history):
+		GDSQL.WorkbenchManager.file_tab_opened.disconnect(remove_from_recent_history)
+	if GDSQL.WorkbenchManager.file_tab_closed.is_connected(add_to_recent_history):
+		GDSQL.WorkbenchManager.file_tab_closed.disconnect(add_to_recent_history)
 		
 func _on_button_refresh_pressed() -> void:
 	tree_databases.refresh()
@@ -354,7 +365,7 @@ func _on_file_menu_id_pressed(id: int) -> void:
 		FILE_MENU.NEW_MAPPER_TAB:
 			_on_file_new_mapper_tab()
 		FILE_MENU.OPEN:
-			_on_file_open()
+			_on_file_open("")
 		FILE_MENU.OPEN_RECENT:
 			_on_file_open_recent()
 		FILE_MENU.CLOSE_TAB:
@@ -378,10 +389,16 @@ func _on_file_new_mapper_tab() -> void:
 	# TODO: Implement new mapper tab
 	pass
 
-func _on_file_open() -> void:
-	# TODO: Implement open file dialog
-	pass
-
+func _on_file_open(path: String) -> void:
+	match path.get_extension().to_lower():
+		"gdsqlgraph":
+			GDSQL.WorkbenchManager.open_sql_graph_file_tab.emit(path)
+		"gdmappergraph":
+			GDSQL.WorkbenchManager.open_mapper_graph_file_tab.emit(path)
+		_:
+			file_not_exist_dialog.dialog_text = tr("Not support this.") + "\n" + path
+			file_not_exist_dialog.popup_centered()
+			
 func _on_file_open_recent() -> void:
 	# This is now handled by the recent_files_sub_menu submenu node.
 	# Kept as a no-op for backward compatibility.
@@ -394,7 +411,7 @@ func _on_recent_files_sub_menu_index_pressed(index: int) -> void:
 		clear_recent_history()
 		refresh_recent_files_menu()
 		return
-	
+		
 	var path = text
 	if not GDSQL.GDSQLUtils.file_exists(path):
 		remove_from_recent_history(path)
@@ -402,9 +419,9 @@ func _on_recent_files_sub_menu_index_pressed(index: int) -> void:
 		file_not_exist_dialog.dialog_text = tr("File does not exist.") + "\n" + path
 		file_not_exist_dialog.popup_centered()
 		return
-	
-	# TODO: 打开选中的文件（需要先实现 _on_file_open 或通用打开方法）
-	add_to_recent_history(path) # 移到最前
+		
+	# 打开选中的文件
+	_on_file_open(path)
 
 func _on_file_close_tab() -> void:
 	# TODO: Implement close current tab
