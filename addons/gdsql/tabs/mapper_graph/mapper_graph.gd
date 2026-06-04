@@ -134,6 +134,8 @@ func _on_button_save_pressed() -> void:
 			
 		config.save(get_meta("file_path"))
 		change_tab_title.emit(self, get_meta("file_name").get_basename())
+		if GDSQL.GDSQLUtils.localize_path(get_meta("file_path")).begins_with("res://"):
+			EditorInterface.get_resource_filesystem().update_file(GDSQL.GDSQLUtils.localize_path(get_meta("file_path")))
 		return
 		
 	_on_button_save_as_pressed()
@@ -164,6 +166,8 @@ func _on_button_save_as_pressed() -> void:
 		set_meta("is_file", true)
 		set_meta("file_path", path)
 		set_meta("file_name", file_name)
+		if GDSQL.GDSQLUtils.localize_path(get_meta("file_path")).begins_with("res://"):
+			EditorInterface.get_resource_filesystem().update_file(GDSQL.GDSQLUtils.localize_path(get_meta("file_path")))
 	)
 	add_child(editor_file_dialog)
 	editor_file_dialog.popup_centered_ratio(0.7)
@@ -1181,6 +1185,8 @@ func popup_generate_dialog(xml_map, mapper_map, entity_map):
 		if line_edit_path.text == "":
 			GDSQL.WorkbenchManager.create_accept_dialog(tr("Save path is empty!"))
 			return
+		var arr_entity_path := [] # Entity 是其他文件的基础，后面优先 update_file entity，再 update_file 其他文件
+		var arr_other_path := []
 		for i: TreeItem in root.get_children():
 			if i.get_text(2) != "":
 				var content = i.get_metadata(0)
@@ -1189,11 +1195,22 @@ func popup_generate_dialog(xml_map, mapper_map, entity_map):
 				file.store_string(content)
 				file.flush()
 				file = null
+				var local_path = GDSQL.GDSQLUtils.localize_path(path)
+				if local_path.begins_with("res://"):
+					if local_path.ends_with("Entity.gd"):
+						arr_entity_path.push_back(local_path)
+					else:
+						arr_other_path.push_back(local_path)
+		# 先让文件系统发现entity，可以避免别的文件报错
+		for path in arr_entity_path:
+			EditorInterface.get_resource_filesystem().update_file(path)
+		for path in arr_other_path:
+			EditorInterface.get_resource_filesystem().update_file(path)
 		var old_icon = btn_save_all.icon
 		btn_save_all.icon = get_theme_icon("ImportCheck", "EditorIcons")
 		btn_save_all.disabled = true
-		EditorInterface.get_editor_toaster().push_toast(
-			"Please refocus Godot editor window to import file(s).", EditorToaster.SEVERITY_WARNING)
+		#EditorInterface.get_editor_toaster().push_toast(
+			#"Please refocus Godot editor window to import file(s).", EditorToaster.SEVERITY_WARNING)
 		#EditorInterface.get_resource_filesystem().scan()
 		#if _generate_dialog:
 			## scan后窗口可能被最小化了，所以用窗口的方法，能重新激活
@@ -1274,6 +1291,8 @@ func popup_generate_dialog(xml_map, mapper_map, entity_map):
 			GDSQL.WorkbenchManager.create_accept_dialog(tr("Save path is empty!"))
 			return [true, null]
 		var save_at_least_one = 0
+		var arr_entity_path := [] # Entity 是其他文件的基础，后面优先 update_file entity，再 update_file 其他文件
+		var arr_other_path := []
 		for i: TreeItem in root.get_children():
 			if i.get_text(2) != "" and i.is_checked(0):
 				var content = i.get_metadata(0)
@@ -1283,20 +1302,31 @@ func popup_generate_dialog(xml_map, mapper_map, entity_map):
 				file.flush()
 				file = null
 				save_at_least_one += 1
+				var local_path = GDSQL.GDSQLUtils.localize_path(path)
+				if local_path.begins_with("res://"):
+					if local_path.ends_with("Entity.gd"):
+						arr_entity_path.push_back(local_path)
+					else:
+						arr_other_path.push_back(local_path)
 		if save_at_least_one > 0:
+			# 先让文件系统发现entity，可以避免别的文件报错
+			for path in arr_entity_path:
+				EditorInterface.get_resource_filesystem().update_file(path)
+			for path in arr_other_path:
+				EditorInterface.get_resource_filesystem().update_file(path)
 			# TODO FIXME Editor will crash if scan, see https://github.com/godotengine/godot/issues/108003
 			#if not EditorInterface.get_resource_filesystem().is_scanning():
 				#EditorInterface.get_resource_filesystem().scan()
-			EditorInterface.get_editor_toaster().push_toast("Please refocus Godot editor window to import file(s).")
+			#EditorInterface.get_editor_toaster().push_toast("Please refocus Godot editor window to import file(s).")
 			_generate_dialog.get_ok_button().disabled = true
 			_generate_dialog.get_ok_button().text = "%s file(s) saved!" % save_at_least_one
 			await get_tree().create_timer(2).timeout
 			if _generate_dialog:
 				_generate_dialog.get_ok_button().disabled = false
-				_generate_dialog.get_ok_button().text = "Save"
+				_generate_dialog.get_ok_button().text = "Save Selected"
 			return [true, null]
 		else:
-			GDSQL.WorkbenchManager.create_accept_dialog(tr("None selected."))
+			GDSQL.WorkbenchManager.create_accept_dialog("None selected.")
 			return [true, null]
 			
 	var defer = func(_a, _b):
@@ -1310,13 +1340,13 @@ func popup_generate_dialog(xml_map, mapper_map, entity_map):
 	#_generate_dialog.always_on_top = true
 	_generate_dialog.minimize_disabled = false
 	_generate_dialog.maximize_disabled = false
-	_generate_dialog.add_button("Inspect", true, "Inspect")
-	_generate_dialog.get_ok_button().text = "Save"
+	_generate_dialog.add_button("Inspect Selected", true, "Inspect Selected")
+	_generate_dialog.get_ok_button().text = "Save Selected"
 	option_button_choose.item_selected.connect(
 		_on_option_button_choose_path_item_selected.bind(line_edit_path, _generate_dialog))
 	_generate_dialog.custom_action.connect(func(action):
 		match action:
-			"Inspect":
+			"Inspect Selected":
 				var arr_content = []
 				for i: TreeItem in root.get_children():
 					if i.is_checked(0):
@@ -1364,8 +1394,10 @@ func comfirm_save(path: String = "", item: TreeItem = null, editor_file_dialog =
 	# refresh diff
 	_refresh_item_diff(item)
 	
-	EditorInterface.get_editor_toaster().push_toast(
-		"Please refocus Godot editor window to import file(s).", EditorToaster.SEVERITY_WARNING)
+	if GDSQL.GDSQLUtils.localize_path(path).begins_with("res://"):
+		EditorInterface.get_resource_filesystem().update_file(GDSQL.GDSQLUtils.localize_path(path))
+	#EditorInterface.get_editor_toaster().push_toast(
+		#"Please refocus Godot editor window to import file(s).", EditorToaster.SEVERITY_WARNING)
 	#EditorInterface.get_resource_filesystem().scan()
 	#if _generate_dialog:
 		# scan后窗口可能被最小化了，所以用窗口的方法，能重新激活

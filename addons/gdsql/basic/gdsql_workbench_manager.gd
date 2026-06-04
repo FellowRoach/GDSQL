@@ -183,6 +183,7 @@ func _add_dialog(dialog: Window):
 func create_confirmation_dialog(msg: String, confirmed_callback: Callable = Callable(), 
 canceled_callback: Callable = Callable()) -> ConfirmationDialog:
 	var dialog := ConfirmationDialog.new()
+	dialog.set_translation_domain("GDSQL")
 	dialog.dialog_text = msg
 	_add_dialog(dialog)
 	dialog.popup_centered()
@@ -202,6 +203,7 @@ func create_accept_dialog(msg) -> void:
 	if msg is Array:
 		msg = " ".join(msg)
 	var dialog := AcceptDialog.new()
+	dialog.set_translation_domain("GDSQL")
 	dialog.dialog_text = msg
 	_add_dialog(dialog)
 	dialog.popup_centered()
@@ -245,6 +247,7 @@ defered_callback: Callable = Callable(),
 ratio = 0.0, # Support Vector2
 vertical_scroll: bool = false) -> ConfirmationDialog:
 	var dialog := ConfirmationDialog.new()
+	dialog.set_translation_domain("GDSQL")
 	dialog.dialog_hide_on_ok = false
 	# 确定
 	dialog.confirmed.connect(func():
@@ -495,6 +498,7 @@ defered_callback: Callable = Callable(),
 min_size: Vector2i = Vector2i.ZERO) -> PopupPanel:
 	#var dialog := ConfirmationDialog.new()
 	var dialog := PopupPanel.new()
+	dialog.set_translation_domain("GDSQL")
 	#dialog.dialog_hide_on_ok = false
 	dialog.popup_hide.connect(func():
 		var close = true

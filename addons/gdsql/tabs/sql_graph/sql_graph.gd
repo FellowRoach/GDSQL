@@ -95,6 +95,8 @@ func _on_button_save_pressed() -> void:
 			
 		config.save(get_meta("file_path"))
 		change_tab_title.emit(self, get_meta("file_name").get_basename())
+		if GDSQL.GDSQLUtils.localize_path(get_meta("file_path")).begins_with("res://"):
+			EditorInterface.get_resource_filesystem().update_file(GDSQL.GDSQLUtils.localize_path(get_meta("file_path")))
 		return
 		
 	_on_button_save_as_pressed()
@@ -125,6 +127,8 @@ func _on_button_save_as_pressed():
 		set_meta("is_file", true)
 		set_meta("file_path", path)
 		set_meta("file_name", file_name)
+		if GDSQL.GDSQLUtils.localize_path(get_meta("file_path")).begins_with("res://"):
+			EditorInterface.get_resource_filesystem().update_file(GDSQL.GDSQLUtils.localize_path(get_meta("file_path")))
 	)
 	add_child(editor_file_dialog)
 	editor_file_dialog.popup_centered_ratio(0.7)
