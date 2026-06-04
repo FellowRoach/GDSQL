@@ -529,7 +529,7 @@ func _close_tab(tab_idx: int):
 	if child == new_tab_button or tab_idx == WELCOME_PAGE_TAB_INDEX:
 		return
 		
-	if child.get_meta("type") in ["sql_graph", "mapper_graph"]:
+	if child.get_meta("type") in ["sql_file", "sql_graph", "mapper_graph"]:
 		if child.get_meta("file_path", ""):
 			mgr.file_tab_closed.emit(child.get_meta("file_path"))
 			

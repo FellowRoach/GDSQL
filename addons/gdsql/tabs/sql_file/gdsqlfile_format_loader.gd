@@ -1,6 +1,6 @@
 @tool
 extends ResourceFormatLoader
-class_name ResourceFormatLoaderGDSQLGraph
+class_name ResourceFormatLoaderGDSQLText
 
 const EXTENSION = "gdsqltext"
 func _get_recognized_extensions() -> PackedStringArray:

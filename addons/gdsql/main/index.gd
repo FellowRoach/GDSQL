@@ -266,6 +266,8 @@ func refresh_recent_files_menu() -> void:
 		id += 1
 		recent_files_sub_menu.add_item(path, id)
 		match path.get_extension().to_lower():
+			"gdsqltext":
+				recent_files_sub_menu.set_item_icon(recent_files_sub_menu.get_item_index(id), load("res://addons/gdsql/img/sql_file.svg"))
 			"gdsqlgraph":
 				recent_files_sub_menu.set_item_icon(recent_files_sub_menu.get_item_index(id), load("res://addons/gdsql/img/GDSQLGraph.svg"))
 			"gdmappergraph":
@@ -400,6 +402,8 @@ func _on_file_new_mapper_tab() -> void:
 	
 func _on_file_open(path: String) -> void:
 	match path.get_extension().to_lower():
+		"gdsqltext":
+			GDSQL.WorkbenchManager.open_sql_text_file_tab.emit(path)
 		"gdsqlgraph":
 			GDSQL.WorkbenchManager.open_sql_graph_file_tab.emit(path)
 		"gdmappergraph":
