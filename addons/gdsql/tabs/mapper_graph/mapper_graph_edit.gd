@@ -95,7 +95,7 @@ func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
 		if data.has("type") and data.has("files") and data.get("type") == "files":
 			for i in data.get("files"):
 				if i is String:
-					if i.ends_with(".gdsqlgraph") or i.ends_with(".gdmappergraph"):
+					if i.ends_with(".gdsqltext") or i.ends_with(".gdsqlgraph") or i.ends_with(".gdmappergraph"):
 						return true
 	return data is Dictionary and data.get("__table_item", false)
 	

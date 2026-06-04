@@ -4,10 +4,10 @@ extends VSplitContainer
 signal request_open_file(path: String)
 signal change_tab_title(page: Control, title: String)
 
-@onready var _code_edit: CodeEdit = $VBoxContainer/CodeEdit
-@onready var button_commit: Button = $VBoxContainer/HFlowContainer/ButtonCommit
-@onready var button_rollback: Button = $VBoxContainer/HFlowContainer/ButtonRollback
-@onready var button_auto_commit: Button = $VBoxContainer/HFlowContainer/ButtonAutoCommit
+@onready var _code_edit: CodeEdit = %CodeEdit
+@onready var button_commit: Button = %ButtonCommit
+@onready var button_rollback: Button = %ButtonRollback
+@onready var button_auto_commit: Button = %ButtonAutoCommit
 
 
 var code_edit: CodeEdit:
@@ -74,3 +74,14 @@ func _on_button_save_as_pressed():
 func _on_code_edit_text_changed() -> void:
 	if get_meta("is_file"):
 		change_tab_title.emit(self, get_meta("file_name").get_basename() + "*")
+		
+func load_sql_file(path: String):
+	var config = GDSQL.ImprovedConfigFile.new()
+	config.load(path)
+	var content = config.get_value("data", "content", "")
+	code_edit.text = content
+	
+	set_meta("type", "sql_file")
+	set_meta("is_file", true)
+	set_meta("file_path", path)
+	set_meta("file_name", path.get_file())

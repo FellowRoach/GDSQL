@@ -1,5 +1,5 @@
 @tool
-extends GraphEdit
+extends CodeEdit
 
 func _can_drop_data(_position, data):
 	# { "type": "files", "files": ["res://src/dao/t_hero.gdmappergraph"], "from": @Tree@6840:<Tree#603409380691> }

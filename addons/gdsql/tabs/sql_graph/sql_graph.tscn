@@ -208,7 +208,7 @@ icon = ExtResource("10_bl2eh")
 [node name="GraphEdit" type="GraphEdit" parent="VBoxContainer" unique_id=1874249524]
 layout_mode = 2
 size_flags_vertical = 3
-scroll_offset = Vector2(0, -67)
+scroll_offset = Vector2(0, -106)
 right_disconnects = true
 minimap_enabled = false
 script = ExtResource("11_bl2eh")

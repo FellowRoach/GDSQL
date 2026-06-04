@@ -186,7 +186,7 @@ func add_tab_sql_file(path: String):
 	set_tab_title(current_tab, path.get_file().get_basename())
 	set_tab_icon(current_tab, load("res://addons/gdsql/img/sql_file.svg"))
 	_tab_index += 1
-	sql_file.load_graph_file(path)
+	sql_file.load_sql_file(path)
 	mgr.file_tab_opened.emit(path)
 	
 func add_tab_empty_graph():

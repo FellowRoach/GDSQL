@@ -53,6 +53,8 @@ func _enter_tree():
 	_make_visible(false)
 	
 func _exit_tree():
+	unbind_file_system_dock_for_gdmappergraph()
+	
 	#ResourceLoader.remove_resource_format_loader(resource_format_loader_xml)
 	if main_panel_instance:
 		main_panel_instance.get_parent().remove_child(main_panel_instance)
@@ -85,12 +87,13 @@ func bind_file_system_dock_for_gdmappergraph():
 	# popup_menu
 	for i in fs_dock.get_children(true):
 		if i is PopupMenu:
-			i.index_pressed.connect(_on_file_system_dock_popup_menu_idex_pressed)
-			
+			if not i.index_pressed.is_connected(_on_file_system_dock_popup_menu_idex_pressed):
+				i.index_pressed.connect(_on_file_system_dock_popup_menu_idex_pressed)
+				
 	var trees = fs_dock.find_children("@Tree*", "Tree", true, false)
 	var file_tree
 	for tree: Tree in trees:
-		if tree.accessibility_name == tr("Directories"):
+		if tree.accessibility_name in ["Directories", tr("Directories")]:
 			file_tree = tree
 			break
 			
@@ -98,25 +101,45 @@ func bind_file_system_dock_for_gdmappergraph():
 		push_warning("Cannot find FileSystemTree in file system dock.")
 		return
 		
-	file_tree.item_activated.connect(func():
-		var selected = file_tree.get_selected()
-		if selected:
-			var path = selected.get_metadata(0) as String
-			if path.get_extension().to_lower() == "gdsqltext":
-				EditorInterface.set_main_screen_editor(PLUGIN_NAME)
-				GDSQL.WorkbenchManager.open_sql_text_file_tab.emit(path)
-			elif path.get_extension().to_lower() == "gdsqlgraph":
-				EditorInterface.set_main_screen_editor(PLUGIN_NAME)
-				GDSQL.WorkbenchManager.open_sql_graph_file_tab.emit(path)
-			elif path.get_extension().to_lower() == "gdmappergraph":
-				EditorInterface.set_main_screen_editor(PLUGIN_NAME)
-				GDSQL.WorkbenchManager.open_mapper_graph_file_tab.emit(path)
-	)
-	
+	if not file_tree.item_activated.is_connected(_on_file_tree_item_activated):
+		file_tree.item_activated.connect(_on_file_tree_item_activated.bind(file_tree))
+		
 	# second split
 	var file_item_list = fs_dock.find_children("@FileSystemList*", "FileSystemList", true, false)[0]
-	file_item_list.item_activated.connect(func(index):
-		var path = file_item_list.get_item_metadata(index) as String
+	if not file_item_list.item_activated.is_connected(_on_file_item_list_item_activated):
+		file_item_list.item_activated.connect(_on_file_item_list_item_activated.bind(file_item_list))
+		
+func unbind_file_system_dock_for_gdmappergraph():
+	var fs_dock = EditorInterface.get_file_system_dock()
+	# popup_menu
+	for i in fs_dock.get_children(true):
+		if i is PopupMenu:
+			if i.index_pressed.is_connected(_on_file_system_dock_popup_menu_idex_pressed):
+				i.index_pressed.disconnect(_on_file_system_dock_popup_menu_idex_pressed)
+				
+	var trees = fs_dock.find_children("@Tree*", "Tree", true, false)
+	var file_tree
+	for tree: Tree in trees:
+		if tree.accessibility_name in ["Directories", tr("Directories")]:
+			file_tree = tree
+			break
+			
+	if not file_tree:
+		push_warning("Cannot find FileSystemTree in file system dock.")
+		return
+		
+	if file_tree.item_activated.is_connected(_on_file_tree_item_activated):
+		file_tree.item_activated.disconnect(_on_file_tree_item_activated)
+		
+	# second split
+	var file_item_list = fs_dock.find_children("@FileSystemList*", "FileSystemList", true, false)[0]
+	if file_item_list.item_activated.is_connected(_on_file_item_list_item_activated):
+		file_item_list.item_activated.disconnect(_on_file_item_list_item_activated)
+		
+func _on_file_tree_item_activated(file_tree: Tree):
+	var selected = file_tree.get_selected()
+	if selected:
+		var path = selected.get_metadata(0) as String
 		if path.get_extension().to_lower() == "gdsqltext":
 			EditorInterface.set_main_screen_editor(PLUGIN_NAME)
 			GDSQL.WorkbenchManager.open_sql_text_file_tab.emit(path)
@@ -126,8 +149,19 @@ func bind_file_system_dock_for_gdmappergraph():
 		elif path.get_extension().to_lower() == "gdmappergraph":
 			EditorInterface.set_main_screen_editor(PLUGIN_NAME)
 			GDSQL.WorkbenchManager.open_mapper_graph_file_tab.emit(path)
-	)
-	
+			
+func _on_file_item_list_item_activated(index, file_item_list: ItemList):
+	var path = file_item_list.get_item_metadata(index) as String
+	if path.get_extension().to_lower() == "gdsqltext":
+		EditorInterface.set_main_screen_editor(PLUGIN_NAME)
+		GDSQL.WorkbenchManager.open_sql_text_file_tab.emit(path)
+	elif path.get_extension().to_lower() == "gdsqlgraph":
+		EditorInterface.set_main_screen_editor(PLUGIN_NAME)
+		GDSQL.WorkbenchManager.open_sql_graph_file_tab.emit(path)
+	elif path.get_extension().to_lower() == "gdmappergraph":
+		EditorInterface.set_main_screen_editor(PLUGIN_NAME)
+		GDSQL.WorkbenchManager.open_mapper_graph_file_tab.emit(path)
+		
 func _on_file_system_dock_popup_menu_idex_pressed(index: int):
 	var fs_dock = EditorInterface.get_file_system_dock()
 	for i in fs_dock.get_children(true):
