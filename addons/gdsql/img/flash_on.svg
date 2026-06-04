@@ -6,7 +6,7 @@
    viewBox="0 0 24 24"
    version="1.1"
    id="svg1"
-   sodipodi:docname="camera_flash_on.svg"
+   sodipodi:docname="flash_on.svg"
    width="24"
    height="24"
    inkscape:version="1.3 (0e150ed6c4, 2023-07-21)"
@@ -36,7 +36,7 @@
      inkscape:current-layer="svg1" />
   <path
      fill="#ffc107"
-     d="M 15.145333,3 H 10.202667 L 7.5066668,12.45 H 11.370933 L 9.3040002,21 16.493333,10.65 H 12.2696 Z"
+     d="M 15.947568,0.70449979 H 9.7442472 L 6.360617,12.564775 h 4.849869 L 8.6163704,23.2955 17.639383,10.305674 h -5.30102 z"
      id="path1"
-     style="stroke-width:1.49889" />
+     style="stroke-width:1.88119" />
 </svg>

@@ -13,13 +13,22 @@
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_03x0p"]
 
-[sub_resource type="InputEventKey" id="InputEventKey_olocg"]
+[sub_resource type="InputEventKey" id="InputEventKey_ln0ie"]
 device = -1
 ctrl_pressed = true
 keycode = 83
 
 [sub_resource type="Shortcut" id="Shortcut_abyjw"]
-events = [SubResource("InputEventKey_olocg")]
+events = [SubResource("InputEventKey_ln0ie")]
+
+[sub_resource type="InputEventKey" id="InputEventKey_k6kxf"]
+device = -1
+shift_pressed = true
+ctrl_pressed = true
+keycode = 83
+
+[sub_resource type="Shortcut" id="Shortcut_k6kxf"]
+events = [SubResource("InputEventKey_k6kxf")]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0ukqh"]
 bg_color = Color(0.541176, 0.168627, 0.890196, 1)
@@ -64,6 +73,16 @@ tooltip_text = "Save the script to a file"
 shortcut_context = NodePath("../../..")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_03x0p")
 shortcut = SubResource("Shortcut_abyjw")
+icon = ExtResource("3_imqmf")
+icon_alignment = 1
+
+[node name="ButtonSaveAs" type="Button" parent="VBoxContainer/HFlowContainer" unique_id=1367487350 node_paths=PackedStringArray("shortcut_context")]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Save the script to a file"
+shortcut_context = NodePath("../../..")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_03x0p")
+shortcut = SubResource("Shortcut_k6kxf")
 icon = ExtResource("3_imqmf")
 icon_alignment = 1
 
@@ -188,5 +207,6 @@ script = ExtResource("10_ln0ie")
 
 [connection signal="pressed" from="VBoxContainer/HFlowContainer/ButtonOpen" to="." method="_on_button_open_pressed"]
 [connection signal="pressed" from="VBoxContainer/HFlowContainer/ButtonSave" to="." method="_on_button_save_pressed"]
+[connection signal="pressed" from="VBoxContainer/HFlowContainer/ButtonSaveAs" to="." method="_on_button_save_as_pressed"]
 [connection signal="toggled" from="VBoxContainer/HFlowContainer/ButtonAutoCommit" to="." method="_on_button_auto_commit_toggled"]
 [connection signal="text_changed" from="VBoxContainer/CodeEdit" to="." method="_on_code_edit_text_changed"]
