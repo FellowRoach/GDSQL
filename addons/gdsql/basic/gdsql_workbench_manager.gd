@@ -125,18 +125,15 @@ func _notification(what):
 		databases.clear()
 		
 		var root = EditorInterface.get_base_control().get_tree().get_root()
-		var dialog_root = root.find_child("DialogRoot", false, false)
+		var dialog_root = root.find_child("GDSQLDialogRoot", false, false)
 		if dialog_root:
+			var dialogs = dialog_root.find_children("*", "AcceptDialog", true, false)
 			var dummy = Node.new()
-			dialog_root.propagate_call("reparent", [dummy])
-			dummy.remove_child(dialog_root)
-			for i in dummy.get_children():
-				if i is AcceptDialog:
-					_clear_custom_dialog(i as AcceptDialog)
-				else:
-					i.print_tree_pretty()
-					push_error("why there is a non-AcceptDialog (%s) here?!" % i.to_string())
+			for dialog in dialogs:
+				dialog.reparent(dummy)
+				_clear_custom_dialog(dialog)
 			dialog_root.queue_free()
+			root.create_tween().tween_callback(dummy.queue_free).set_delay(2)
 			
 func _init() -> void:
 	if TranslationServer.has_domain("GDSQL"):
@@ -151,10 +148,10 @@ func run_in_plugin(node: Node) -> bool:
 	
 func _add_dialog(dialog: Window):
 	var root = EditorInterface.get_base_control().get_tree().get_root()
-	var dialog_root = root.find_child("DialogRoot", false, false)
+	var dialog_root = root.find_child("GDSQLDialogRoot", false, false)
 	if dialog_root == null:
 		dialog_root = Node.new()
-		dialog_root.name = "DialogRoot"
+		dialog_root.name = "GDSQLDialogRoot"
 		root.add_child(dialog_root, true)
 		
 	# 把新的对话框加到最深一层
@@ -170,8 +167,8 @@ func _add_dialog(dialog: Window):
 				# 能到这里说明上一个对话框正在关闭，把独占关闭一下，免得引擎报错，例如：
 				# scene/main/window.cpp:886 - Attempting to make child window exclusive, 
 				# but the parent window already has another exclusive child. This window: 
-				# /root/DialogRoot/@ConfirmationDialog@23258, parent window: /root, 
-				# current exclusive child window: /root/DialogRoot/@ConfirmationDialog@23219
+				# /root/GDSQLDialogRoot/@ConfirmationDialog@23258, parent window: /root, 
+				# current exclusive child window: /root/GDSQLDialogRoot/@ConfirmationDialog@23219
 				#printt("xxxxxxxxxxxxxx", p.get_child_count())
 				#await root.create_tween().tween_interval(0.1).finished
 				#dialog_root.print_tree_pretty()
@@ -222,7 +219,7 @@ func _clear_custom_dialog(dialog: Window):
 		if dialog.get_parent():
 			dialog.get_parent().remove_child(dialog)
 		dialog.queue_free()
-	
+		
 ## 创建并弹出自定义对话框。
 ## 【datas】: 构建自定义对话框的数据，类似graph_node.gd，例如：
 ## [
