@@ -41,7 +41,7 @@ func _on_button_save_pressed() -> void:
 	if get_meta("is_file"):
 		var file = FileAccess.open(get_meta("file_path"), FileAccess.WRITE)
 		file.store_string(code_edit.text)
-		change_tab_title.emit(self, get_meta("file_name"))
+		change_tab_title.emit(self, get_meta("file_name").get_basename())
 		return
 		
 	var editor_file_dialog = EditorFileDialog.new()
@@ -52,7 +52,7 @@ func _on_button_save_pressed() -> void:
 		var file = FileAccess.open(path, FileAccess.WRITE)
 		file.store_string(code_edit.text)
 		var file_name = path.get_file()
-		change_tab_title.emit(self, file_name)
+		change_tab_title.emit(self, file_name.get_basename())
 		set_meta("is_file", true)
 		set_meta("file_name", file_name)
 		set_meta("file_path", path)
@@ -66,4 +66,4 @@ func _on_button_save_pressed() -> void:
 
 func _on_code_edit_text_changed() -> void:
 	if get_meta("is_file"):
-		change_tab_title.emit(self, get_meta("file_name") + "*")
+		change_tab_title.emit(self, get_meta("file_name").get_basename() + "*")

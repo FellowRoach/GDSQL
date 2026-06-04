@@ -110,4 +110,5 @@ static func _clear():
 		if Engine.has_singleton(singleton_name):
 			var mgr = Engine.get_singleton(singleton_name)
 			Engine.unregister_singleton(singleton_name)
-			mgr.free()
+			mgr.get_parent().remove_child(mgr)
+			mgr.queue_free()

@@ -973,7 +973,7 @@ to_node: StringName, to_port: int) -> void:
 	
 func mark_modified(_whatever = null):
 	if owner.get_meta("is_file", false):
-		owner.change_tab_title.emit(owner, owner.get_meta("file_name") + "*")
+		owner.change_tab_title.emit(owner, owner.get_meta("file_name").get_basename() + "*")
 		
 func select_all_node():
 	for i in get_children():

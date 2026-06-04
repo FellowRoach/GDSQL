@@ -180,7 +180,7 @@ func _on_option_button_choose_path_item_selected(access: int, extra_line_edit = 
 		line_edit_save_path.text = path
 		if extra_line_edit:
 			extra_line_edit.text = path
-		change_tab_title.emit(self, get_meta("file_name") + "*")
+		change_tab_title.emit(self, get_meta("file_name").get_basename() + "*")
 	, CONNECT_DEFERRED)
 	if parent_dialog:
 		editor_file_dialog.transient = true
@@ -1705,7 +1705,7 @@ func split_for_long_content(content: String, delimiter = "\n") -> String:
 	return delimiter.join(arr)
 	
 func _on_option_button_link_item_selected(_index: int) -> void:
-	change_tab_title.emit(self, get_meta("file_name") + "*")
+	change_tab_title.emit(self, get_meta("file_name").get_basename() + "*")
 	
 func _on_button_add_include_pressed() -> void:
 	EditorInterface.popup_quick_open(graph_edit.include_file, [&"GDMapperGraph"])
@@ -2045,7 +2045,7 @@ func _on_tree_node_list_button_clicked(item: TreeItem, _column: int, id: int, _m
 					graph_edit.update_item_comment(graph_node, new_comment)
 					_on_sys_confirm_alter_table()
 					if get_meta("is_file"):
-						change_tab_title.emit(self, get_meta("file_name") + "*")
+						change_tab_title.emit(self, get_meta("file_name").get_basename() + "*")
 			var dialog = GDSQL.WorkbenchManager.create_confirmation_dialog("Change the comment to: [%s]." % new_comment, confirm, Callable())
 			if frame:
 				dialog.ok_button_text = tr("Open file to modify this")

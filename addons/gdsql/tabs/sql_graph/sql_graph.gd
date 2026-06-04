@@ -94,7 +94,7 @@ func _on_button_save_pressed() -> void:
 			return
 			
 		config.save(get_meta("file_path"))
-		change_tab_title.emit(self, get_meta("file_name"))
+		change_tab_title.emit(self, get_meta("file_name").get_basename())
 		return
 		
 	_on_button_save_as_pressed()
@@ -120,7 +120,7 @@ func _on_button_save_as_pressed():
 			
 		config.save(path)
 		var file_name = path.get_file()
-		change_tab_title.emit(self, file_name)
+		change_tab_title.emit(self, file_name.get_basename())
 		set_meta("type", "sql_graph")
 		set_meta("is_file", true)
 		set_meta("file_path", path)
@@ -3322,7 +3322,7 @@ func split_for_long_content(content: String) -> String:
 	
 func mark_modified(_whatever = null):
 	if get_meta("is_file", false):
-		change_tab_title.emit(self, get_meta("file_name") + "*")
+		change_tab_title.emit(self, get_meta("file_name").get_basename() + "*")
 		
 func _on_graph_edit_copy_nodes_request(p_copied_data = null) -> void:
 	var selected_nodes_params = get_nodes_params(true)
