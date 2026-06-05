@@ -299,6 +299,18 @@ func reset_header():
 		
 		c.dragged.connect(_on_header_col_model_dragged.bind(c))
 		
+	# 禁止拖拽倒数第二个spliter
+	# HeaderColModel
+	# ┠╴Button_id
+	# ┠╴Control
+	# ┃  ┖╴HeaderColModel
+	# ┃     ┠╴Button_
+	# ┃     ┠╴Control ------------------------待删除的最后一个空control
+	# ┃     ┖╴@SplitContainerDragger
+	# ┖╴@SplitContainerDragger
+	var spliter: HSplitContainer = parent.get_parent().get_parent().get_parent()
+	spliter.collapsed = true
+	
 	# 把最后一个空control删掉，免得占空间
 	parent.queue_free()
 	clear_rows()
