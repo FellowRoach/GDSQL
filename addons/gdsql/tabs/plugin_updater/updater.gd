@@ -29,6 +29,7 @@ var _max_upgrade: String = ""
 
 
 func _init() -> void:
+	set_meta("type", "updater")
 	title = "Check for Updates"
 	min_size = Vector2(780, 620)
 	exclusive = true

@@ -8,6 +8,7 @@ const LICENSE_FILE = "res://addons/gdsql/license.txt"
 var _font_variation: FontVariation
 
 func _ready() -> void:
+	set_meta("type", "license")
 	_font_variation = FontVariation.new()
 	_font_variation.set_spacing(TextServer.SPACING_TOP, 7)
 	
