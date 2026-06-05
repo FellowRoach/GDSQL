@@ -34,6 +34,7 @@ func _gui_input(event: InputEvent) -> void:
 	if button_run_edit.shortcut.matches_event(event):
 		in_run_edit = true
 		if event.is_released():
+			in_run_edit = false
 			_button_run_edit_pressed()
 		accept_event()
 		return

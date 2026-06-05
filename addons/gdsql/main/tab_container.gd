@@ -158,6 +158,7 @@ func add_tab_empty_sql_file():
 	set_tab_title(current_tab, "SQL File %d" % _tab_index)
 	set_tab_icon(current_tab, load("res://addons/gdsql/img/sql_file.svg"))
 	_tab_index += 1
+	sql_file.code_edit.grab_focus()
 	return sql_file
 	
 func add_tab_sql_file(path: String):
@@ -188,6 +189,7 @@ func add_tab_sql_file(path: String):
 	_tab_index += 1
 	sql_file.load_sql_file(path)
 	mgr.file_tab_opened.emit(path)
+	sql_file.code_edit.graph_focus()
 	
 func add_tab_empty_graph():
 	var sql_graph = SQLGraph.instantiate()
@@ -415,7 +417,6 @@ func add_tab_license() -> void:
 			return
 
 	var license_page = load("res://addons/gdsql/tabs/license/license.gd").new()
-	license_page.set_meta("type", "license")
 	add_child(license_page)
 	move_child(new_tab_button, get_child_count() - 1)
 	current_tab = get_child_count() - 2

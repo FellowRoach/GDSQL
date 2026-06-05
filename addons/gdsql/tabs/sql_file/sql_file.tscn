@@ -10,6 +10,7 @@
 [ext_resource type="Texture2D" uid="uid://7cof0bycfuoy" path="res://addons/gdsql/img/circle-cancel.svg" id="8_imqmf"]
 [ext_resource type="Texture2D" uid="uid://ds3hxargchfqy" path="res://addons/gdsql/img/flash_checkmark.svg" id="9_3rvnd"]
 [ext_resource type="Script" uid="uid://d3r6wvkq5qrcd" path="res://addons/gdsql/tabs/sql_file/code_edit.gd" id="10_ln0ie"]
+[ext_resource type="Script" uid="uid://uxp6gxgsouec" path="res://addons/gdsql/tabs/sql_file/results_tab.gd" id="11_k6kxf"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_03x0p"]
 
@@ -46,6 +47,16 @@ corner_radius_bottom_right = 3
 corner_radius_bottom_left = 3
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_35ij8"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_k6kxf"]
+content_margin_left = 9.0
+content_margin_top = 9.0
+content_margin_right = 9.0
+content_margin_bottom = 9.0
+bg_color = Color(0.14, 0.14, 0.14, 1)
+corner_radius_top_left = 5
+corner_radius_bottom_left = 5
+corner_detail = 5
 
 [node name="SQL File" type="VSplitContainer" unique_id=1989459338]
 anchors_preset = 15
@@ -200,6 +211,7 @@ popup/item_5/text = "Limit to 100000 rows"
 popup/item_5/id = 5
 
 [node name="VSplitContainer" type="VSplitContainer" parent="VBoxContainer" unique_id=1252358798]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 
@@ -221,12 +233,16 @@ auto_brace_completion_highlight_matching = true
 script = ExtResource("10_ln0ie")
 button_run_edit = NodePath("../../HFlowContainer/ButtonRunEdit")
 
-[node name="ResultsTab" type="TabContainer" parent="VBoxContainer/VSplitContainer" unique_id=2078486873]
+[node name="ResultsTab" type="TabContainer" parent="VBoxContainer/VSplitContainer" unique_id=2078486873 node_paths=PackedStringArray("v_split_container")]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
 size_flags_vertical = 3
-tabs_position = 1
+theme_type_variation = &"TabContainerInner"
+theme_override_styles/panel = SubResource("StyleBoxFlat_k6kxf")
 drag_to_rearrange_enabled = true
+script = ExtResource("11_k6kxf")
+v_split_container = NodePath("..")
 
 [connection signal="pressed" from="VBoxContainer/HFlowContainer/ButtonOpen" to="." method="_on_button_open_pressed"]
 [connection signal="pressed" from="VBoxContainer/HFlowContainer/ButtonSave" to="." method="_on_button_save_pressed"]
@@ -234,3 +250,6 @@ drag_to_rearrange_enabled = true
 [connection signal="pressed" from="VBoxContainer/HFlowContainer/ButtonRunEdit" to="." method="_on_button_run_edit_pressed"]
 [connection signal="toggled" from="VBoxContainer/HFlowContainer/ButtonAutoCommit" to="." method="_on_button_auto_commit_toggled"]
 [connection signal="text_changed" from="VBoxContainer/VSplitContainer/CodeEdit" to="." method="_on_code_edit_text_changed"]
+[connection signal="child_exiting_tree" from="VBoxContainer/VSplitContainer/ResultsTab" to="VBoxContainer/VSplitContainer/ResultsTab" method="_on_child_exiting_tree"]
+[connection signal="tab_button_pressed" from="VBoxContainer/VSplitContainer/ResultsTab" to="VBoxContainer/VSplitContainer/ResultsTab" method="_on_tab_button_pressed"]
+[connection signal="tab_changed" from="VBoxContainer/VSplitContainer/ResultsTab" to="VBoxContainer/VSplitContainer/ResultsTab" method="_on_tab_changed"]
