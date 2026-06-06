@@ -303,15 +303,33 @@ func set_need_head(p_need_head: bool) -> GDSQL.BaseDao:
 	
 ## 同时设置表名和别名。table支持不带后缀和带后缀.gsql
 func from(table: String, alias: String = "") -> GDSQL.BaseDao:
-	table = GDSQL.RootConfig.validate_name(table)
-	if not table.ends_with(GDSQL.RootConfig.DATA_EXTENSION):
-		table = table + GDSQL.RootConfig.DATA_EXTENSION
-	__table = table
+	__table = GDSQL.RootConfig.validate_name(table)
 	__table_alias = alias
 	return self
 	
+func _check_table_exit():
+	if not Engine.is_editor_hint():
+		return true
+		
+	var check_info = GDSQL.RootConfig.check_table_exit(__db_name, __table)
+	if not check_info:
+		return _assert_false("Check", "Check table existing failed! db: %s, table: %s." % [__db_name, __table])
+		
+	if check_info[0]:
+		return true
+		
+	if check_info[2]:
+		return _assert_false("Check", "Not find table %s! Possible table: %s?" % [__table, ", ".join(check_info[2])])
+		
+	if check_info[1]:
+		if check_info[1] is String:
+			return _assert_false("Check", "Not find table: %s.%s!" % [__db_name, __table])
+		return _assert_false("Check", "Not find database %s! Possible database: %s?") % [__db_name, ", ".join(check_info[1])]
+		
+	return _assert_false("Check", "Not find table: %s.%s!" % [__db_name, __table])
+	
 func _set_primary_and_autoincre():
-	if __db_name and __db_path and __table and __table != GDSQL.RootConfig.DATA_EXTENSION:
+	if __db_name and __db_path and __table:
 		__primary_key_def = ""
 		__autoincrement_keys_def = {}
 		var defination = __get_table_defination(__db_name, __table)
@@ -609,8 +627,6 @@ func left_join(db_name: String, table: String, alias: String, cond: String, pass
 		return _assert_false("left_join", "duplicate table alias")
 	if db_name == "":
 		db_name = __db_name
-	if not table.ends_with(GDSQL.RootConfig.DATA_EXTENSION):
-		table = table + GDSQL.RootConfig.DATA_EXTENSION
 		
 	var left_join_obj: GDSQL.LeftJoin
 	if __left_join == null:
@@ -1047,6 +1063,9 @@ func ___select(fill_primary_key: String = ""):
 			__err.append_array(a_left_join.get_err())
 			return null
 	for a_left_join: GDSQL.LeftJoin in arr_left_join:
+		if not a_left_join.check_table_exit():
+			__err.append(a_left_join.get_err())
+			return null
 		var err = a_left_join.handle_defualt_password()
 		if err != OK:
 			__err.append_array(a_left_join.get_err())
@@ -1600,6 +1619,8 @@ func ___select(fill_primary_key: String = ""):
 		
 	# 合并union
 	if __union_all:
+		if not __union_all._check_table_exit():
+			return null
 #		__union_all.__need_post_porcess = false # 改为需要后处理
 #		__union_all.__need_head = false
 		# 为了让union表数据包含order by的列，需要先设置一下
@@ -2028,6 +2049,9 @@ func query() -> GDSQL.QueryResult:
 	if __cmd == "":
 		return _assert_false("query", "command is empty")
 		
+	if not _check_table_exit():
+		return null
+		
 	_set_primary_and_autoincre()
 	
 	if __parent_union:
@@ -2411,7 +2435,7 @@ func _get_cond(need_where: bool, new_line = false) -> String:
 		#if cond != "":
 			#cond += " and "
 		#cond += "(" + i + ")"
-	var cond = " and ".join(__where)
+	var cond = " AND ".join(__where)
 	
 	if cond == "":
 		return cond
@@ -2422,8 +2446,8 @@ func _get_cond(need_where: bool, new_line = false) -> String:
 		return cond
 		
 	if new_line:
-		return "\nwhere " + cond
-	return " where " + cond
+		return "\nWHERE " + cond
+	return " WHERE " + cond
 	
 func _get_order_by(need_order_by: bool, new_line = false) -> String:
 	if __order_by.is_empty():
@@ -2431,7 +2455,7 @@ func _get_order_by(need_order_by: bool, new_line = false) -> String:
 		
 	var arr = []
 	for i in __order_by:
-		arr.push_back("%s %s" % [i[0], "asc" if i[1] == GDSQL.ORDER_BY.ASC else "desc"])
+		arr.push_back("%s %s" % [i[0], "ASC" if i[1] == GDSQL.ORDER_BY.ASC else "DESC"])
 	var s = ", ".join(arr)
 	
 	if not need_order_by:
@@ -2440,54 +2464,55 @@ func _get_order_by(need_order_by: bool, new_line = false) -> String:
 		return s
 		
 	if new_line:
-		return "\norder by " + s
-	return " order by " + s
+		return "\nORDER BY " + s
+	return " ORDER BY " + s
 	
 func _get_limit(new_line = false) -> String:
 	if __limit < 0 or __offset < 0:
 		return ""
 		
 	if new_line:
-		return "\n limit %d, %d" % [__offset, __limit]
-	return " limit %d, %d" % [__offset, __limit]
+		return "\n LIMIT %d, %d" % [__offset, __limit]
+	return " LIMIT %d, %d" % [__offset, __limit]
 	
 func get_cmd() -> String:
 	return __cmd
 	
 ## 获取正正执行的语句
 func get_query_cmd() -> String:
-	var a_table = __table.substr(0, __table.length() - GDSQL.RootConfig.DATA_EXTENSION.length())
+	var db_name = GDSQL.RootConfig.get_database_display_name(__db_name)
+	var table_name = GDSQL.RootConfig.get_table_display_name(__db_name, __table)
 	match __cmd:
 		"select":
-			return "select %s from %s%s%s%s%s%s%s" % [
+			return "SELECT %s FROM %s.%s%s%s%s%s%s%s" % [
 				__select_str, 
-				a_table,
+				db_name, table_name,
 				"" if __table_alias == "" else " " + __table_alias,
 				"" if __left_join == null else "\n" + "\n".join(__left_join.get_query_cmds()),
 				_get_cond(true, false) if __left_join == null else _get_cond(true, true),
-				"" if __union_all == null else "\nunion all " + __union_all.get_query_cmd(),
+				"" if __union_all == null else "\nUNION ALL " + __union_all.get_query_cmd(),
 				_get_order_by(true, false) if __union_all == null and __left_join == null else _get_order_by(true, true),
 				_get_limit(false) if __union_all == null and __left_join == null else _get_limit(true)
 			]
 		"insert_into":
-			return "insert into %s (%s) values (%s)" \
-				% [a_table, ", ".join(__data.keys()), ", ".join(__data.values().map(func(v): return var_to_str(v)))]
+			return "INSERT INTO %s.%s (%s) VALUES (%s)" \
+				% [db_name, table_name, ", ".join(__data.keys()), ", ".join(__data.values().map(func(v): return var_to_str(v)))]
 		"insert_ignore":
-			return "insert ignore into %s (%s) values (%s)" \
-				% [a_table, ", ".join(__data.keys()), ", ".join(__data.values().map(func(v): return var_to_str(v)))]
+			return "INSERT IGNORE INTO %s.%s (%s) VALUES (%s)" \
+				% [db_name, table_name, ", ".join(__data.keys()), ", ".join(__data.values().map(func(v): return var_to_str(v)))]
 		"insert_or_update":
 			var arr = []
 			for key in __data:
 				arr.push_back(key + " = " + var_to_str(__data[key]))
-			return "insert into %s (%s) values (%s) on duplicate key update %s" % \
-				[a_table, ", ".join(__data.keys()), ", ".join(__data.values().map(func(v): return var_to_str(v))), ", ".join(arr)]
+			return "INSERT INTO %s.%s (%s) VALUES (%s) ON DUPLICATE KEY UPDATE %s" % \
+				[db_name, table_name, ", ".join(__data.keys()), ", ".join(__data.values().map(func(v): return var_to_str(v))), ", ".join(arr)]
 		"update":
 			var arr = []
 			for key in __data:
 				arr.push_back(key + " = " + var_to_str(__data[key]))
-			return "update %s set %s%s" % [a_table, ", ".join(arr), _get_cond(true)]
+			return "UPDATE %s.%s SET %s%s" % [db_name, table_name, ", ".join(arr), _get_cond(true)]
 		"delete_from":
-			return "delete from %s%s" % [a_table, _get_cond(true)]
+			return "DELETE FROM %s.%s%s" % [db_name, table_name, _get_cond(true)]
 	return ""
 	
 func reset(_force = false):

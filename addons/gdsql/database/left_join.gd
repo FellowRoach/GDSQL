@@ -142,10 +142,15 @@ func clear_chain():
 		i.__left_join = null
 		
 func get_query_cmds() -> Array:
-	var ret = ["left join %s %s on %s" % [__table, __table_alias, __condition]]
+	var db_name = GDSQL.RootConfig.get_database_display_name(__db_name)
+	var table_name = GDSQL.RootConfig.get_table_display_name(__db_name, __table)
+	var ret = ["LEFT JOIN %s.%s %s on %s" % [db_name, table_name, __table_alias, __condition]]
 	var obj = __left_join
 	while obj != null:
-		ret.push_back("left join %s %s on %s" % [obj.__table, obj.__table_alias, obj.__condition])
+		ret.push_back("LEFT JOIN %s.%s %s on %s" % [
+			GDSQL.RootConfig.get_database_display_name(obj.__db_name), 
+			GDSQL.RootConfig.get_table_display_name(obj.__db_name, obj.__table), 
+			obj.__table_alias, obj.__condition])
 		obj = obj.__left_join
 	return ret
 	
@@ -193,6 +198,25 @@ func _assert_false(action: String, msg: String):
 	
 func get_err() -> Array:
 	return __err
+	
+func check_table_exit():
+	if not Engine.is_editor_hint():
+		return true
+		
+	var check_info = GDSQL.RootConfig.check_table_exit(__db_name, __table)
+	if not check_info:
+		return _assert_false("Check", "Check table existing failed! db: %s, table: %s." % [__db_name, __table])
+		
+	if check_info[0]:
+		return true
+		
+	if check_info[2]:
+		return _assert_false("Check", "Not find table `%s`! Possible table:\n%s?" % [__table, "\n,".join(check_info[2])])
+		
+	if check_info[1]:
+		return _assert_false("Check", "Not find database `%s`! Possible database:\n%s?") % [__db_name, "\n,".join(check_info[1])]
+		
+	return _assert_false("Check", "Not find table: %s.%s!" % [__db_name, __table])
 	
 func validate() -> bool:
 	__err.clear()

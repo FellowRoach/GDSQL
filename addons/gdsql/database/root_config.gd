@@ -355,3 +355,42 @@ func get_table_valid_if_not_exist(db_name: String, table_name: String) -> bool:
 	table_name = validate_name(table_name)
 	var table_config = GDSQL.ConfManager.get_conf(get_table_config_path(db_name, table_name), "")
 	return table_config.get_value(table_name, "valid_if_not_exist", false)
+	
+func check_table_exit(p_db_name_or_path: String, p_table_name: String):
+	var p_db_name_or_path_bak = p_db_name_or_path
+	var p_table_name_bak = p_table_name
+	if p_db_name_or_path.contains("/") or p_db_name_or_path.contains("\\"):
+		p_db_name_or_path = validate_name(p_db_name_or_path)
+	p_table_name = validate_name(p_table_name)
+	var possible = []
+	var find_db = ""
+	var info = get_databases_info()
+	const SIMILARITY = 0.6
+	for db_name in info:
+		if p_db_name_or_path == db_name or GDSQL.GDSQLUtils.globalize_path(p_db_name_or_path) == \
+		GDSQL.GDSQLUtils.globalize_path(info[db_name].data_path):
+			find_db = db_name if db_name == p_db_name_or_path_bak else info[db_name].get("display_name", db_name)
+			possible.clear()
+			for table_name in info[db_name].tables:
+				if p_table_name == table_name:
+					return [true, find_db, table_name if table_name == p_table_name_bak 
+						else info[db_name].tables[table_name].get("display_name", table_name)]
+				elif p_table_name.similarity(table_name) >= SIMILARITY:
+					possible.push_back(info[db_name].tables[table_name].get("display_name", table_name))
+			break
+		elif p_db_name_or_path.similarity(db_name) >= SIMILARITY:
+			possible.push_back(info[db_name].get("display_name", db_name))
+		elif GDSQL.GDSQLUtils.globalize_path(p_db_name_or_path).similarity(
+		GDSQL.GDSQLUtils.globalize_path(info[db_name].data_path)) >= SIMILARITY:
+			possible.push_back(info[db_name].data_path)
+			
+	if not find_db:
+		if possible.is_empty():
+			return [false, false, false]
+		else:
+			return [false, possible, false]
+	else:
+		if possible.is_empty():
+			return [false, find_db, false]
+		else:
+			return [false, find_db, possible]

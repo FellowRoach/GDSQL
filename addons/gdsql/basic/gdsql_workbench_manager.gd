@@ -762,7 +762,6 @@ func _find_last_line_edit(control: Node) -> Control:
 func need_request_password(db_name: String, table_name: String, try_password: String) -> bool:
 	var result = []
 	need_user_enter_password.emit(db_name, table_name, try_password, result)
-	assert(not result.is_empty(), "Err occur!")
 	if result[0]:
 		_request_password.clear()
 		_request_password.push_back(db_name)
