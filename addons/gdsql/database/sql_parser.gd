@@ -12,7 +12,11 @@ static var re_replace: RegEx = RegEx.new()
 static var lru_cache: SQLParserLRULink
 
 static func _assert_false(msg: String):
-	assert(false, "You have an error in your SQL syntax. %s" % msg)
+	msg = "You have an error in your SQL syntax. %s" % msg
+	if GDSQL.WorkbenchManager and Engine.is_editor_hint():
+		GDSQL.WorkbenchManager.create_accept_dialog(msg)
+		GDSQL.WorkbenchManager.add_log_history.emit("Err", Time.get_unix_time_from_system(), "sql parser", msg)
+	assert(false, msg)
 	return null
 	
 static func _static_init() -> void:
