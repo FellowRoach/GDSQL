@@ -147,7 +147,10 @@ size_flags_horizontal = 3
 size_flags_stretch_ratio = 6.0
 theme_override_constants/autohide = 0
 
-[node name="TabContainer" type="TabContainer" parent="VBoxContainer/HSplitContainer/VSplitContainer" unique_id=567798177]
+[node name="PopupMenuTabContainerFile" type="PopupMenu" parent="VBoxContainer/HSplitContainer/VSplitContainer" unique_id=454101033]
+unique_name_in_owner = true
+
+[node name="TabContainer" type="TabContainer" parent="VBoxContainer/HSplitContainer/VSplitContainer" unique_id=567798177 node_paths=PackedStringArray("rmb_menu")]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
@@ -157,6 +160,7 @@ current_tab = 0
 drag_to_rearrange_enabled = true
 tab_0/icon = ExtResource("5_eplp7")
 script = ExtResource("3_2dwia")
+rmb_menu = NodePath("../PopupMenuTabContainerFile")
 
 [node name="Welcome" parent="VBoxContainer/HSplitContainer/VSplitContainer/TabContainer" unique_id=529169008 instance=ExtResource("4_ilb7s")]
 unique_name_in_owner = true

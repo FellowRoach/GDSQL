@@ -14,6 +14,7 @@ extends MarginContainer
 @onready var popup_menu_database: PopupMenu = %PopupMenuDatabase
 @onready var popup_menu_tools: PopupMenu = %PopupMenuTools
 @onready var popup_menu_help: PopupMenu = %PopupMenuHelp
+@onready var popup_menu_tab_container_file: PopupMenu = %PopupMenuTabContainerFile
 
 var xml_editor_window: Window
 var recent_files_sub_menu: PopupMenu
@@ -142,6 +143,15 @@ func _ready() -> void:
 	_init_menus()
 	
 func _init_menus() -> void:
+	# File menu of TabContainer
+	popup_menu_tab_container_file.add_item(tr("New Text Query"), FILE_MENU.NEW_QUERY_TAB)
+	popup_menu_tab_container_file.set_item_icon(popup_menu_tab_container_file.get_item_index(FILE_MENU.NEW_QUERY_TAB), load("res://addons/gdsql/img/sql_file.svg"))
+	popup_menu_tab_container_file.add_item(tr("New SQL Graph"), FILE_MENU.NEW_GRAPH_TAB)
+	popup_menu_tab_container_file.set_item_icon(popup_menu_tab_container_file.get_item_index(FILE_MENU.NEW_GRAPH_TAB), load("res://addons/gdsql/img/GDSQLGraph.svg"))
+	popup_menu_tab_container_file.add_item(tr("New Mapper Graph"), FILE_MENU.NEW_MAPPER_TAB)
+	popup_menu_tab_container_file.set_item_icon(popup_menu_tab_container_file.get_item_index(FILE_MENU.NEW_MAPPER_TAB), load("res://addons/gdsql/gbatis/img/GBMapperGraph.svg"))
+	popup_menu_tab_container_file.id_pressed.connect(_on_tab_container_file_menu_id_pressed)
+	
 	# File menu
 	popup_menu_file.add_item(tr("New Text Query"), FILE_MENU.NEW_QUERY_TAB)
 	popup_menu_file.set_item_icon(popup_menu_file.get_item_index(FILE_MENU.NEW_QUERY_TAB), load("res://addons/gdsql/img/sql_file.svg"))
@@ -370,6 +380,15 @@ func _on_button_clear_log_pressed():
 
 # ==================== Menu Handlers ====================
 
+func _on_tab_container_file_menu_id_pressed(id: int) -> void:
+	match id:
+		FILE_MENU.NEW_QUERY_TAB:
+			_on_file_new_query_tab()
+		FILE_MENU.NEW_GRAPH_TAB:
+			_on_file_new_graph_tab()
+		FILE_MENU.NEW_MAPPER_TAB:
+			_on_file_new_mapper_tab()
+			
 func _on_file_menu_id_pressed(id: int) -> void:
 	match id:
 		FILE_MENU.NEW_QUERY_TAB:

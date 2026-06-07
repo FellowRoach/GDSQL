@@ -1,6 +1,8 @@
 @tool
 extends TabContainer
 
+@export var rmb_menu: Popup
+
 var mgr: GDSQL.WorkbenchManagerClass:
 	get: return GDSQL.WorkbenchManager
 	
@@ -471,7 +473,9 @@ func _add_tab_context_menu():
 	# 注意：不能 add_child 到 TabContainer，会影响 get_child_count() 导致➕按钮下标计算错误
 	get_tree().root.add_child(_tab_context_menu)
 	get_tab_bar().gui_input.connect(_on_tab_bar_gui_input)
-
+	if rmb_menu:
+		set_popup(rmb_menu)
+		
 func _on_tab_bar_gui_input(event: InputEvent):
 	if event is InputEventMouseButton and event.pressed:
 		var tab_bar = get_tab_bar()
@@ -493,8 +497,14 @@ func _on_tab_right_clicked(clicked_tab: int):
 	if clicked_tab <= WELCOME_PAGE_TAB_INDEX:
 		return
 	var tab_control = get_tab_control(clicked_tab)
-	if tab_control == null or tab_control == new_tab_button:
+	if tab_control == null:
 		return
+	elif tab_control == new_tab_button:
+		if rmb_menu:
+			rmb_menu.position = get_tab_bar().get_screen_position() + get_tab_bar().get_local_mouse_position()
+			rmb_menu.popup()
+		return
+		
 	current_tab = clicked_tab
 
 	# 检查是否有“其他选项卡”
