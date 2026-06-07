@@ -105,16 +105,10 @@ func load_data(info: Dictionary):
 	graph_edit.add_item(info, {})
 	
 func _on_button_open_pressed() -> void:
-	var editor_file_dialog = EditorFileDialog.new()
-	editor_file_dialog.access = EditorFileDialog.ACCESS_FILESYSTEM
-	editor_file_dialog.file_mode = EditorFileDialog.FILE_MODE_OPEN_FILE
-	editor_file_dialog.add_filter(EXTENSION, "GDSQL Mapper Project File")
-	editor_file_dialog.file_selected.connect(func(path: String):
-		request_open_file.emit(path)
-	)
-	add_child(editor_file_dialog)
-	editor_file_dialog.popup_centered_ratio(0.7)
-	editor_file_dialog.canceled.connect(editor_file_dialog.queue_free)
+	EditorInterface.popup_quick_open(func(path: String):
+		if not path.is_empty():
+			request_open_file.emit(path)
+	, [&"GDMapperGraph"])
 	
 func _on_button_save_pressed() -> void:
 	# 本身就是一个已经保存的文件，就直接保存
