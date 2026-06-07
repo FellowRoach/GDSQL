@@ -194,7 +194,7 @@ func add_tab_sql_file(path: String):
 	_tab_index += 1
 	sql_file.load_sql_file(path)
 	mgr.file_tab_opened.emit(path)
-	sql_file.code_edit.graph_focus()
+	sql_file.code_edit.grap_focus()
 	
 func add_tab_empty_graph():
 	var sql_graph = SQLGraph.instantiate()
