@@ -142,8 +142,13 @@ func _exit_tree():
 func _on_tab_clicked(tab: int) -> void:
 	# 点击了“新建SQL页面”（加号），增加一个编辑页面，并激活
 	if get_child(tab) == new_tab_button:
-		add_tab_empty_graph()
-		
+		var settings := ConfigFile.new()
+		settings.load("res://gdsql/settings.cfg")
+		match settings.get_value("config", "new_tab_type", 1):
+			0: add_tab_empty_sql_file()
+			1: add_tab_empty_graph()
+			2: add_tab_empty_mapper_graph()
+			
 func add_tab_empty_sql_file():
 	var sql_file = SQLFile.instantiate()
 	sql_file.request_open_file.connect(add_tab_sql_file)

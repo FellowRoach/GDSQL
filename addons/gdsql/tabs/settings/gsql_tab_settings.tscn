@@ -2,6 +2,9 @@
 
 [ext_resource type="Script" uid="uid://leju7sj5k0eq" path="res://addons/gdsql/tabs/settings/gsql_tab_settings.gd" id="1_gd"]
 [ext_resource type="Texture2D" uid="uid://caxb01gsgiywd" path="res://addons/gdsql/img/folder.svg" id="2_45jch"]
+[ext_resource type="Texture2D" uid="uid://0fun6c0kv8tx" path="res://addons/gdsql/img/sql_file.svg" id="3_o78nu"]
+[ext_resource type="Texture2D" uid="uid://bi5gd802w2hr6" path="res://addons/gdsql/img/GDSQLGraph.svg" id="4_p0kkm"]
+[ext_resource type="Texture2D" uid="uid://cq6e67rcqa18o" path="res://addons/gdsql/gbatis/img/GBMapperGraph.svg" id="5_4gq37"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_focus"]
 
@@ -24,19 +27,10 @@ theme_override_constants/margin_right = 20
 layout_mode = 2
 theme_override_constants/separation = 15
 
-[node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=1859949575]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.278, 0.549, 0.749, 1)
-theme_override_font_sizes/font_size = 22
-text = "GDSQL Settings"
-
-[node name="HSeparator" type="HSeparator" parent="MarginContainer/VBoxContainer" unique_id=201253379]
-layout_mode = 2
-
 [node name="SectionConfig" type="Label" parent="MarginContainer/VBoxContainer" unique_id=1963642115]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 0.8)
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.34901962, 0.61960787, 0.81960785, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
 text = "Config Paths"
 
 [node name="HBoxRootConfig" type="HBoxContainer" parent="MarginContainer/VBoxContainer" unique_id=1799485061]
@@ -46,6 +40,7 @@ layout_mode = 2
 custom_minimum_size = Vector2(290, 0)
 layout_mode = 2
 tooltip_text = "Root config file path. Stores the root config (database/table schemas) used by GDSQL within the project."
+mouse_filter = 1
 text = "Root Config Path"
 horizontal_alignment = 2
 
@@ -91,6 +86,7 @@ layout_mode = 2
 custom_minimum_size = Vector2(290, 0)
 layout_mode = 2
 tooltip_text = "Supplementary config file path. Used when the game is exported, storing runtime-created database/table metadata. Should point to a user:// or install:// path."
+mouse_filter = 1
 text = "Supplementary Config Path"
 horizontal_alignment = 2
 
@@ -127,8 +123,8 @@ layout_mode = 2
 
 [node name="SectionDatabase" type="Label" parent="MarginContainer/VBoxContainer" unique_id=1103354298]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 0.8)
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.34901962, 0.61960787, 0.81960785, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
 text = "Database"
 
 [node name="HBoxGameDbName" type="HBoxContainer" parent="MarginContainer/VBoxContainer" unique_id=494004156]
@@ -138,6 +134,7 @@ layout_mode = 2
 custom_minimum_size = Vector2(290, 0)
 layout_mode = 2
 tooltip_text = "The database name used for game configuration (e.g. for storing runtime game settings)."
+mouse_filter = 1
 text = "Game Conf DB Name"
 horizontal_alignment = 2
 
@@ -148,24 +145,69 @@ size_flags_horizontal = 3
 tooltip_text = "Select a pre-configured database, or leave it blank. This setting is required when using GDSQL.BaseDao.use_conf_db()."
 selected = 0
 fit_to_longest_item = false
-item_count = 1
+item_count = 2
 popup/item_0/id = 0
+popup/item_1/text = "test"
+popup/item_1/id = 1
 
 [node name="HSeparator3" type="HSeparator" parent="MarginContainer/VBoxContainer" unique_id=1078470491]
 layout_mode = 2
 
+[node name="SectionEdit" type="Label" parent="MarginContainer/VBoxContainer" unique_id=1331591518]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.34901962, 0.61960787, 0.81960785, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+text = "Edit"
+
+[node name="HBoxNewTabType" type="HBoxContainer" parent="MarginContainer/VBoxContainer" unique_id=2086408184]
+layout_mode = 2
+
+[node name="LabelNewTabType" type="Label" parent="MarginContainer/VBoxContainer/HBoxNewTabType" unique_id=283366267]
+custom_minimum_size = Vector2(290, 0)
+layout_mode = 2
+tooltip_text = "Tab page type after clicking the ➕ button."
+mouse_filter = 1
+text = "New Tab Page"
+horizontal_alignment = 2
+
+[node name="OptionButtonNewTabType" type="OptionButton" parent="MarginContainer/VBoxContainer/HBoxNewTabType" unique_id=166655874]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "Tab page type after clicking the ➕ button."
+selected = 1
+item_count = 3
+popup/item_0/text = "New Text Query"
+popup/item_0/icon = ExtResource("3_o78nu")
+popup/item_0/id = 0
+popup/item_1/text = "New SQL Graph"
+popup/item_1/icon = ExtResource("4_p0kkm")
+popup/item_1/id = 1
+popup/item_2/text = "New Mapper Graph"
+popup/item_2/icon = ExtResource("5_4gq37")
+popup/item_2/id = 2
+
+[node name="HSeparator4" type="HSeparator" parent="MarginContainer/VBoxContainer" unique_id=1947921895]
+layout_mode = 2
+
 [node name="SectionUpdates" type="Label" parent="MarginContainer/VBoxContainer" unique_id=1200000001]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 0.8)
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.34901962, 0.61960787, 0.81960785, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
 text = "Updates"
 
 [node name="HBoxAutoCheck" type="HBoxContainer" parent="MarginContainer/VBoxContainer" unique_id=1200000002]
 layout_mode = 2
 
+[node name="Control" type="Control" parent="MarginContainer/VBoxContainer/HBoxAutoCheck" unique_id=1213403091]
+layout_mode = 2
+size_flags_horizontal = 3
+
 [node name="CheckBoxAutoUpdate" type="CheckBox" parent="MarginContainer/VBoxContainer/HBoxAutoCheck" unique_id=1200000003]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 10.0
 button_pressed = true
 text = "Auto check for updates (on startup)"
 
@@ -177,9 +219,6 @@ alignment = 1
 custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 text = "Save"
-
-[node name="HSeparator4" type="HSeparator" parent="MarginContainer/VBoxContainer" unique_id=1623243278]
-layout_mode = 2
 
 [node name="StatusContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer" unique_id=46626828]
 layout_mode = 2
