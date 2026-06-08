@@ -398,7 +398,10 @@ func _on_file_menu_id_pressed(id: int) -> void:
 		FILE_MENU.NEW_MAPPER_TAB:
 			_on_file_new_mapper_tab()
 		FILE_MENU.OPEN:
-			_on_file_open("")
+			EditorInterface.popup_quick_open(func(path: String):
+				if not path.is_empty():
+					_on_file_open(path)
+			, [&"GDSQLText", &"GDSQLGraph", &"GDMapperGraph"])
 		FILE_MENU.OPEN_RECENT:
 			_on_file_open_recent()
 		FILE_MENU.CLOSE_TAB:
