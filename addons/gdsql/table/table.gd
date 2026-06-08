@@ -912,6 +912,9 @@ func add_border(border) -> void:
 	if not support_select_border:
 		return
 		
+	if not border["rect"].has_area():
+		return
+		
 	# 起始点
 	last_selected_pos = border["start"]
 	
@@ -1035,7 +1038,7 @@ func add_border(border) -> void:
 				pc.add_theme_stylebox_override("panel", sb)
 				pc.set_meta("overlapping", overlapping)
 				sb.bg_color.a = DEFAULT_BORDER_BG_COLOR.a * overlapping * 1.05
-			
+				
 	selected_borders.push_back(border)
 	if selected_borders.size() == 1:
 		add_cornor_dragger()
