@@ -92,8 +92,121 @@ func load_sql_file(path: String):
 	set_meta("file_name", path.get_file())
 	
 func _on_button_run_all_pressed() -> void:
-	pass # Replace with function body.
+	# 清理旧的标签页
+	var children = results_tab.get_children()
+	for child in children:
+		results_tab.remove_child(child)
+		child.queue_free()
+		
+	# 1. 有选中的，执行选中的部分；2. 没有选中的，执行全部
+	var text_to_run: String
+	if code_edit.has_selection(0):
+		text_to_run = code_edit.get_selected_text(0)
+	else:
+		text_to_run = code_edit.text
+		
+	if text_to_run.strip_edges().is_empty():
+		return
+		
+	# 去掉注释后，按分号拆分为多条SQL语句
+	var statements = _split_sql_statements(text_to_run)
+	if statements.is_empty():
+		return
+		
+	var index = 0
+	for sql in statements:
+		if sql.strip_edges().is_empty():
+			continue
+			
+		var dao = GDSQL.SQLParser.parse_to_dao(sql)
+		if dao == null:
+			mgr.add_log_history.emit("Err", Time.get_unix_time_from_system(), sql, "Parse failed")
+			continue
+			
+		var action = dao.get_query_cmd()
+		var begin_time = Time.get_unix_time_from_system()
+		var query_ret: GDSQL.QueryResult = await _deal_query_need_enter_password(dao, begin_time, action)
+		if query_ret == null:
+			mgr.add_log_history.emit("Err", begin_time, action, "something wrong")
+			continue
+			
+		if not query_ret.ok():
+			mgr.add_log_history.emit("Err", begin_time, action, query_ret.get_err(), query_ret.get_cost_time())
+			continue
+			
+		index += 1
+		var ret: GDSQL.QueryResult = null
+		if dao.get_cmd().begins_with("select"):
+			ret = query_ret
+		else:
+			var gen_dict = func(s):
+				return {"select_name": s, "Column Name": s, "field_as": s,
+					"is_field": false, "table_alias": "", "db_path": "",
+					"table_name": "", "hint": PROPERTY_HINT_NONE,
+					"Hint String": "", "Data Type": TYPE_NIL,
+					"Default(Expression)": ""}
+			ret = GDSQL.QueryResult.new()
+			ret._has_head = true
+			ret._data = [
+				["err", "affected_rows", "warnings", "last_insert_id", "generated_keys", "cost_time"]
+					.map(gen_dict),
+				[
+					query_ret.get_err(),
+					query_ret.get_affected_rows(),
+					query_ret.get_warnings(),
+					query_ret.get_last_insert_id(),
+					query_ret.get_generated_keys(),
+					query_ret.get_cost_time(),
+				]
+			]
+			
+		var table_node = gen_table_node(ret.get_head(), ret.get_data(), dao.is_union_all(), dao.get_left_join_conds())
+		table_node.name = tr("Result") + " " + str(index)
+		table_node.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		table_node.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		results_tab.add_child(table_node, true)
+		results_tab.show()
+		
+		if dao.get_cmd().begins_with("select"):
+			mgr.add_log_history.emit("OK", begin_time, action,
+				"%d row(s) returned" % (query_ret.get_data().size()),
+				ret.get_cost_time())
+		else:
+			mgr.add_log_history.emit("OK", begin_time, action,
+				"%d row(s) affected" % (query_ret.get_affected_rows()),
+				query_ret.get_cost_time())
+				
+## 将SQL文本去掉注释后，按分号拆分为独立的语句数组。
+## 分号在字符串字面量内不会被当作分隔符。
+func _split_sql_statements(text: String) -> Array[String]:
+	var pos_map: Array[int] = []
+	var clean_text = _strip_sql_comments(text, pos_map)
 	
+	var statements: Array[String] = []
+	var stmt_start = 0
+	var in_sq = false
+	var in_dq = false
+	var i = 0
+	while i < clean_text.length():
+		var ch = clean_text[i]
+		if ch == "'" and not in_dq:
+			in_sq = not in_sq
+		elif ch == '"' and not in_sq:
+			in_dq = not in_dq
+		elif ch == ";" and not in_sq and not in_dq:
+			var stmt = clean_text.substr(stmt_start, i - stmt_start).strip_edges()
+			if not stmt.is_empty():
+				statements.push_back(stmt)
+			stmt_start = i + 1
+		i += 1
+		
+	# 最后一段（末尾没有分号的情况）
+	var last_stmt = clean_text.substr(stmt_start).strip_edges()
+	if not last_stmt.is_empty():
+		statements.push_back(last_stmt)
+		
+	return statements
+
 func _on_button_run_edit_pressed() -> void:
 	# 清理旧的标签页
 	var children = results_tab.get_children()
@@ -476,6 +589,7 @@ func gen_table_node(columns: Array, table_datas: Array, is_union_all: bool, join
 	
 	var hsplit = HSplitContainer.new()
 	hsplit.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	hsplit.add_theme_constant_override("autohide", 0)
 	vbox.add_child(hsplit)
 	
 	var table: Control = load("res://addons/gdsql/table/table.tscn").instantiate()
