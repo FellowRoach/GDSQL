@@ -232,7 +232,7 @@ theme_override_colors/font_color = Color(0.4, 0.8, 0.4, 1)
 [connection signal="pressed" from="MarginContainer/VBoxContainer/HBoxRootConfig/ButtonRootConfig" to="." method="_on_select_root_config_path" binds= [0]]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/HBoxRootConfig/ButtonRootConfig2" to="." method="_on_select_root_config_path" binds= [1]]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/HBoxRootConfig/ButtonRootConfig3" to="." method="_on_select_root_config_path" binds= [2]]
-[connection signal="pressed" from="MarginContainer/VBoxContainer/HBoxRootConfig/ButtonRootConfigInstall" to="." method="_on_install_config_path" binds= ["LineEditRootConfig"]]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/HBoxRootConfig/ButtonRootConfigInstall" to="." method="_on_install_config_path"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/HBoxSupplConfig/ButtonSupplConfig2" to="." method="_on_select_supplementary_config_path" binds= [1]]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/HBoxSupplConfig/ButtonSupplConfig3" to="." method="_on_select_supplementary_config_path" binds= [2]]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/HBoxSupplConfig/ButtonSupplConfigInstall" to="." method="_on_install_config_path" binds= ["LineEditSupplConfig"]]

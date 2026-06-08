@@ -5,7 +5,7 @@ extends VBoxContainer
 #signal button_apply_pressed(db_name: String, path: String, save: bool, id: String)
 
 @onready var line_edit_name: LineEdit = $HBoxContainer/LineEditName
-@onready var line_edit_path: LineEdit = $HBoxContainer2/LineEditPath
+@onready var line_edit_path: LineEdit = %LineEditPath
 
 @onready var h_box_container_2: HBoxContainer = $HBoxContainer2
 
@@ -22,8 +22,18 @@ func _on_button_pressed(access) -> void:
 	editor_file_dialog.close_requested.connect(func():
 		editor_file_dialog.queue_free()
 	, CONNECT_DEFERRED)
-
-
+	
+func _on_install_config_path() -> void:
+	var base_path = "install://"
+	var current = line_edit_path.text.strip_edges()
+	# If the field already has an install:// path with subdirectory, preserve the subdirectory
+	if current.begins_with(base_path) and current.length() > len(base_path):
+		line_edit_path.text = current
+	else:
+		line_edit_path.text = base_path
+	line_edit_path.grab_focus()
+	line_edit_path.caret_column = line_edit_path.text.length()
+	
 func _on_button_apply_pressed() -> void:
 	var db_name = line_edit_name.text.strip_edges()
 	var path = line_edit_path.text.strip_edges()

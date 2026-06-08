@@ -88,18 +88,17 @@ func _on_select_supplementary_config_path(access: int) -> void:
 		editor_file_dialog.queue_free()
 	, CONNECT_DEFERRED)
 	
-func _on_install_config_path(target_node_name: String) -> void:
-	var target = get_node("%" + target_node_name) as LineEdit
-	if target:
-		var base_path = "install://"
-		var current = target.text.strip_edges()
-		# If the field already has an install:// path with subdirectory, preserve the subdirectory
-		if current.begins_with(base_path) and current.length() > len(base_path):
-			target.text = current
-		else:
-			target.text = base_path
-		target.grab_focus()
-		
+func _on_install_config_path() -> void:
+	var base_path = "install://"
+	var current = line_edit_root_config.text.strip_edges()
+	# If the field already has an install:// path with subdirectory, preserve the subdirectory
+	if current.begins_with(base_path) and current.length() > len(base_path):
+		line_edit_root_config.text = current
+	else:
+		line_edit_root_config.text = base_path
+	line_edit_root_config.grab_focus()
+	line_edit_root_config.caret_column = line_edit_root_config.text.length()
+	
 func _on_button_save_pressed() -> void:
 	var root_config_path = line_edit_root_config.text.strip_edges()
 	var suppl_config_path = line_edit_suppl_config.text.strip_edges()

@@ -42,11 +42,11 @@ text = "Data Path"
 horizontal_alignment = 2
 
 [node name="LineEditPath" type="LineEdit" parent="HBoxContainer2" unique_id=1337069559]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/focus = SubResource("StyleBoxEmpty_oeto1")
 placeholder_text = "choose a dir"
-editable = false
 
 [node name="Button" type="Button" parent="HBoxContainer2" unique_id=71180956]
 layout_mode = 2
@@ -69,6 +69,13 @@ theme_override_styles/focus = SubResource("StyleBoxEmpty_0kgcd")
 text = "FileSystem"
 icon = ExtResource("2_pm86x")
 
+[node name="Button4" type="Button" parent="HBoxContainer2" unique_id=180237524]
+layout_mode = 2
+tooltip_text = "open any dir of your system"
+theme_override_styles/focus = SubResource("StyleBoxEmpty_0kgcd")
+text = "Install"
+icon = ExtResource("2_pm86x")
+
 [node name="HFlowContainer" type="HFlowContainer" parent="." unique_id=213056495]
 layout_mode = 2
 alignment = 1
@@ -86,5 +93,6 @@ text = "Cancel"
 [connection signal="pressed" from="HBoxContainer2/Button" to="." method="_on_button_pressed" binds= [0]]
 [connection signal="pressed" from="HBoxContainer2/Button2" to="." method="_on_button_pressed" binds= [1]]
 [connection signal="pressed" from="HBoxContainer2/Button3" to="." method="_on_button_pressed" binds= [2]]
+[connection signal="pressed" from="HBoxContainer2/Button4" to="." method="_on_install_config_path"]
 [connection signal="pressed" from="HFlowContainer/ButtonApply" to="." method="_on_button_apply_pressed"]
 [connection signal="pressed" from="HFlowContainer/ButtonCancel" to="." method="_on_button_cancel_pressed"]
