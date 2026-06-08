@@ -600,12 +600,26 @@ func gen_table_node(columns: Array, table_datas: Array, is_union_all: bool, join
 	hsplit.add_theme_constant_override("autohide", 0)
 	vbox.add_child(hsplit)
 	
+	var mc = MarginContainer.new()
+	mc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	mc.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	hsplit.add_child(mc)
+	
+	# 将表格放入水平 ScrollContainer，列数多时用户可以水平滚动查看
+	var table_scroll = ScrollContainer.new()
+	table_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	table_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	table_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	table_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	mc.add_child(table_scroll)
+	
 	var table: Control = load("res://addons/gdsql/table/table.tscn").instantiate()
 	table.show_frame = true
 	table.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	table.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	table.size_flags_stretch_ratio = 0.1 * columns.size()
-	hsplit.add_child(table)
+	# 每列至少 120px，让表格在列数多时自然撑宽，触发 ScrollContainer 水平滚动
+	table.custom_minimum_size.x = columns.size() * 120
+	table_scroll.add_child(table)
 	table.set_meta("columns", columns)
 	table.column_tips = columns.map(func(v): 
 		return type_string(v["Data Type"]) if v.has("Data Type") else "")
