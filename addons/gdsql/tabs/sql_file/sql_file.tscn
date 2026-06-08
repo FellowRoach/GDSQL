@@ -48,7 +48,128 @@ corner_radius_bottom_left = 3
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_35ij8"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_k6kxf"]
+[sub_resource type="CodeHighlighter" id="CodeHighlighter_k6kxf"]
+number_color = Color(0.63, 1, 0.88, 1)
+symbol_color = Color(0.67, 0.79, 1, 1)
+function_color = Color(0.34, 0.7, 1, 1)
+member_variable_color = Color(1, 1, 1, 0.75)
+keyword_colors = {
+"abs": Color(0.34, 0.7, 1, 1),
+"add": Color(1, 0.44, 0.52, 1),
+"all": Color(1, 0.44, 0.52, 1),
+"alter": Color(1, 0.44, 0.52, 1),
+"and": Color(1, 0.44, 0.52, 1),
+"as": Color(1, 0.44, 0.52, 1),
+"asc": Color(1, 0.44, 0.52, 1),
+"autoincrement": Color(1, 0.44, 0.52, 1),
+"avg": Color(0.34, 0.7, 1, 1),
+"begin": Color(1, 0.44, 0.52, 1),
+"between": Color(1, 0.44, 0.52, 1),
+"blob": Color(0.56, 1, 0.86, 1),
+"bool": Color(0.56, 1, 0.86, 1),
+"boolean": Color(0.56, 1, 0.86, 1),
+"by": Color(1, 0.44, 0.52, 1),
+"cascade": Color(1, 0.44, 0.52, 1),
+"case": Color(1, 0.44, 0.52, 1),
+"cast": Color(0.34, 0.7, 1, 1),
+"ceil": Color(0.34, 0.7, 1, 1),
+"char": Color(0.56, 1, 0.86, 1),
+"coalesce": Color(0.34, 0.7, 1, 1),
+"column": Color(1, 0.44, 0.52, 1),
+"commit": Color(1, 0.44, 0.52, 1),
+"count": Color(0.34, 0.7, 1, 1),
+"create": Color(1, 0.44, 0.52, 1),
+"cross": Color(1, 0.44, 0.52, 1),
+"database": Color(1, 0.44, 0.52, 1),
+"date": Color(0.56, 1, 0.86, 1),
+"datetime": Color(0.56, 1, 0.86, 1),
+"decimal": Color(0.56, 1, 0.86, 1),
+"default": Color(1, 0.44, 0.52, 1),
+"delete": Color(1, 0.44, 0.52, 1),
+"desc": Color(1, 0.44, 0.52, 1),
+"distinct": Color(1, 0.44, 0.52, 1),
+"double": Color(0.56, 1, 0.86, 1),
+"drop": Color(1, 0.44, 0.52, 1),
+"duplicate": Color(1, 0.44, 0.52, 1),
+"else": Color(1, 0.44, 0.52, 1),
+"end": Color(1, 0.44, 0.52, 1),
+"exists": Color(1, 0.44, 0.52, 1),
+"false": Color(1, 1, 1, 0.5),
+"float": Color(0.56, 1, 0.86, 1),
+"floor": Color(0.34, 0.7, 1, 1),
+"foreign": Color(1, 0.44, 0.52, 1),
+"from": Color(1, 0.44, 0.52, 1),
+"group": Color(1, 0.44, 0.52, 1),
+"having": Color(1, 0.44, 0.52, 1),
+"if": Color(1, 0.44, 0.52, 1),
+"ifnull": Color(0.34, 0.7, 1, 1),
+"ignore": Color(1, 0.44, 0.52, 1),
+"in": Color(1, 0.44, 0.52, 1),
+"index": Color(1, 0.44, 0.52, 1),
+"inner": Color(1, 0.44, 0.52, 1),
+"insert": Color(1, 0.44, 0.52, 1),
+"int": Color(0.56, 1, 0.86, 1),
+"integer": Color(0.56, 1, 0.86, 1),
+"into": Color(1, 0.44, 0.52, 1),
+"is": Color(1, 0.44, 0.52, 1),
+"join": Color(1, 0.44, 0.52, 1),
+"key": Color(1, 0.44, 0.52, 1),
+"left": Color(1, 0.44, 0.52, 1),
+"length": Color(0.34, 0.7, 1, 1),
+"like": Color(1, 0.44, 0.52, 1),
+"limit": Color(1, 0.44, 0.52, 1),
+"list": Color(0.34, 0.7, 1, 1),
+"lower": Color(0.34, 0.7, 1, 1),
+"max": Color(0.34, 0.7, 1, 1),
+"min": Color(0.34, 0.7, 1, 1),
+"not": Color(1, 0.44, 0.52, 1),
+"null": Color(1, 1, 1, 0.5),
+"nullif": Color(0.34, 0.7, 1, 1),
+"offset": Color(1, 0.44, 0.52, 1),
+"on": Color(1, 0.44, 0.52, 1),
+"or": Color(1, 0.44, 0.52, 1),
+"order": Color(1, 0.44, 0.52, 1),
+"outer": Color(1, 0.44, 0.52, 1),
+"primary": Color(1, 0.44, 0.52, 1),
+"real": Color(0.56, 1, 0.86, 1),
+"references": Color(1, 0.44, 0.52, 1),
+"rename": Color(1, 0.44, 0.52, 1),
+"replace": Color(0.34, 0.7, 1, 1),
+"restrict": Color(1, 0.44, 0.52, 1),
+"right": Color(1, 0.44, 0.52, 1),
+"rollback": Color(1, 0.44, 0.52, 1),
+"round": Color(0.34, 0.7, 1, 1),
+"savepoint": Color(1, 0.44, 0.52, 1),
+"select": Color(1, 0.44, 0.52, 1),
+"set": Color(1, 0.44, 0.52, 1),
+"substr": Color(0.34, 0.7, 1, 1),
+"sum": Color(0.34, 0.7, 1, 1),
+"table": Color(1, 0.44, 0.52, 1),
+"text": Color(0.56, 1, 0.86, 1),
+"then": Color(1, 0.44, 0.52, 1),
+"timestamp": Color(0.56, 1, 0.86, 1),
+"to": Color(1, 0.44, 0.52, 1),
+"transaction": Color(1, 0.44, 0.52, 1),
+"trim": Color(0.34, 0.7, 1, 1),
+"true": Color(1, 1, 1, 0.5),
+"typeof": Color(0.34, 0.7, 1, 1),
+"union": Color(1, 0.44, 0.52, 1),
+"unique": Color(1, 0.44, 0.52, 1),
+"update": Color(1, 0.44, 0.52, 1),
+"upper": Color(0.34, 0.7, 1, 1),
+"values": Color(1, 0.44, 0.52, 1),
+"varchar": Color(0.56, 1, 0.86, 1),
+"when": Color(1, 0.44, 0.52, 1),
+"where": Color(1, 0.44, 0.52, 1)
+}
+color_regions = {
+"#": Color(1, 1, 1, 0.5),
+"' '": Color(1, 0.93, 0.63, 1),
+"--": Color(1, 1, 1, 0.5),
+"/* */": Color(1, 1, 1, 0.5)
+}
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kt13l"]
 content_margin_left = 9.0
 content_margin_top = 9.0
 content_margin_right = 9.0
@@ -223,10 +344,13 @@ size_flags_stretch_ratio = 3.0
 middle_mouse_paste_enabled = false
 scroll_smooth = true
 caret_blink = true
+syntax_highlighter = SubResource("CodeHighlighter_k6kxf")
 highlight_all_occurrences = true
 highlight_current_line = true
 line_folding = true
 gutters_draw_line_numbers = true
+code_completion_enabled = true
+code_completion_prefixes = Array[String]([".", "_", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"])
 indent_automatic = true
 auto_brace_completion_enabled = true
 auto_brace_completion_highlight_matching = true
@@ -239,7 +363,7 @@ visible = false
 layout_mode = 2
 size_flags_vertical = 3
 theme_type_variation = &"TabContainerInner"
-theme_override_styles/panel = SubResource("StyleBoxFlat_k6kxf")
+theme_override_styles/panel = SubResource("StyleBoxFlat_kt13l")
 drag_to_rearrange_enabled = true
 script = ExtResource("11_k6kxf")
 v_split_container = NodePath("..")
@@ -250,6 +374,7 @@ v_split_container = NodePath("..")
 [connection signal="pressed" from="VBoxContainer/HFlowContainer/ButtonRunEdit" to="." method="_on_button_run_edit_pressed"]
 [connection signal="pressed" from="VBoxContainer/HFlowContainer/ButtonRunAll" to="." method="_on_button_run_all_pressed"]
 [connection signal="toggled" from="VBoxContainer/HFlowContainer/ButtonAutoCommit" to="." method="_on_button_auto_commit_toggled"]
+[connection signal="code_completion_requested" from="VBoxContainer/VSplitContainer/CodeEdit" to="VBoxContainer/VSplitContainer/CodeEdit" method="_on_code_completion_requested"]
 [connection signal="text_changed" from="VBoxContainer/VSplitContainer/CodeEdit" to="." method="_on_code_edit_text_changed"]
 [connection signal="child_exiting_tree" from="VBoxContainer/VSplitContainer/ResultsTab" to="VBoxContainer/VSplitContainer/ResultsTab" method="_on_child_exiting_tree"]
 [connection signal="tab_button_pressed" from="VBoxContainer/VSplitContainer/ResultsTab" to="VBoxContainer/VSplitContainer/ResultsTab" method="_on_tab_button_pressed"]
