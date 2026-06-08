@@ -6,6 +6,16 @@ extends CodeEdit
 var in_run_edit = false
 var in_run_edit_shortcut_feedback = false
 
+# 自定义补全面板（非弹窗，不会抢焦点）
+var _completion_panel: PanelContainer
+var _completion_list: ItemList
+var _completion_matches: Array[Dictionary] = []
+var _completion_word_start: int = 0
+var _completion_word_end: int = 0
+var _completion_inserting: bool = false
+var _completion_dot_mode: bool = false
+var _completion_selected_idx: int = 0
+
 const SQL_KEYWORDS: Array[String] = [
 	"select", "insert", "update", "delete", "replace",
 	"from", "where", "set", "into", "values",
@@ -33,19 +43,28 @@ var mgr: GDSQL.WorkbenchManagerClass:
 
 func _ready() -> void:
 	syntax_highlighter = _create_sql_highlighter()
-	code_completion_enabled = true
-	var prefixes = PackedStringArray([".", "_"])
-	for c in range(ord("a"), ord("z") + 1):
-		prefixes.push_back(char(c))
-	for c in range(ord("A"), ord("Z") + 1):
-		prefixes.push_back(char(c))
-	for c in range(ord("0"), ord("9") + 1):
-		prefixes.push_back(char(c))
-	code_completion_prefixes = prefixes
-	if not code_completion_requested.is_connected(_on_code_completion_requested):
-		code_completion_requested.connect(_on_code_completion_requested)
-	text_changed.connect(func(): code_completion_requested.emit())
-	print("[SQL CodeEdit] _ready done, enabled=", code_completion_enabled, " prefixes=", code_completion_prefixes.size())
+
+	# 创建补全面板（非弹窗，不抢焦点）
+	_completion_panel = PanelContainer.new()
+	_completion_panel.visible = false
+	_completion_panel.z_index = 100
+	_completion_panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(_completion_panel)
+
+	_completion_list = ItemList.new()
+	_completion_list.max_columns = 1
+	_completion_list.fixed_column_width = 0
+	_completion_list.same_column_width = true
+	_completion_list.focus_mode = Control.FOCUS_NONE
+	_completion_list.mouse_filter = Control.MOUSE_FILTER_PASS
+	_completion_list.custom_minimum_size = Vector2(280, 0)
+	_completion_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_completion_panel.add_child(_completion_list)
+	_completion_list.item_selected.connect(_on_completion_selected)
+	_completion_panel.custom_minimum_size = Vector2(280, 0)
+
+	text_changed.connect(_on_text_changed)
+	print("[SQL CodeEdit] _ready done")
 
 
 ## 创建 SQL 语法高亮器
@@ -142,111 +161,183 @@ func _create_sql_highlighter() -> CodeHighlighter:
 
 # ==================== 代码补全 ====================
 
-func _on_code_completion_requested() -> void:
+func _on_text_changed() -> void:
+	# 防止插入补全文本时递归触发
+	if _completion_inserting:
+		print("[SQL CodeEdit] text_changed skipped (inserting)")
+		return
+	print("[SQL CodeEdit] text_changed fired")
+	_update_completion()
+
+
+func _update_completion() -> void:
 	if _is_cursor_in_string_or_comment():
-		cancel_code_completion()
+		print("[SQL CodeEdit] cursor in string/comment, hiding")
+		_hide_popup()
 		return
 
 	var line_idx = get_caret_line(0)
-	var col = get_caret_column(0)
-	var before: String = get_line(line_idx).substr(0, col)
+	var caret_col = get_caret_column(0)
+	var before: String = get_line(line_idx).substr(0, caret_col)
 	var word = _get_word_before_cursor(before)
 	print("[SQL CodeEdit] before='", before, "' word='", word, "'")
 
-	# 检查 "xxx." 模式（数据库名或表名后跟点号）
-	var prefix_parts = before.strip_edges().rsplit(".", true, 1)
-	if before.ends_with(".") and prefix_parts.size() >= 2:
-		var db_prefix = prefix_parts[0].get_slice(" ", prefix_parts[0].get_slice_count(" ") - 1).strip_edges()
-		if _add_table_completions(db_prefix, ""):
-			update_code_completion_options(true)
-			return
-	elif prefix_parts.size() >= 2:
-		var db_prefix = prefix_parts[0].get_slice(" ", prefix_parts[0].get_slice_count(" ") - 1).strip_edges()
-		if _add_table_completions(db_prefix, word):
-			update_code_completion_options(true)
-			return
+	var matches: Array[Dictionary] = []
+	_completion_dot_mode = false
+
+	# 检查 "xxx." 模式
+	var stripped = before.strip_edges()
+	var dot_pos = stripped.rfind(".")
+	if dot_pos >= 0:
+		var after_dot = stripped.substr(dot_pos + 1)
+		var before_dot = stripped.substr(0, dot_pos)
+		if before.length() == stripped.length() and (after_dot.is_empty() or after_dot == word):
+			var db_prefix = before_dot.get_slice(" ", before_dot.get_slice_count(" ") - 1).strip_edges()
+			if db_prefix != "":
+				matches = _get_dot_completions(db_prefix, word)
+				_completion_dot_mode = true
 
 	# 通用候选词
-	if word.length() < 2:
-		cancel_code_completion()
-		return
+	if matches.is_empty() and not _completion_dot_mode:
+		if word.length() < 2:
+			_hide_popup()
+			return
 
-	var all_candidates: Array[Dictionary] = []
-
-	# SQL 关键字
-	for kw in SQL_KEYWORDS:
-		all_candidates.push_back({"text": kw, "type": "keyword"})
-
-	# 数据库名
-	if mgr and mgr.databases:
-		for db_name in mgr.databases:
-			all_candidates.push_back({"text": db_name, "type": "database"})
-			var display_name = mgr.databases[db_name].get("display_name", "")
-			if display_name != "" and display_name != db_name:
-				all_candidates.push_back({"text": display_name, "type": "database"})
-
-		# 所有表名
-		for db_name in mgr.databases:
-			for table_name in mgr.databases[db_name].get("tables", {}):
-				all_candidates.push_back({"text": table_name, "type": "table"})
-
-		# 当前SQL中FROM/JOIN后引用的表的字段名
-		var referenced_tables = _extract_referenced_tables(before)
-		for t_name in referenced_tables:
+		var all_candidates: Array[Dictionary] = []
+		for kw in SQL_KEYWORDS:
+			all_candidates.push_back({"text": kw, "display": kw, "type": "keyword"})
+		if mgr and mgr.databases:
 			for db_name in mgr.databases:
-				var tables = mgr.databases[db_name].get("tables", {})
-				if tables.has(t_name):
-					for column in tables[t_name].get("columns", []):
-						all_candidates.push_back({"text": column["Column Name"], "type": "column"})
+				var db_display = mgr.databases[db_name].get("display_name", db_name)
+				if db_display == "" or db_display == db_name:
+					db_display = db_name
+				all_candidates.push_back({"text": db_name, "display": db_display, "type": "database"})
+			for db_name in mgr.databases:
+				for table_name in mgr.databases[db_name].get("tables", {}):
+					var tbl_display = mgr.databases[db_name]["tables"][table_name].get("display_name", table_name)
+					if tbl_display == "":
+						tbl_display = table_name
+					all_candidates.push_back({"text": table_name, "display": tbl_display, "type": "table"})
+			var referenced_tables = _extract_referenced_tables(before)
+			for t_name in referenced_tables:
+				for db_name in mgr.databases:
+					var tables = mgr.databases[db_name].get("tables", {})
+					if tables.has(t_name):
+						for column in tables[t_name].get("columns", []):
+							all_candidates.push_back({"text": column["Column Name"], "display": column["Column Name"], "type": "column"})
+		matches = _filter_and_sort(all_candidates, word)
+		print("[SQL CodeEdit] candidates=", all_candidates.size(), " matches=", matches.size())
 
-	var matches = _filter_and_sort(all_candidates, word)
-	print("[SQL CodeEdit] candidates=", all_candidates.size(), " matches=", matches.size())
 	if matches.is_empty():
-		cancel_code_completion()
+		print("[SQL CodeEdit] no matches, hiding popup")
+		_hide_popup()
 		return
 
-	for m in matches:
-		add_code_completion_option(
-			0, m["text"], m["text"],
-			_get_completion_color(m["type"])
-		)
-	update_code_completion_options(true)
-	print("[SQL CodeEdit] update_code_completion_options called")
+	# 记录当前词的起止位置
+	print("[SQL CodeEdit] showing popup with ", matches.size(), " matches")
+	_completion_word_end = caret_col
+	_completion_word_start = caret_col - word.length()
+	_completion_matches = matches
+	_show_popup()
 
 
-## 尝试添加表名补全（xxx. 之后）。成功返回 true。
-func _add_table_completions(db_prefix: String, word_filter: String) -> bool:
+func _show_popup() -> void:
+	_completion_list.clear()
+	for i in range(_completion_matches.size()):
+		var m = _completion_matches[i]
+		var display_text = m.get("display", m["text"])
+		var type_tag = ""
+		match m["type"]:
+			"keyword": type_tag = " [关键字]"
+			"database": type_tag = " [数据库]"
+			"table": type_tag = " [表]"
+			"column": type_tag = " [字段]"
+		_completion_list.add_item(display_text + type_tag)
+
+	_completion_selected_idx = 0
+	if _completion_list.item_count > 0:
+		_completion_list.select(0)
+
+	# 定位到光标下方
+	_completion_panel.visible = true
+	var caret_draw_pos = get_caret_draw_pos(0)
+	_completion_panel.position = Vector2(caret_draw_pos.x, caret_draw_pos.y + 4)
+	# 根据条目数计算高度，最大 300
+	var item_height = 24  # 每行约 24px
+	var list_height = mini(_completion_list.item_count * item_height, 300)
+	_completion_list.custom_minimum_size = Vector2(280, list_height)
+	_completion_panel.custom_minimum_size = Vector2(280, 0)
+	print("[SQL CodeEdit] popup: visible=", _completion_panel.visible, 
+		" pos=", _completion_panel.position, 
+		" size=", _completion_panel.size,
+		" items=", _completion_list.item_count,
+		" list_size=", _completion_list.size,
+		" parent=", _completion_panel.get_parent())
+
+
+func _hide_popup() -> void:
+	_completion_panel.visible = false
+	_completion_list.clear()
+	_completion_matches.clear()
+	_completion_dot_mode = false
+
+
+func _on_completion_selected(index: int) -> void:
+	if index < 0 or index >= _completion_matches.size():
+		return
+	var candidate = _completion_matches[index]
+	var insert_text: String = candidate.get("display", candidate["text"])
+	_completion_inserting = true
+	var line_idx = get_caret_line(0)
+	var line_text = get_line(line_idx)
+	var new_line = line_text.substr(0, _completion_word_start) + insert_text + line_text.substr(_completion_word_end)
+	set_line(line_idx, new_line)
+	set_caret_column(_completion_word_start + insert_text.length())
+	_completion_inserting = false
+	_hide_popup()
+
+
+## 尝试生成表名/列名补全候选（xxx. 之后）。成功返回候选列表。
+## 大小写不敏感查找字典键，返回匹配的实际键名，未找到返回空字符串
+func _find_key_ci(dict: Dictionary, key: String) -> String:
+	if dict.has(key):
+		return key
+	var key_lower = key.to_lower()
+	for k in dict:
+		if (k as String).to_lower() == key_lower:
+			return k
+	return ""
+
+
+func _get_dot_completions(db_prefix: String, word_filter: String) -> Array[Dictionary]:
 	if not (mgr and mgr.databases):
-		return false
+		return []
 	var databases = mgr.databases
 
-	# 精确匹配数据库名
-	if databases.has(db_prefix):
-		var tables: Dictionary = databases[db_prefix].get("tables", {})
+	# 大小写不敏感匹配数据库名
+	var matched_db = _find_key_ci(databases, db_prefix)
+	if matched_db != "":
+		var tables: Dictionary = databases[matched_db].get("tables", {})
 		var candidates: Array[Dictionary] = []
 		for t_name in tables:
-			candidates.push_back({"text": t_name, "type": "table"})
-		var matches = _filter_and_sort(candidates, word_filter) if word_filter != "" else candidates
-		for m in matches:
-			add_code_completion_option(0, m["text"], m["text"],
-				_get_completion_color("table"))
-		return true
+			var tbl_display = tables[t_name].get("display_name", t_name)
+			if tbl_display == "":
+				tbl_display = t_name
+			candidates.push_back({"text": t_name, "display": tbl_display, "type": "table"})
+		return _filter_and_sort(candidates, word_filter) if word_filter != "" else candidates
 
-	# 尝试作为表名，补全列名
+	# 大小写不敏感匹配表名，补全列名
 	for db_name in databases:
 		var tables: Dictionary = databases[db_name].get("tables", {})
-		if tables.has(db_prefix):
-			var cols = tables[db_prefix].get("columns", [])
+		var matched_table = _find_key_ci(tables, db_prefix)
+		if matched_table != "":
+			var cols = tables[matched_table].get("columns", [])
 			var candidates: Array[Dictionary] = []
-			for col in cols:
-				candidates.push_back({"text": col["Column Name"], "type": "column"})
-			var matches = _filter_and_sort(candidates, word_filter) if word_filter != "" else candidates
-			for m in matches:
-				add_code_completion_option(0, m["text"], m["text"],
-					_get_completion_color("column"))
-			return true
+			for column in cols:
+				candidates.push_back({"text": column["Column Name"], "display": column["Column Name"], "type": "column"})
+			return _filter_and_sort(candidates, word_filter) if word_filter != "" else candidates
 
-	return false
+	return []
 
 
 ## 从SQL文本中提取 FROM / JOIN 后面引用的表名
@@ -280,6 +371,10 @@ func _filter_and_sort(candidates: Array[Dictionary], prefix: String) -> Array[Di
 	var prefix_lower = prefix.to_lower()
 	for c in candidates:
 		var score = _fuzzy_match_score(c["text"], prefix_lower)
+		var display = c.get("display", c["text"])
+		if display != c["text"]:
+			var display_score = _fuzzy_match_score(display, prefix_lower)
+			score = maxi(score, display_score)
 		if score > 0:
 			var entry = c.duplicate()
 			entry["score"] = score
@@ -287,7 +382,7 @@ func _filter_and_sort(candidates: Array[Dictionary], prefix: String) -> Array[Di
 	result.sort_custom(func(a, b):
 		if a["score"] != b["score"]:
 			return a["score"] > b["score"]
-		return a["text"].to_lower() < b["text"].to_lower()
+		return a.get("display", a["text"]).to_lower() < b.get("display", b["text"]).to_lower()
 	)
 	return result
 
@@ -405,6 +500,44 @@ func _drop_data(_position, data):
 				GDSQL.WorkbenchManager.open_mapper_graph_file_tab.emit(i)
 				
 func _gui_input(event: InputEvent) -> void:
+	# 补全弹窗键盘导航
+	if _completion_panel.visible and event is InputEventKey and event.is_pressed():
+		var count = _completion_list.item_count
+		match event.keycode:
+			KEY_UP:
+				if _completion_selected_idx > 0:
+					_completion_selected_idx -= 1
+				else:
+					_completion_selected_idx = count - 1
+				_completion_list.select(_completion_selected_idx)
+				_completion_list.ensure_current_is_visible()
+				accept_event()
+				return
+			KEY_DOWN:
+				if _completion_selected_idx < count - 1:
+					_completion_selected_idx += 1
+				else:
+					_completion_selected_idx = 0
+				_completion_list.select(_completion_selected_idx)
+				_completion_list.ensure_current_is_visible()
+				accept_event()
+				return
+			KEY_TAB, KEY_ENTER, KEY_KP_ENTER:
+				_on_completion_selected(_completion_selected_idx)
+				accept_event()
+				return
+			KEY_ESCAPE:
+				_hide_popup()
+				accept_event()
+				return
+
+	# 点击补全面板外部时关闭
+	if _completion_panel.visible and event is InputEventMouseButton and event.is_pressed():
+		var mouse_pos = get_global_mouse_position()
+		var panel_rect = Rect2(_completion_panel.global_position, _completion_panel.size)
+		if not panel_rect.has_point(mouse_pos):
+			_hide_popup()
+
 	if in_run_edit_shortcut_feedback:
 		if event is InputEventKey:
 			accept_event()
