@@ -1,5 +1,5 @@
 @tool
-extends VBoxContainer
+extends MarginContainer
 
 signal row_clicked(row_index: int, mouse_button_index: int, data)
 signal row_deleted(datas)
@@ -113,6 +113,8 @@ var last_visible_idx := -1
 var datas_flat: Array = []                # working copy (mirror of datas)
 var _entered_tree := false
 
+var vbox_container: VBoxContainer
+
 # Selection / border state
 var selected_borders: Array[Dictionary] = []
 var last_selected_pos := Vector2i(0, 0)
@@ -175,11 +177,16 @@ func _ready() -> void:
 	v_bar.visibility_changed.connect(_on_vbar_visibility_changed)
 
 func _construct_tree():
+	vbox_container = VBoxContainer.new()
+	vbox_container.name = "VBoxContainer"
+	vbox_container.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(vbox_container)
+
 	# ── Models (template nodes, invisible) ──
 	var models = HBoxContainer.new()
 	models.name = "Models"
 	models.visible = false
-	add_child(models)
+	vbox_container.add_child(models)
 
 	row_panel_model = PanelContainer.new()
 	row_panel_model.name = "RowPanelModel"
@@ -208,7 +215,7 @@ func _construct_tree():
 	header_container.name = "HeaderContainer"
 	header_container.add_theme_constant_override("separation", 0)
 	header_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	add_child(header_container)
+	vbox_container.add_child(header_container)
 
 	# ── Scroll container (direct child, VBoxContainer handles layout) ──
 	scroll_container = ScrollContainer.new()
@@ -218,7 +225,7 @@ func _construct_tree():
 	var sb = StyleBoxEmpty.new()
 	sb.content_margin_top = 2
 	scroll_container.add_theme_stylebox_override("panel", sb)
-	add_child(scroll_container)
+	vbox_container.add_child(scroll_container)
 
 	row_container = Control.new()
 	row_container.name = "RowContainer"
@@ -251,13 +258,13 @@ func _construct_tree():
 		popup_menu_text.set_item_icon(2, icon_trash)
 	popup_menu_text.set_item_disabled(2, true)
 	popup_menu_text.index_pressed.connect(_on_popup_menu_index_pressed)
-	add_child(popup_menu_text)
+	vbox_container.add_child(popup_menu_text)
 
 	# ── Shortcut buttons (invisible) ──
 	var shortcut_layer = Control.new()
 	shortcut_layer.name = "ShortcutLayer"
 	shortcut_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(shortcut_layer)
+	vbox_container.add_child(shortcut_layer)
 
 	button_select_all = _make_shortcut_button(KEY_A | KEY_CTRL)
 	button_select_all.pressed.connect(_on_button_select_all_pressed)
@@ -396,7 +403,7 @@ func rebuild_header():
 	header_container.add_child(header_spacer)
 
 	# 通知 VBoxContainer 重新布局（header 尺寸变化后需要）
-	self.queue_sort()
+	vbox_container.queue_sort()
 
 
 func _update_frame_col_width() -> float:
@@ -441,8 +448,7 @@ func _on_table_resized():
 
 func _update_borders_overlay_size():
 	if is_instance_valid(borders_overlay) and is_instance_valid(scroll_container):
-		borders_overlay.top_level = true
-		borders_overlay.global_position = scroll_container.global_position + row_container.position
+		borders_overlay.position = scroll_container.position
 		borders_overlay.size = scroll_container.size
 
 func _apply_header_widths():
@@ -519,6 +525,7 @@ func _on_scroll(value: float):
 	last_visible_idx = new_last
 
 	_position_visible_rows()
+	_update_borders_overlay_size()
 	borders_overlay.queue_redraw()
 
 func _position_visible_rows():
