@@ -472,6 +472,7 @@ func _on_grabber_gui_input(event: InputEvent, col_idx: int):
 			col_widths[_drag_col_idx] = new_w
 			_apply_header_widths()
 			sync_row_widths()
+			_update_dragger_position()
 			borders_overlay.queue_redraw()
 
 func sync_row_widths():
