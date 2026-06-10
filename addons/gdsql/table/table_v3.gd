@@ -1209,7 +1209,22 @@ func commit_exclude_border():
 
 	exclude_border = {}
 	exclude_border_active = false
+
+	# Save start pos before clearing exclude_border
+	var eb_start = exclude_border.get("start", Vector2i.ZERO)
+	
+	exclude_border = {}
+	exclude_border_active = false
+
+	# Fallback: if everything was excluded, keep a single-cell border at exclude start
+	if selected_borders.is_empty():
+		var fp = Vector2i(eb_start)
+		var fb = {"start": fp, "rect": Rect2(fp.x, fp.y, 1, 1)}
+		add_border(fb)
+		return
+
 	borders_overlay.queue_redraw()
+
 func borders_has_same_cols() -> bool:
 	if selected_borders.is_empty():
 		return false
@@ -1530,6 +1545,15 @@ func _on_row_container_gui_input(event: InputEvent):
 			if mb.button_index == MOUSE_BUTTON_LEFT or mb.button_index == MOUSE_BUTTON_RIGHT:
 				if cell_pos.x < datas_flat.size():
 					row_clicked.emit(cell_pos.x, mb.button_index, datas_flat[cell_pos.x])
+		else:
+			# Mouse release
+			if exclude_mode and start_drag:
+				commit_exclude_border()
+			if start_drag_with_ctrl and exclude_mode:
+				commit_exclude_border()
+			start_drag = false
+			start_drag_with_ctrl = false
+			exclude_mode = false
 
 	elif event is InputEventMouseMotion:
 		var mm = event as InputEventMouseMotion
@@ -1549,17 +1573,6 @@ func _on_row_container_gui_input(event: InputEvent):
 					add_exclude_border(border)
 				else:
 					add_border(border)
-
-	elif event is InputEventMouseButton:
-		var mb = event as InputEventMouseButton
-		if not mb.pressed:
-			if exclude_mode and start_drag:
-				commit_exclude_border()
-			if start_drag_with_ctrl and exclude_mode:
-				commit_exclude_border()
-			start_drag = false
-			start_drag_with_ctrl = false
-			exclude_mode = false
 
 func _handle_normal_click(cell_pos: Vector2i):
 	start_drag = true
