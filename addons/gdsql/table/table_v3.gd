@@ -529,6 +529,7 @@ func _position_visible_rows():
 		var data_idx = first_visible_idx + i
 		var row = row_pool[i]
 		_assign_row_data(row, data_idx)
+		_apply_row_widths(row)
 
 	# 第二步：从第一行测量实际行高
 	actual_row_height = ROW_HEIGHT
