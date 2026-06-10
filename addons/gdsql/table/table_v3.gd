@@ -1378,8 +1378,8 @@ func _on_corner_drag_moving(diff: Vector2):
 		else:
 			desired_end.y = pos_col + 1
 	elif pos_col < src_end.y - 1:
-		# Deep inside the selection → shrink right edge
-		desired_end.y = pos_col
+		if local_mouse.x < cell_cx:
+			desired_end.y = pos_col
 
 	# --- Row ---
 	if pos_row < src_start.x:
@@ -1398,7 +1398,8 @@ func _on_corner_drag_moving(diff: Vector2):
 		else:
 			desired_end.x = pos_row + 1
 	elif pos_row < src_end.x - 1:
-		desired_end.x = pos_row
+		if local_mouse.y < cell_cy:
+			desired_end.x = pos_row
 
 	# Determine mode and apply (compare against current rect, not original)
 	var mode = "add" if (desired_end.x > src_end.x or desired_end.y > src_end.y) else "sub"
