@@ -1,4 +1,4 @@
-[gd_scene load_steps=3 format=3 uid="uid://bo2ofaxmvh7qc"]
+[gd_scene format=3 uid="uid://bo2ofaxmvh7qc"]
 
 [ext_resource type="Script" uid="uid://c40kpqjvsou3v" path="res://addons/gdsql/table/cornor_dragger.gd" id="1_db7ec"]
 
@@ -9,17 +9,14 @@ border_width_top = 4
 corner_detail = 1
 anti_aliasing = false
 
-[node name="CornorDragger" type="MarginContainer"]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
+[node name="CornorDragger" type="MarginContainer" unique_id=474063203]
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 theme_override_constants/margin_right = -6
 script = ExtResource("1_db7ec")
 
-[node name="Panel" type="Panel" parent="."]
+[node name="Panel" type="Panel" parent="." unique_id=1266006911]
 custom_minimum_size = Vector2(10, 10)
 layout_mode = 2
 size_flags_horizontal = 8
@@ -27,7 +24,7 @@ size_flags_vertical = 8
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_chohr")
 
-[node name="MarginContainer" type="MarginContainer" parent="Panel"]
+[node name="MarginContainer" type="MarginContainer" parent="Panel" unique_id=1378399035]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -40,12 +37,12 @@ theme_override_constants/margin_top = -5
 theme_override_constants/margin_right = -5
 theme_override_constants/margin_bottom = -5
 
-[node name="DragArea" type="Control" parent="Panel/MarginContainer"]
+[node name="DragArea" type="Control" parent="Panel/MarginContainer" unique_id=248553378]
 layout_mode = 2
 mouse_force_pass_scroll_events = false
 mouse_default_cursor_shape = 3
 
-[node name="Center" type="Control" parent="Panel"]
+[node name="Center" type="Control" parent="Panel" unique_id=1352282800]
 layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0
