@@ -938,16 +938,16 @@ func _on_borders_overlay_draw():
 				if ci < 0 or ci >= col_widths.size():
 					continue
 				var x0 = _get_col_x(ci)
-				var cell_rect = Rect2(x0, y0, col_widths[ci], actual_row_height)
-
-				var b_start = border.get("start", Vector2i(-1, -1))
-				var is_start_cell = r == b_start.x and c == b_start.y
-				
-				# Background (skip start cell — matches table.gd draw_center=false)
-				if not is_start_cell:
+				# Extend width rightward to cover the GRABBER_WIDTH gap to next cell
+				var bw = col_widths[ci]
+				if c < end_c - 1:
+					bw += GRABBER_WIDTH + 1.0
+				# Only last border's start cell has no background (draw_center=false)
+				var is_start = r == last_selected_pos.x and c == last_selected_pos.y
+				if not is_start:
 					var alpha = DEFAULT_BORDER_BG.a * _get_overlap_count(r, c) * 1.05
 					var bg = Color(DEFAULT_BORDER_BG.r, DEFAULT_BORDER_BG.g, DEFAULT_BORDER_BG.b, alpha)
-					borders_overlay.draw_rect(cell_rect, bg)
+					borders_overlay.draw_rect(Rect2(x0, y0, bw, actual_row_height), bg)
 
 		# Draw continuous outer boundary (4 lines)
 		var sl = _get_col_x(start_c + fo)
@@ -975,19 +975,10 @@ func _on_borders_overlay_draw():
 				if eci < 0 or eci >= col_widths.size():
 					continue
 				var ex0 = _get_col_x(eci)
-				borders_overlay.draw_rect(Rect2(ex0, ey, col_widths[eci], actual_row_height), Color(Color.DARK_BLUE, 0.25))
-
-	# Start cell: draw very faint border (matches table.gd border_color alpha 0.1)
-	var sp = last_selected_pos
-	var sci = sp.y + fo
-	if sci >= 0 and sci < col_widths.size():
-		var sx = _get_col_x(sci)
-		var sy = sp.x * actual_row_height - scroll_val
-		var sc = Color(DEFAULT_BORDER_LINE, 0.1)
-		borders_overlay.draw_line(Vector2(sx, sy), Vector2(sx + col_widths[sci], sy), sc, 2)
-		borders_overlay.draw_line(Vector2(sx, sy + actual_row_height), Vector2(sx + col_widths[sci], sy + actual_row_height), sc, 2)
-		borders_overlay.draw_line(Vector2(sx, sy), Vector2(sx, sy + actual_row_height), sc, 2)
-		borders_overlay.draw_line(Vector2(sx + col_widths[sci], sy), Vector2(sx + col_widths[sci], sy + actual_row_height), sc, 2)
+				var ew = col_widths[eci]
+				if ec < int(ex_rect.end.y) - 1:
+					ew += GRABBER_WIDTH + 1.0
+				borders_overlay.draw_rect(Rect2(ex0, ey, ew, actual_row_height), Color(Color.DARK_BLUE, 0.25))
 
 	# Autofill dashed border
 	if autofill_info.has("rect"):
