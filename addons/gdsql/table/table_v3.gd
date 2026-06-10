@@ -799,7 +799,7 @@ func _bind_update_callback(a_data: GDSQL.DictionaryObject, col_idx: int, control
 	var wr = weakref(control)
 
 	var hint_static = hint
-	var cb = func(new_value, _old_value):
+	var cb = func(new_value):
 		var ctl = wr.get_ref()
 		if not ctl:
 			return
@@ -932,6 +932,8 @@ func _on_borders_overlay_draw():
 
 			for c in range(start_c, end_c):
 				var ci = c + int(show_frame)
+				if ci < 0 or ci >= col_widths.size():
+					continue
 				var x0 = _get_col_x(ci)
 				var cell_rect = Rect2(x0, y0, col_widths[ci], actual_row_height)
 
@@ -975,13 +977,16 @@ func _on_borders_overlay_draw():
 	borders_overlay.draw_rect(Rect2(sx, sy, sw, actual_row_height), scolor, false, 1.0)
 
 	# Autofill dashed border
-	if autofill_info.has("start") and autofill_info.has("rect"):
-		var af_start = autofill_info["start"] as Vector2
-		var af_end = autofill_info["end"] as Vector2
+	if autofill_info.has("rect"):
+		var af_rect = autofill_info["rect"] as Rect2
+		var af_start = af_rect.position
+		var af_end = af_rect.end
 		for r in range(int(af_start.x), int(af_end.x)):
 			for c in range(int(af_start.y), int(af_end.y)):
 				if r == int(af_start.x) or c == int(af_start.y) or r == int(af_end.x) - 1 or c == int(af_end.y) - 1:
 					var ci = c + int(show_frame)
+					if ci >= col_widths.size():
+						continue
 					var cx = _get_col_x(ci)
 					var cy = r * actual_row_height - scroll_val
 					_draw_dashed_rect(Rect2(cx, cy, col_widths[ci], actual_row_height),
@@ -1097,6 +1102,9 @@ func add_border(border: Dictionary):
 	if not b_rect.has_area():
 		return
 	var start = border["start"]
+	if start is Vector2:
+		start = Vector2i(start)
+		border["start"] = start
 	last_selected_pos = start
 	for i in selected_borders.size():
 		if selected_borders[i]["start"] == start:
@@ -1189,6 +1197,8 @@ func _add_corner_dragger():
 		return
 
 	var ci = last_col + int(show_frame)
+	if ci < 0 or ci >= col_widths.size():
+		return
 	var cx = _get_col_x(ci) + col_widths[ci]
 	var cy = (last_row + 1) * actual_row_height - scroll_container.scroll_vertical
 	cornor_dragger = load("res://addons/gdsql/table/cornor_dragger.tscn").instantiate()
@@ -1215,6 +1225,8 @@ func _update_dragger_position():
 	if last_row < 0 or last_col < 0:
 		return
 	var ci = last_col + int(show_frame)
+	if ci < 0 or ci >= col_widths.size():
+		return
 	var cx = _get_col_x(ci) + col_widths[ci]
 	var cy = (last_row + 1) * actual_row_height - scroll_container.scroll_vertical
 	cornor_dragger.position = Vector2(cx, cy) - Vector2(5, 5)
@@ -1240,10 +1252,11 @@ func _on_corner_drag_moving(diff: Vector2):
 	var src_end = autofill_info["end"] as Vector2
 
 	var corner_row = int(src_end.x)
-	var corner_col = int(src_end.y)
-	if corner_col < 0 or corner_col >= col_widths.size():
-		corner_col = max(0, col_widths.size() - 1)
-	var corner_x_pos = _get_col_x(corner_col) + col_widths[corner_col]
+	var last_data_col = max(0, int(src_end.y) - 1)
+	var ci = last_data_col + int(show_frame)
+	if ci >= col_widths.size():
+		ci = col_widths.size() - 1
+	var corner_x_pos = _get_col_x(ci) + col_widths[ci]
 	var corner_y_pos = corner_row * actual_row_height - scroll_container.scroll_vertical
 
 	var new_pixel_x = corner_x_pos + diff.x
@@ -1256,18 +1269,20 @@ func _on_corner_drag_moving(diff: Vector2):
 	var accum = 0.0
 	for c in range(col_widths.size()):
 		accum += col_widths[c]
+		if show_frame and c == 0:
+			accum += GRABBER_WIDTH
 		if new_pixel_x < accum:
 			new_col = c
 			break
 		new_col = c
 
-	var af_start_v = Vector2(min(src_start.x, new_row), min(src_start.y, new_col))
-	var af_end_v = Vector2(max(src_end.x, new_row + 1), max(src_end.y, new_col + 1))
+	var new_data_col = max(0, new_col - int(show_frame))
+	var af_start_v = Vector2(min(src_start.x, new_row), min(src_start.y, new_data_col))
+	var af_end_v = Vector2(max(src_end.x, new_row + 1), max(src_end.y, new_data_col + 1))
 	af_end_v.x = clamp(af_end_v.x, src_start.x + 1, datas_flat.size())
-	af_end_v.y = clamp(af_end_v.y, src_start.y + 1, col_widths.size())
+	af_end_v.y = clamp(af_end_v.y, src_start.y + 1, col_widths.size() - int(show_frame))
 
 	autofill_info["rect"] = Rect2(af_start_v, af_end_v - af_start_v)
-	autofill_info["end"] = af_end_v
 	borders_overlay.queue_redraw()
 
 func _on_corner_drag_end():
@@ -1287,7 +1302,7 @@ func _commit_autofill():
 		borders_overlay.queue_redraw()
 		return
 
-	var src_start = autofill_info["start"] as Vector2
+	var src_start = Vector2i(autofill_info["start"])
 	var src_sel = selected_borders.front()["rect"] as Rect2 if not selected_borders.is_empty() else af_rect
 
 	if af_rect.position == src_sel.position and af_rect.end == src_sel.end:
@@ -1370,7 +1385,6 @@ func _on_row_container_gui_input(event: InputEvent):
 	if event is InputEventMouseButton:
 		var mb = event as InputEventMouseButton
 		if mb.pressed:
-			print("  mb.pressed at pos=", mb.position, " btn=", mb.button_index)
 			var cell_pos = get_cell_at_pos(mb.position)
 			if cell_pos.x < 0 or cell_pos.y < 0:
 				return
@@ -1782,6 +1796,8 @@ func _draw_corner_dragger():
 	if last_row < 0 or last_col < 0:
 		return
 	var ci = last_col + int(show_frame)
+	if ci < 0 or ci >= col_widths.size():
+		return
 	var cx = _get_col_x(ci) + col_widths[ci]
 	var cy = (last_row + 1) * actual_row_height - scroll_container.scroll_vertical
 	var s = 5.0
