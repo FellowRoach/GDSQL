@@ -911,13 +911,15 @@ func _get_row_node(data_idx: int):
 # ── Borders overlay ─────────────────────────────────────────────────────
 
 func _on_borders_overlay_draw():
-	if not support_select_border or selected_borders.is_empty():
-
-
+	if not support_select_border:
+		return
+	if selected_borders.is_empty() and exclude_border.is_empty():
 		return
 
 	var view_h = scroll_container.size.y
 	var scroll_val = scroll_container.scroll_vertical
+	var multi = selected_borders.size() > 1
+	var fo = int(show_frame)
 
 	for border in selected_borders:
 		var rect = border["rect"] as Rect2
@@ -932,42 +934,59 @@ func _on_borders_overlay_draw():
 				continue
 
 			for c in range(start_c, end_c):
-				var ci = c + int(show_frame)
+				var ci = c + fo
 				if ci < 0 or ci >= col_widths.size():
 					continue
 				var x0 = _get_col_x(ci)
 				var cell_rect = Rect2(x0, y0, col_widths[ci], actual_row_height)
 
-				# Background (per-cell for overlap counting)
-				if border.has("exclude") and border["exclude"]:
-					borders_overlay.draw_rect(cell_rect, Color(Color.DARK_BLUE, 0.25))
-				else:
+				var is_start = r == last_selected_pos.x and c == last_selected_pos.y
+
+				# Background (skip start cell — matches table.gd draw_center=false)
+				if not is_start:
 					var alpha = DEFAULT_BORDER_BG.a * _get_overlap_count(r, c) * 1.05
 					var bg = Color(DEFAULT_BORDER_BG.r, DEFAULT_BORDER_BG.g, DEFAULT_BORDER_BG.b, alpha)
 					borders_overlay.draw_rect(cell_rect, bg)
 
-		# Draw continuous outer boundary (4 lines, once per border, skip exclude borders)
-		if not border.has("exclude"):
-			var fo = int(show_frame)
-			var sl = _get_col_x(start_c + fo)
-			var last_ci = end_c + fo - 1
-			var sr = _get_col_x(last_ci) + col_widths[last_ci] if last_ci >= 0 else sl
-			var st = start_r * actual_row_height - scroll_val
-			var sb = end_r * actual_row_height - scroll_val
-			var bc = DEFAULT_BORDER_LINE
-			borders_overlay.draw_line(Vector2(sl, st), Vector2(sr, st), bc, 2)
-			borders_overlay.draw_line(Vector2(sl, sb), Vector2(sr, sb), bc, 2)
-			borders_overlay.draw_line(Vector2(sl, st), Vector2(sl, sb), bc, 2)
-			borders_overlay.draw_line(Vector2(sr, st), Vector2(sr, sb), bc, 2)
+		# Draw continuous outer boundary (4 lines)
+		var sl = _get_col_x(start_c + fo)
+		var last_ci = end_c + fo - 1
+		var sr = _get_col_x(last_ci) + col_widths[last_ci] if last_ci >= 0 else sl
+		var st = start_r * actual_row_height - scroll_val
+		var sb = end_r * actual_row_height - scroll_val
+		var bc = DEFAULT_BORDER_LINE
+		if multi:
+			bc = Color(DEFAULT_BORDER_LINE, 0.1)
+		borders_overlay.draw_line(Vector2(sl, st), Vector2(sr, st), bc, 2)
+		borders_overlay.draw_line(Vector2(sl, sb), Vector2(sr, sb), bc, 2)
+		borders_overlay.draw_line(Vector2(sl, st), Vector2(sl, sb), bc, 2)
+		borders_overlay.draw_line(Vector2(sr, st), Vector2(sr, sb), bc, 2)
 
-	# Selection start indicator (green rect background)
-	var start_pos = last_selected_pos
-	var si = start_pos.y + int(show_frame)
-	var sx = _get_col_x(si)
-	var sy = start_pos.x * actual_row_height - scroll_val
-	var scolor = Color(DEFAULT_BORDER_LINE, 0.1)
-	var sw = col_widths[si] if si >= 0 and si < col_widths.size() else 0.0
-	borders_overlay.draw_rect(Rect2(sx, sy, sw, actual_row_height), scolor, false, 1.0)
+	# Exclude border (dark blue background)
+	if not exclude_border.is_empty():
+		var ex_rect = exclude_border["rect"] as Rect2
+		for er in range(int(ex_rect.position.x), int(ex_rect.end.x)):
+			var ey = er * actual_row_height - scroll_val
+			if ey + actual_row_height < 0 or ey > view_h:
+				continue
+			for ec in range(int(ex_rect.position.y), int(ex_rect.end.y)):
+				var eci = ec + fo
+				if eci < 0 or eci >= col_widths.size():
+					continue
+				var ex0 = _get_col_x(eci)
+				borders_overlay.draw_rect(Rect2(ex0, ey, col_widths[eci], actual_row_height), Color(Color.DARK_BLUE, 0.25))
+
+	# Start cell: draw very faint border (matches table.gd border_color alpha 0.1)
+	var sp = last_selected_pos
+	var sci = sp.y + fo
+	if sci >= 0 and sci < col_widths.size():
+		var sx = _get_col_x(sci)
+		var sy = sp.x * actual_row_height - scroll_val
+		var sc = Color(DEFAULT_BORDER_LINE, 0.1)
+		borders_overlay.draw_line(Vector2(sx, sy), Vector2(sx + col_widths[sci], sy), sc, 2)
+		borders_overlay.draw_line(Vector2(sx, sy + actual_row_height), Vector2(sx + col_widths[sci], sy + actual_row_height), sc, 2)
+		borders_overlay.draw_line(Vector2(sx, sy), Vector2(sx, sy + actual_row_height), sc, 2)
+		borders_overlay.draw_line(Vector2(sx + col_widths[sci], sy), Vector2(sx + col_widths[sci], sy + actual_row_height), sc, 2)
 
 	# Autofill dashed border
 	if autofill_info.has("rect"):
@@ -1083,6 +1102,8 @@ func _get_overlap_count(row: int, col: int) -> int:
 
 func clear_borders():
 	selected_borders.clear()
+	exclude_border = {}
+	exclude_border_active = false
 	_remove_corner_dragger()
 	autofill_info = {}
 	autofill_borders_positions.clear()
@@ -1109,30 +1130,86 @@ func add_border(border: Dictionary):
 		selected_borders.clear()
 	selected_borders.append(border)
 	borders_overlay.queue_redraw()
-	_add_corner_dragger()
+	if selected_borders.size() > 1:
+		_remove_corner_dragger()
+	else:
+		_add_corner_dragger()
 
 func add_exclude_border(border: Dictionary):
 	if not support_select_border:
 		return
 	if not (border["rect"] as Rect2).has_area():
 		return
-	border["exclude"] = true
-	selected_borders.append(border)
+	exclude_border = border
+	exclude_border_active = true
 	borders_overlay.queue_redraw()
 
 func commit_exclude_border():
-	if not exclude_border_active:
+	if not exclude_border_active or exclude_border.is_empty():
 		return
-	var to_remove = []
+	var exclude_rect = exclude_border["rect"] as Rect2
+
+	# Step 1: Remove borders fully enclosed by exclude rect
+	var clears = []
 	for i in selected_borders.size():
-		if selected_borders[i].get("exclude", false):
-			to_remove.append(i)
-	to_remove.reverse()
-	for i in to_remove:
+		var b_rect = selected_borders[i]["rect"] as Rect2
+		if exclude_rect.encloses(b_rect):
+			clears.push_back(i)
+	clears.reverse()
+	for i in clears:
 		selected_borders.remove_at(i)
+
+	# Step 2: Split borders intersecting with exclude rect
+	var to_add = []
+	var to_delete = []
+	var empty_rect = Rect2()
+	for i in selected_borders.size():
+		var border = selected_borders[i]
+		var b_rect = border["rect"] as Rect2
+		var inter = exclude_rect.intersection(b_rect)
+		if inter == empty_rect or not inter.has_area():
+			continue
+		to_delete.push_back(i)
+
+		var bp = b_rect.position
+		var be = b_rect.end
+
+		# Decompose into up to 4 non-overlapping sub-rectangles
+		# Top strip: above the intersection (full width)
+		if inter.position.y > bp.y:
+			to_add.push_back({
+				"start": Vector2(bp.x, bp.y),
+				"rect": Rect2(bp.x, bp.y, b_rect.size.x, inter.position.y - bp.y)
+			})
+		# Bottom strip: below the intersection (full width)
+		if inter.end.y < be.y:
+			to_add.push_back({
+				"start": Vector2(bp.x, inter.end.y),
+				"rect": Rect2(bp.x, inter.end.y, b_rect.size.x, be.y - inter.end.y)
+			})
+		# Left strip: between top/bottom, to the left
+		if inter.position.x > bp.x:
+			to_add.push_back({
+				"start": Vector2(bp.x, inter.position.y),
+				"rect": Rect2(bp.x, inter.position.y, inter.position.x - bp.x, inter.size.y)
+			})
+		# Right strip: between top/bottom, to the right
+		if inter.end.x < be.x:
+			to_add.push_back({
+				"start": Vector2(inter.end.x, inter.position.y),
+				"rect": Rect2(inter.end.x, inter.position.y, be.x - inter.end.x, inter.size.y)
+			})
+
+	# Remove and add
+	to_delete.reverse()
+	for i in to_delete:
+		selected_borders.remove_at(i)
+	for b in to_add:
+		selected_borders.append(b)
+
+	exclude_border = {}
 	exclude_border_active = false
 	borders_overlay.queue_redraw()
-
 func borders_has_same_cols() -> bool:
 	if selected_borders.is_empty():
 		return false
@@ -1244,38 +1321,69 @@ func _on_corner_drag_moving(diff: Vector2):
 	var src_start = autofill_info["start"] as Vector2
 	var src_end = autofill_info["end"] as Vector2
 
-	var corner_row = int(src_end.x)
-	var last_data_col = max(0, int(src_end.y) - 1)
-	var ci = last_data_col + int(show_frame)
-	if ci >= col_widths.size():
-		ci = col_widths.size() - 1
-	var corner_x_pos = _get_col_x(ci) + col_widths[ci]
-	var corner_y_pos = corner_row * actual_row_height - scroll_container.scroll_vertical
+	# Get cell under mouse using overlay-relative coordinates
+	var mouse_gpos = get_global_mouse_position()
+	var overlay_gpos = borders_overlay.global_position
+	var local_mouse = mouse_gpos - overlay_gpos
+	local_mouse.x -= scroll_container.scroll_horizontal
+	var cell_pos = get_cell_at_pos(local_mouse)
+	var pos_row = cell_pos.x
+	var pos_col = cell_pos.y
+	
+	if pos_row < 0 or pos_col < 0:
+		return
 
-	var new_pixel_x = corner_x_pos + diff.x
-	var new_pixel_y = corner_y_pos + diff.y
-
-	var new_row = int(new_pixel_y / actual_row_height) if actual_row_height > 0 else 0
-	new_row = clampi(new_row, 0, max(0, datas_flat.size() - 1))
-
-	var new_col = 0
-	var accum = 0.0
-	for c in range(col_widths.size()):
-		accum += col_widths[c]
-		if c < col_widths.size() - 1:
-			accum += GRABBER_WIDTH
-		if new_pixel_x < accum:
-			new_col = c
-			break
-		new_col = c
-
-	var new_data_col = max(0, new_col - int(show_frame))
-	var af_start_v = Vector2(min(src_start.x, new_row), min(src_start.y, new_data_col))
-	var af_end_v = Vector2(max(src_end.x, new_row + 1), max(src_end.y, new_data_col + 1))
-	af_end_v.x = clamp(af_end_v.x, src_start.x + 1, datas_flat.size())
-	af_end_v.y = clamp(af_end_v.y, src_start.y + 1, col_widths.size() - int(show_frame))
-
-	autofill_info["rect"] = Rect2(af_start_v, af_end_v - af_start_v)
+	# Determine direction and call add_autofill_border
+	if pos_col >= src_start.y and pos_col <= src_end.y - 1:
+		if pos_row < src_start.x:
+			# Extend upward
+			add_autofill_border(Vector2(pos_row, src_start.y), src_end, "add")
+			return
+		if pos_row >= src_end.x:
+			# Extend downward
+			add_autofill_border(src_start, Vector2(pos_row + 1, src_end.y), "add")
+			return
+	if pos_row >= src_start.x and pos_row <= src_end.x - 1:
+		if pos_col < src_start.y:
+			# Extend leftward
+			add_autofill_border(Vector2(src_start.x, pos_col), src_end, "add")
+			return
+		if pos_col >= src_end.y:
+			# Extend rightward
+			add_autofill_border(src_start, Vector2(src_end.x, pos_col + 1), "add")
+			return
+	
+	# Diagonal or inward - use diff to determine intent
+	if diff.x > 0:
+		if diff.y > 0:
+			if diff.x > diff.y:
+				add_autofill_border(src_start, Vector2(src_end.x, pos_col + 1), "add")
+			else:
+				add_autofill_border(src_start, Vector2(pos_row + 1, src_end.y), "add")
+		else:
+			if diff.x > -diff.y:
+				add_autofill_border(src_start, Vector2(src_end.x, pos_col + 1), "add")
+			else:
+				if pos_row > src_start.x:
+					add_autofill_border(src_start, Vector2(pos_row, src_end.y), "sub")
+				else:
+					add_autofill_border(src_start, src_end, "sub")
+	else:
+		if diff.y > 0:
+			if -diff.x > diff.y:
+				add_autofill_border(Vector2(pos_row, src_start.y), src_end, "sub")
+			else:
+				add_autofill_border(src_start, Vector2(pos_row + 1, src_end.y), "add")
+		else:
+			if pos_col > src_start.y:
+				add_autofill_border(src_start, Vector2(src_end.x, pos_col), "sub")
+			else:
+				add_autofill_border(src_start, src_end, "sub")
+	
+func add_autofill_border(start_pos: Vector2, end_pos: Vector2, mode: String):
+	# Clear old dashed borders
+	autofill_info["rect"] = Rect2(start_pos, end_pos - start_pos)
+	autofill_info["mode"] = mode
 	borders_overlay.queue_redraw()
 
 func _on_corner_drag_end():
@@ -1352,7 +1460,6 @@ func _commit_autofill():
 	add_border({"start": src_start, "rect": af_rect})
 	autofill_info = {}
 	borders_overlay.queue_redraw()
-
 func commit_vertical_autofill():
 	if selected_borders.is_empty():
 		return
@@ -1399,6 +1506,8 @@ func get_cell_at_pos(pos: Vector2) -> Vector2i:
 				return Vector2i(-1, -1)
 			return Vector2i(row, data_col)
 		x += w
+		if c < col_widths.size() - 1:
+			x += GRABBER_WIDTH  # spacer/grabber between columns
 	return Vector2i(-1, -1)
 
 func _on_row_container_gui_input(event: InputEvent):
