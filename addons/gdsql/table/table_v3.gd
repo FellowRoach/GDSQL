@@ -114,6 +114,7 @@ var datas_flat: Array = []                # working copy (mirror of datas)
 var _entered_tree := false
 
 var vbox_container: VBoxContainer
+var overlay_wrapper: MarginContainer
 
 # Selection / border state
 var selected_borders: Array[Dictionary] = []
@@ -237,12 +238,18 @@ func _construct_tree():
 	row_container.mouse_entered.connect(_on_data_area_mouse_entered)
 	row_container.mouse_exited.connect(_on_data_area_mouse_exited)
 
-	# Borders overlay (sibling of scroll_container, positioned to cover it)
+	# Borders overlay — wrapped in MarginContainer so root layout can't override position
+	overlay_wrapper = MarginContainer.new()
+	overlay_wrapper.name = "OverlayWrapper"
+	overlay_wrapper.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(overlay_wrapper)
+
 	borders_overlay = Control.new()
 	borders_overlay.name = "BordersOverlay"
 	borders_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	borders_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
 	borders_overlay.draw.connect(_on_borders_overlay_draw)
-	add_child(borders_overlay)
+	overlay_wrapper.add_child(borders_overlay)
 
 	# ── Popup menu ──
 	popup_menu_text = PopupMenu.new()
@@ -447,9 +454,13 @@ func _on_table_resized():
 
 
 func _update_borders_overlay_size():
-	if is_instance_valid(borders_overlay) and is_instance_valid(scroll_container):
-		borders_overlay.position = scroll_container.position
-		borders_overlay.size = scroll_container.size
+	if is_instance_valid(overlay_wrapper) and is_instance_valid(scroll_container):
+		var sp = scroll_container.position
+		var ss = scroll_container.size
+		overlay_wrapper.add_theme_constant_override("margin_left", sp.x)
+		overlay_wrapper.add_theme_constant_override("margin_top", sp.y)
+		overlay_wrapper.add_theme_constant_override("margin_right", max(0, overlay_wrapper.size.x - sp.x - ss.x))
+		overlay_wrapper.add_theme_constant_override("margin_bottom", max(0, overlay_wrapper.size.y - sp.y - ss.y))
 
 func _apply_header_widths():
 	for i in min(header_buttons.size(), col_widths.size()):
