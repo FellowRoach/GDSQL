@@ -384,6 +384,12 @@ func rebuild_header():
 			grabber.gui_input.connect(_on_grabber_gui_input.bind(i))
 			header_container.add_child(grabber)
 			header_grabbers.append(grabber)
+		elif show_frame and i == 0:
+			# Spacer between frame column and first data column
+			var spacer = ColorRect.new()
+			spacer.custom_minimum_size.x = GRABBER_WIDTH
+			spacer.color = Color(1, 1, 1, 0.0)
+			header_container.add_child(spacer)
 	# Spacer (fills remaining space)
 	header_spacer = Control.new()
 	header_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -410,6 +416,8 @@ func update_frame_col_width_if_needed():
 
 func _get_header_available_width() -> float:
 	var total_grabber = max(0, columns.size() - 1) * GRABBER_WIDTH
+	if show_frame:
+		total_grabber += GRABBER_WIDTH  # spacer between frame and first data col
 	return max(100, header_container.size.x - total_grabber)
 
 func _on_table_resized():
@@ -475,9 +483,14 @@ func _apply_row_widths(row_node: Control):
 	var hbox = row_node.get_child(0) if row_node.get_child_count() > 0 else null
 	if hbox == null:
 		return
-	var cells = hbox.get_children()
-	for i in min(cells.size(), col_widths.size()):
-		cells[i].custom_minimum_size.x = col_widths[i]
+	var wi = 0
+	for child in hbox.get_children():
+		if not (child is PanelContainer):
+			continue
+		if wi >= col_widths.size():
+			break
+		child.custom_minimum_size.x = col_widths[wi]
+		wi += 1
 
 # ── Virtual Scrolling ─────────────────────────────────────────────────────
 
@@ -596,7 +609,7 @@ func _create_row_node() -> Control:
 
 		var is_frame = show_frame and i == 0
 		if is_frame:
-			cell.custom_minimum_size.x = 30.0
+			cell.custom_minimum_size.x = col_widths[i] if i < col_widths.size() else 48.0
 			var line_btn = Button.new()
 			line_btn.flat = true
 			line_btn.mouse_default_cursor_shape = Control.CURSOR_HELP
@@ -609,6 +622,10 @@ func _create_row_node() -> Control:
 			cell.custom_minimum_size.x = col_widths[i] if i < col_widths.size() else float(MIN_COL_WIDTH)
 
 		hbox.add_child(cell)
+		if is_frame:
+			var spacer = Control.new()
+			spacer.custom_minimum_size.x = GRABBER_WIDTH
+			hbox.add_child(spacer)
 	return row
 
 func _assign_row_data(row_node: Control, data_idx: int):
@@ -623,18 +640,16 @@ func _assign_row_data(row_node: Control, data_idx: int):
 	row_node.set_meta("data_index", data_idx)
 	row_node.set_meta("data", data)
 
-	var cells = hbox.get_children()
-	var total_cols = columns.size() + int(show_frame)
-
 	var data_arr = _data_to_array(data)
 
 	var col_offset = int(show_frame)
-	for ci in range(total_cols):
-		var cell = cells[ci] as PanelContainer
-		if cell == null:
-			continue
-		if ci < col_offset:
+	var data_col = 0
+	for cell in hbox.get_children():
+		if not (cell is PanelContainer):
+			continue  # skip spacers
+		if col_offset > 0:
 			# Frame column
+			col_offset -= 1
 			var btn = cell.get_child(0) if cell.get_child_count() > 0 else null
 			if btn is Button:
 				btn.text = str(data_idx + 1)
@@ -644,14 +659,14 @@ func _assign_row_data(row_node: Control, data_idx: int):
 				btn.pressed.connect(_on_frame_btn_pressed.bind(data_idx, btn))
 			continue
 
-		var data_col = ci - col_offset
 		if data_col >= data_arr.size():
+			data_col += 1
 			continue
 
 		# Clear existing children
 		for c in cell.get_children():
 			cell.remove_child(c)
-			if not c is Button:  # keep frame button? no, frame uses different branch
+			if not c is Button:
 				c.queue_free()
 
 		var value = data_arr[data_col]
@@ -663,6 +678,7 @@ func _assign_row_data(row_node: Control, data_idx: int):
 		# Assign cell meta for border lookup
 		cell.set_meta("row", data_idx)
 		cell.set_meta("col", data_col)
+		data_col += 1
 
 
 	# end for
@@ -1033,11 +1049,20 @@ func _get_col_x(col: int) -> float:
 	# Prefer hbox cell position for accuracy
 	if not row_pool.is_empty() and row_pool[0].visible:
 		var hbox = row_pool[0].get_child(0)
-		if hbox and hbox.get_child_count() > col and hbox.get_child(col).position.x > 1.0:
-			return hbox.get_child(col).position.x
+		if hbox:
+			var pc_idx = -1
+			for child in hbox.get_children():
+				if child is PanelContainer:
+					pc_idx += 1
+					if pc_idx == col:
+						if child.position.x > 1.0:
+							return child.position.x
+						break
 	var x = 0.0
 	for i in range(min(col, col_widths.size())):
 		x += col_widths[i]
+		if show_frame and i == 0:
+			x += GRABBER_WIDTH  # spacer between frame and first data col
 	return x
 
 func _get_cell_screen_rect(data_row: int, data_col: int) -> Rect2:
@@ -1340,14 +1365,11 @@ func get_cell_at_pos(pos: Vector2) -> Vector2i:
 	return Vector2i(-1, -1)
 
 func _on_row_container_gui_input(event: InputEvent):
-	print("row_container event: ", event.get_class(), " type=", typeof(event))
 	if event is InputEventMouseButton:
 		var mb = event as InputEventMouseButton
 		if mb.pressed:
 			print("  mb.pressed at pos=", mb.position, " btn=", mb.button_index)
-			print("  col_widths=", col_widths, " actual_row_h=", actual_row_height, " show_frame=", show_frame)
 			var cell_pos = get_cell_at_pos(mb.position)
-			print("  cell_pos=", cell_pos)
 			if cell_pos.x < 0 or cell_pos.y < 0:
 				return
 
