@@ -275,6 +275,8 @@ func _construct_tree():
 
 	data_row_container = Control.new()
 	data_row_container.name = "DataRowContainer"
+	data_row_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	data_row_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	data_scroll.add_child(data_row_container)
 
 	# Mouse events on data_row_container for selection
@@ -395,6 +397,7 @@ func rebuild_header():
 
 	data_header_hbox = HBoxContainer.new()
 	data_header_hbox.name = "DataHeaderHBox"
+	data_header_hbox.set_anchors_preset(Control.PRESET_FULL_RECT)
 	data_header_hbox.add_theme_constant_override("separation", 0)
 	data_header_wrapper.add_child(data_header_hbox)
 
@@ -445,6 +448,9 @@ func rebuild_header():
 	header_spacer = Control.new()
 	header_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	data_header_hbox.add_child(header_spacer)
+
+	# 设置 wrapper 高度为表头按钮的实际最小高度
+	data_header_wrapper.custom_minimum_size.y = data_header_hbox.get_combined_minimum_size().y
 
 	# 通知 VBoxContainer 重新布局
 	vbox_container.queue_sort()
@@ -618,12 +624,15 @@ func update_content_size():
 		frame_row_container.custom_minimum_size.y = total_h
 		frame_row_container.custom_minimum_size.x = frame_col_width
 		frame_scroll.custom_minimum_size.x = frame_col_width
+		frame_scroll.queue_sort()
 	# Horizontal scroll extent = sum of all data column widths
 	var total_w = 0.0
 	for w in col_widths:
 		total_w += w
 	data_row_container.custom_minimum_size.x = total_w
 	data_area.queue_sort()
+	# Ensure ScrollContainer recalculates its scrollbars
+	data_scroll.queue_sort()
 
 func _on_scroll(value: float):
 	if datas_flat.is_empty():
@@ -674,6 +683,7 @@ func _on_frame_scroll_changed(value: float):
 func _on_data_hscroll_changed(value: float):
 	if show_frame and is_instance_valid(data_header_hbox):
 		data_header_hbox.position.x = -value
+	_update_dragger_position()
 	borders_overlay.queue_redraw()
 
 func _position_visible_rows():
@@ -1174,7 +1184,7 @@ func _on_borders_overlay_draw():
 				var ci = c
 				if ci < 0 or ci >= col_widths.size():
 					continue
-				var x0 = _get_col_x(ci)
+				var x0 = _get_col_x(ci) - scroll_h
 				var bw = col_widths[ci]
 				# Only last border's start cell has no background (draw_center=false)
 				var is_start = r == last_selected_pos.x and c == last_selected_pos.y
@@ -1186,7 +1196,7 @@ func _on_borders_overlay_draw():
 		# Draw continuous outer boundary (4 lines)
 		var sl = _get_col_x(start_c) - scroll_h
 		var last_ci = end_c - 1
-		var sr = _get_col_x(last_ci) + col_widths[last_ci] if last_ci >= 0 else sl
+		var sr = (_get_col_x(last_ci) + col_widths[last_ci]) - scroll_h if last_ci >= 0 else sl
 		var st = start_r * actual_row_height - scroll_val
 		var sb = end_r * actual_row_height - scroll_val
 		var bc = DEFAULT_BORDER_LINE
@@ -1208,7 +1218,7 @@ func _on_borders_overlay_draw():
 				var eci = ec
 				if eci < 0 or eci >= col_widths.size():
 					continue
-				var ex0 = _get_col_x(eci)
+				var ex0 = _get_col_x(eci) - scroll_h
 				var ew = col_widths[eci]
 				borders_overlay.draw_rect(Rect2(ex0, ey, ew, actual_row_height), Color(Color.DARK_BLUE, 0.25))
 
@@ -1223,7 +1233,7 @@ func _on_borders_overlay_draw():
 					var ci = c
 					if ci >= col_widths.size():
 						continue
-					var cx = _get_col_x(ci)
+					var cx = _get_col_x(ci) - scroll_h
 					var cy = r * actual_row_height - scroll_val
 					_draw_dashed_rect(Rect2(cx, cy, col_widths[ci], actual_row_height),
 						r == int(af_start.x), r == int(af_end.x) - 1,
@@ -1496,7 +1506,7 @@ func _add_corner_dragger():
 	var ci = last_col
 	if ci < 0 or ci >= col_widths.size():
 		return
-	var cx = _get_col_x(ci) + col_widths[ci]
+	var cx = _get_col_x(ci) + col_widths[ci] - data_scroll.scroll_horizontal
 	var cy = (last_row + 1) * actual_row_height - data_scroll.scroll_vertical
 	cornor_dragger = load("res://addons/gdsql/table/cornor_dragger.tscn").instantiate()
 	borders_overlay.add_child(cornor_dragger)
@@ -1524,7 +1534,7 @@ func _update_dragger_position():
 	var ci = last_col
 	if ci < 0 or ci >= col_widths.size():
 		return
-	var cx = _get_col_x(ci) + col_widths[ci]
+	var cx = _get_col_x(ci) + col_widths[ci] - data_scroll.scroll_horizontal
 	var cy = (last_row + 1) * actual_row_height - data_scroll.scroll_vertical
 	cornor_dragger.position = Vector2(cx, cy) - Vector2(5, 5)
 
@@ -2195,7 +2205,7 @@ func _draw_corner_dragger():
 	var ci = last_col
 	if ci < 0 or ci >= col_widths.size():
 		return
-	var cx = _get_col_x(ci) + col_widths[ci]
+	var cx = _get_col_x(ci) + col_widths[ci] - data_scroll.scroll_horizontal
 	var cy = (last_row + 1) * actual_row_height - data_scroll.scroll_vertical
 	var s = 5.0
 	var pts = PackedVector2Array([
