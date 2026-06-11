@@ -187,10 +187,10 @@ func _ready() -> void:
 	_update_borders_overlay_size()
 	data_scroll.resized.connect(_update_borders_overlay_size)
 
-	# Scroll listener
+	# Scroll listener (built-in v_bar)
 	var data_v_bar = data_scroll.get_v_scroll_bar()
 	data_v_bar.value_changed.connect(_on_data_scroll_changed)
-	data_v_bar.visibility_changed.connect(_on_vbar_visibility_changed)
+	data_v_bar.visibility_changed.connect(_on_vbar_resized)
 
 	var data_h_bar = data_scroll.get_h_scroll_bar()
 	data_h_bar.value_changed.connect(_on_data_hscroll_changed)
@@ -496,7 +496,6 @@ func _on_table_resized():
 
 
 func _update_borders_overlay_size():
-	# Reposition overlay to cover data_scroll
 	if is_instance_valid(borders_overlay) and is_instance_valid(data_scroll):
 		borders_overlay.position = data_scroll.position + data_area.position
 		borders_overlay.size = data_scroll.size
@@ -659,6 +658,7 @@ func _on_scroll(value: float):
 	borders_overlay.queue_redraw()
 
 func _on_data_scroll_changed(value: float):
+	print("[DATA_SCROLL] value_changed=", value)
 	_on_scroll(value)
 
 func _on_data_hscroll_changed(value: float):
@@ -666,6 +666,9 @@ func _on_data_hscroll_changed(value: float):
 		data_header_hbox.position.x = -value
 	_update_dragger_position()
 	borders_overlay.queue_redraw()
+
+func _on_vbar_resized():
+	header_container.queue_sort()
 
 func _position_visible_rows():
 	var needed = last_visible_idx - first_visible_idx + 1
@@ -2132,10 +2135,6 @@ func inspect_highlight_rows():
 
 # ── Misc ────────────────────────────────────────────────────────────────
 
-func _on_vbar_visibility_changed():
-	header_container.queue_sort()
-	_on_table_resized()
-
 func _split_tooltip(content: String) -> String:
 	const L = 40
 	var total = content.length()
@@ -2431,8 +2430,21 @@ func _get_selected_cols() -> Array:
 var _last_data_scroll_v: float = -1
 
 func _process(_delta):
+	# Sync frame row container position
 	if show_frame and is_instance_valid(data_scroll) and is_instance_valid(frame_row_container):
 		var sv = data_scroll.scroll_vertical
 		if sv != _last_data_scroll_v:
 			_last_data_scroll_v = sv
 			frame_row_container.position.y = -sv
+
+	# Reposition built-in v_bar to data content's visible right edge
+	if is_instance_valid(data_scroll) and is_instance_valid(data_row_container):
+		var v_bar = data_scroll.get_v_scroll_bar()
+		var data_w = data_row_container.custom_minimum_size.x
+		if v_bar.visible and data_w > 0:
+			var scroll_h = data_scroll.scroll_horizontal
+			var view_w = data_scroll.size.x
+			var visible_right = min(view_w, data_w - scroll_h)
+			var bar_w = v_bar.size.x
+			var bar_left = min(visible_right, view_w - bar_w)
+			v_bar.position.x = max(0, bar_left)
