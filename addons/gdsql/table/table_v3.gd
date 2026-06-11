@@ -20,6 +20,12 @@ signal row_deleted(datas)
 @export var show_frame: bool = false
 ## 行的高度是否进行扩展并填充（v3固定行高，设为true相当于填充可用高度）
 @export var row_expend_and_fill: bool = false
+## 是否显示网格线（类似Excel）
+@export var show_grid: bool = false:
+	set(val):
+		show_grid = val
+		if is_node_ready():
+			borders_overlay.queue_redraw()
 
 ## 每列的名称。注意：如果要正确显示tooltip，需要先设置column_tips，再设置columns
 @export var columns: Array:
@@ -83,6 +89,7 @@ const MAX_POOL_SIZE := 200
 const HIGHTLIGHT_COLOR = Color(Color.MEDIUM_PURPLE, 0.788)
 const DEFAULT_BORDER_BG = Color(1, 1, 1, 0.05)
 const DEFAULT_BORDER_LINE = Color(0.96, 0.96, 0.96, 0.75)
+const GRID_COLOR = Color(0.78, 0.78, 0.78, 0.35)
 
 # ── Node references ─────────────────────────────────────────────────────────
 
@@ -929,10 +936,63 @@ func _get_row_node(data_idx: int):
 
 # ── Borders overlay ─────────────────────────────────────────────────────
 
+func _draw_grid():
+	if datas_flat.is_empty() or actual_row_height <= 0 or col_widths.is_empty():
+		return
+	if not is_instance_valid(borders_overlay) or not is_instance_valid(scroll_container):
+		return
+
+	var view_h = scroll_container.size.y
+	var scroll_val = scroll_container.scroll_vertical
+	var fo = int(show_frame)
+
+	# Visible row range
+	var first_r = max(0, int(scroll_val / actual_row_height))
+	var last_r = min(datas_flat.size() - 1, int((scroll_val + view_h) / actual_row_height))
+	if last_r < first_r:
+		return
+
+	# Data column indices in col_widths
+	var first_dc = fo
+	var last_dc = col_widths.size() - 1
+	if last_dc < first_dc:
+		return
+
+	var left_x = _get_col_x(first_dc)
+	var right_x = _get_col_x(last_dc) + col_widths[last_dc]
+
+	# Y range clamped to viewport
+	var y0 = first_r * actual_row_height - scroll_val
+	var y1 = (last_r + 1) * actual_row_height - scroll_val
+	if y0 < 0.0:
+		y0 = 0.0
+	if y1 > view_h:
+		y1 = view_h
+
+	# Horizontal grid lines — at bottom of each visible row
+	for r in range(first_r, last_r + 1):
+		var y = (r + 1) * actual_row_height - scroll_val
+		if y < y0 or y > y1:
+			continue
+		borders_overlay.draw_line(Vector2(left_x, y), Vector2(right_x, y), GRID_COLOR, 1.0)
+
+	# Vertical grid lines — left of first data column and right of each data column
+	var x_first = _get_col_x(first_dc)
+	borders_overlay.draw_line(Vector2(x_first, y0), Vector2(x_first, y1), GRID_COLOR, 1.0)
+	for ci in range(first_dc, last_dc + 1):
+		var x = _get_col_x(ci) + col_widths[ci]
+		if x > right_x:
+			break
+		borders_overlay.draw_line(Vector2(x, y0), Vector2(x, y1), GRID_COLOR, 1.0)
+
 func _on_borders_overlay_draw():
+	# Grid lines (drawn first, behind selection borders)
+	if show_grid:
+		_draw_grid()
+
 	if not support_select_border:
 		return
-	if selected_borders.is_empty() and exclude_border.is_empty():
+	if selected_borders.is_empty() and exclude_border.is_empty() and not autofill_info.has("rect"):
 		return
 
 	var view_h = scroll_container.size.y
