@@ -1,5 +1,5 @@
 @tool
-extends MarginContainer
+extends Control
 
 signal row_clicked(row_index: int, mouse_button_index: int, data)
 signal row_deleted(datas)
@@ -120,7 +120,6 @@ var datas_flat: Array = []                # working copy (mirror of datas)
 var _entered_tree := false
 
 var vbox_container: VBoxContainer
-var overlay_wrapper: MarginContainer
 
 # Selection / border state
 var selected_borders: Array[Dictionary] = []
@@ -244,18 +243,13 @@ func _construct_tree():
 	row_container.mouse_entered.connect(_on_data_area_mouse_entered)
 	row_container.mouse_exited.connect(_on_data_area_mouse_exited)
 
-	# Borders overlay — wrapped in MarginContainer so root layout can't override position
-	overlay_wrapper = MarginContainer.new()
-	overlay_wrapper.name = "OverlayWrapper"
-	overlay_wrapper.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(overlay_wrapper)
-
+	# Borders overlay — direct child of root, repositioned after container layout via NOTIFICATION_SORT_CHILDREN
 	borders_overlay = Control.new()
 	borders_overlay.name = "BordersOverlay"
 	borders_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	borders_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	borders_overlay.clip_contents = true
 	borders_overlay.draw.connect(_on_borders_overlay_draw)
-	overlay_wrapper.add_child(borders_overlay)
+	add_child(borders_overlay)
 
 	# ── Popup menu ──
 	popup_menu_text = PopupMenu.new()
@@ -397,7 +391,7 @@ func rebuild_header():
 
 	# 通知 VBoxContainer 重新布局（header 尺寸变化后需要）
 	vbox_container.queue_sort()
-
+	_update_min_width()
 
 func _update_frame_col_width() -> float:
 	if not show_frame or col_widths.is_empty():
@@ -433,17 +427,23 @@ func _on_table_resized():
 		col_widths[i] = max(MIN_COL_WIDTH, col_widths[i] * ratio)
 	_apply_header_widths()
 	sync_row_widths()
+	_update_min_width()
+	_update_borders_overlay_size()
 	borders_overlay.queue_redraw()
 
 
+func _update_min_width():
+	# Minimum width = sum of all column widths (no gaps between columns)
+	var total = 0.0
+	for w in col_widths:
+		total += w
+	custom_minimum_size.x = total
+
 func _update_borders_overlay_size():
-	if is_instance_valid(overlay_wrapper) and is_instance_valid(scroll_container):
-		var sp = scroll_container.position
-		var ss = scroll_container.size
-		overlay_wrapper.add_theme_constant_override("margin_left", sp.x)
-		overlay_wrapper.add_theme_constant_override("margin_top", sp.y)
-		overlay_wrapper.add_theme_constant_override("margin_right", max(0, overlay_wrapper.size.x - sp.x - ss.x))
-		overlay_wrapper.add_theme_constant_override("margin_bottom", max(0, overlay_wrapper.size.y - sp.y - ss.y))
+	# Reposition overlay to cover scroll_container
+	if is_instance_valid(borders_overlay) and is_instance_valid(scroll_container):
+		borders_overlay.position = scroll_container.position
+		borders_overlay.size = scroll_container.size
 
 func _apply_header_widths():
 	for i in min(header_buttons.size(), col_widths.size()):
@@ -499,6 +499,7 @@ func _input(event):
 				_apply_header_widths()
 				sync_row_widths()
 				_update_dragger_position()
+				_update_min_width()
 				borders_overlay.queue_redraw()
 		elif over_header:
 			var header_pos = mouse_global - header_container.global_position
