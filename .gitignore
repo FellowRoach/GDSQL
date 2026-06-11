@@ -19,3 +19,8 @@ mono_crash.*.json
 .vscode/settings.json
 addons/gdUnit4/GdUnitRunner.cfg
 reports/
+
+# VitePress docs
+docs/node_modules/
+docs/.vitepress/dist/
+docs/.vitepress/cache/
