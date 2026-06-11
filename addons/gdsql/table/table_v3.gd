@@ -1037,6 +1037,7 @@ func _replace_control(old: Control, new_ctl: Control):
 # ── Row operations ────────────────────────────────────────────────────────
 
 func append_data(a_data):
+	datas.append(a_data)
 	datas_flat.append(a_data)
 	if columns.is_empty() and a_data is Dictionary:
 		for key in a_data:
@@ -1049,6 +1050,7 @@ func append_data(a_data):
 
 func insert_data(pos: int, a_data):
 	clear_borders()
+	datas.insert(pos, a_data)
 	datas_flat.insert(pos, a_data)
 	if columns.is_empty() and a_data is Dictionary:
 		for key in a_data:
@@ -1063,6 +1065,7 @@ func remove_data_at(index: int, free_data: bool):
 		return
 	if free_data and datas_flat[index] is GDSQL.DictionaryObject:
 		datas_flat[index].free_all_custom_display_controls()
+	datas.remove_at(index)
 	datas_flat.remove_at(index)
 	update_content_size()
 	_on_scroll(data_scroll.scroll_vertical)
@@ -1072,6 +1075,8 @@ func move_data(from: int, to: int):
 		return
 	clear_borders()
 	var data = datas_flat[from]
+	datas.remove_at(from)
+	datas.insert(to, data)
 	datas_flat.remove_at(from)
 	datas_flat.insert(to, data)
 	update_content_size()
@@ -1560,7 +1565,6 @@ func _on_corner_drag_moving(diff: Vector2):
 	if pos_row < 0 or pos_col < 0:
 		return
 
-	print("[DRAG] src_start=", src_start, " src_end=", src_end, " mouse_row=", pos_row, " mouse_col=", pos_col)
 
 	# Compute cell center for threshold
 	var ci = pos_col
@@ -1584,7 +1588,6 @@ func _on_corner_drag_moving(diff: Vector2):
 		# Extending left: recompute full rect including new start
 		var sp = Vector2(min(src_start.x, pos_row), pos_col)
 		var ep = Vector2(max(src_end.x, pos_row + 1), src_end.y)
-		print("[DRAG] LEFT branch sp=", sp, " ep=", ep)
 		add_autofill_border(sp, ep, "add")
 		return
 	elif pos_col >= src_end.y:
@@ -1606,7 +1609,6 @@ func _on_corner_drag_moving(diff: Vector2):
 		# Extending up: recompute full rect
 		var sp = Vector2(pos_row, min(src_start.y, pos_col))
 		var ep = Vector2(src_end.x, max(src_end.y, pos_col + 1))
-		print("[DRAG] UP branch sp=", sp, " ep=", ep)
 		add_autofill_border(sp, ep, "add")
 		return
 	elif pos_row >= src_end.x:
@@ -1681,7 +1683,6 @@ func _commit_autofill():
 
 	var src_start = Vector2i(autofill_info["start"])
 	var src_sel = selected_borders.front()["rect"] as Rect2 if not selected_borders.is_empty() else af_rect
-	print("[COMMIT] rect=", af_rect, " sel_start=", src_sel.position, " sel_end=", src_sel.end)
 	if af_rect.position == src_sel.position and af_rect.end == src_sel.end:
 		autofill_info = {}
 		borders_overlay.queue_redraw()
@@ -1710,7 +1711,6 @@ func _commit_autofill():
 
 	# Upward fill: extend rows upward (reverse data source)
 	if af_rect.position.x < src_sel.position.x:
-		print("[FILL] UPWARD pos_x=", af_rect.position.x, " < ", src_sel.position.x, " cols=", src_sel.position.y, "-", src_sel.end.y)
 		var fill_start = int(af_rect.position.x)
 		var fill_end = int(src_sel.position.x)
 		for col in range(int(src_sel.position.y), int(src_sel.end.y)):
@@ -1754,7 +1754,6 @@ func _commit_autofill():
 
 	# Leftward fill: extend columns leftward (reverse data source)
 	if af_rect.position.y < src_sel.position.y:
-		print("[FILL] LEFTWARD pos_y=", af_rect.position.y, " < ", src_sel.position.y, " rows=", src_sel.position.x, "-", src_sel.end.x)
 		var fill_start = int(af_rect.position.y)
 		var fill_end = int(src_sel.position.y)
 		for row in range(int(src_sel.position.x), int(src_sel.end.x)):
