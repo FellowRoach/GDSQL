@@ -606,20 +606,23 @@ func gen_table_node(columns: Array, table_datas: Array, is_union_all: bool, join
 	hsplit.add_child(mc)
 	
 	# 将表格放入水平 ScrollContainer，列数多时用户可以水平滚动查看
-	var table_scroll = ScrollContainer.new()
-	table_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	table_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	table_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	table_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	mc.add_child(table_scroll)
+	#var table_scroll = ScrollContainer.new()
+	#table_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	#table_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	#table_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	#table_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	#mc.add_child(table_scroll)
 	
-	var table: Control = load("res://addons/gdsql/table/table.tscn").instantiate()
+	var table: Control = load("res://addons/gdsql/table/table_v3.gd").new()
+	table.name = "Table"
 	table.show_frame = true
+	table.show_grid = true
 	table.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	table.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	# 每列至少 120px，让表格在列数多时自然撑宽，触发 ScrollContainer 水平滚动
 	table.custom_minimum_size.x = columns.size() * 120
-	table_scroll.add_child(table)
+	#table_scroll.add_child(table, true)
+	mc.add_child(table, true)
 	table.set_meta("columns", columns)
 	table.column_tips = columns.map(func(v): 
 		return type_string(v["Data Type"]) if v.has("Data Type") else "")
@@ -814,10 +817,11 @@ func gen_table_node(columns: Array, table_datas: Array, is_union_all: bool, join
 						
 			# 弹对话框让用户选择更新哪些数据
 			var arr: Array[Array] = [["Please confirm:"]]
-			var table_2 = load("res://addons/gdsql/table/table.tscn").instantiate()
+			var table_2 = load("res://addons/gdsql/table/table_v3.gd").new()
 			table_2.ratios = [15.0, 0.4, 2.0, 4.0, 8.0] as Array[float]
 			table_2.columns = ["#", tr("Action"), tr("Extra info"), tr("Do"), tr("Status")]
 			table_2.column_tips = ["", "", "If necessary.", "Only execute checked actions.", "Execute status."]
+			table_2.show_grid = true
 			var check_all_btn = CheckBox.new()
 			check_all_btn.text = tr("Check all")
 			check_all_btn.button_pressed = true
