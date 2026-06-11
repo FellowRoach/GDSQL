@@ -664,7 +664,6 @@ func _on_scroll(value: float):
 	borders_overlay.queue_redraw()
 
 func _on_data_scroll_changed(value: float):
-	print("[DATA_SCROLL] value_changed=", value)
 	_on_scroll(value)
 
 func _on_data_hscroll_changed(value: float):
