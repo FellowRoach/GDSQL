@@ -558,6 +558,12 @@ func _input(event):
 				col_widths[_drag_col_idx] = new_w
 				_apply_header_widths()
 				sync_data_row_widths()
+				# Update total content width for horizontal scrollbar
+				var tw = 0.0
+				for w in col_widths:
+					tw += w
+				data_row_container.custom_minimum_size.x = tw
+				data_scroll.queue_sort()
 				_update_dragger_position()
 				borders_overlay.queue_redraw()
 		elif over_header:
