@@ -18,7 +18,7 @@ signal row_deleted(datas) # {index: data}
 @export var support_select_border: bool = true
 ## 是否显示外纵向框架1\2\3\4...
 @export var show_frame: bool = false
-## 行的高度是否进行扩展并填充（v3固定行高，设为true相当于填充可用高度）
+## 行的高度是否进行扩展并填充
 @export var row_expend_and_fill: bool = false
 ## 是否显示网格线（类似Excel）
 @export var show_grid: bool = false:
@@ -874,6 +874,8 @@ func _ensure_frame_pool_size(needed: int):
 func _create_data_row_node() -> Control:
 	var row = PanelContainer.new()
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	if row_expend_and_fill:
+		row.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	row.custom_minimum_size.y = ROW_HEIGHT
 	row.mouse_filter = Control.MOUSE_FILTER_PASS
 	row.add_theme_stylebox_override("panel", style_box_empty)
