@@ -2,7 +2,7 @@
 extends Control
 
 signal row_clicked(row_index: int, mouse_button_index: int, data)
-signal row_deleted(datas)
+signal row_deleted(datas) # {index: data}
 
 # ── Exports ──────────────────────────────────────────────────────────────────
 
@@ -2137,43 +2137,124 @@ func _on_button_edit_pressed():
 	inspect_highlight_rows()
 
 func _on_button_copy_pressed():
-	var data_list = get_data_of_highlight_rows()
-	if data_list.is_empty():
+	if selected_borders.is_empty():
 		return
-	var lines = []
-	for d in data_list:
-		var row_arr = []
-		for c in columns.size():
-			var val = ""
-			if d is Array and c < d.size():
-				val = str(d[c])
-			elif d is Dictionary:
-				if columns.size() > c:
-					var keys = d.keys()
-					if c < keys.size() and keys[c] in d:
-						val = str(d[keys[c]])
-			elif d is GDSQL.DictionaryObject:
-				val = str(d._get_by_index(c))
-			row_arr.append(val)
-		lines.append("\t".join(row_arr))
-	DisplayServer.clipboard_set("\n".join(lines))
-
+	if selected_borders.size() > 1:
+		GDSQL.WorkbenchManager.create_accept_dialog(tr("Can not apply copy to multi-selected areas."))
+		return
+	var rect = selected_borders.front()["rect"] as Rect2
+	var map = {}
+	var i_index = -1
+	for i in range(int(rect.position.x), int(rect.end.x)):
+		i_index += 1
+		if not map.has(i_index):
+			map[i_index] = {}
+		var j_index = -1
+		for j in range(int(rect.position.y), int(rect.end.y)):
+			j_index += 1
+			if datas_flat[i] is Array:
+				map[i_index][j_index] = datas_flat[i][j]
+			elif datas_flat[i] is Dictionary:
+				map[i_index][j_index] = datas_flat[i][(datas_flat[i] as Dictionary).keys()[j]]
+			elif datas_flat[i] is GDSQL.DictionaryObject:
+				map[i_index][j_index] = (datas_flat[i] as GDSQL.DictionaryObject)._get_by_index(j)
+			else:
+				push_error("Table only support Array, Dictionary or GDSQL.DictionaryObject.")
+	var content = "~~@@GDSQL-TABLE-COPY-CONTENT@@~~" + var_to_str(map)
+	DisplayServer.clipboard_set(content)
 func _on_button_paste_pressed():
-	var text = DisplayServer.clipboard_get()
-	if text.is_empty():
+	if selected_borders.is_empty():
 		return
-	var lines = text.split("\n")
-	var data_list = get_data_of_highlight_rows()
-	if data_list.is_empty():
+	if not editable:
 		return
-	for i in min(lines.size(), data_list.size()):
-		var vals = lines[i].split("\t")
-		var d = data_list[i]
-		for j in min(vals.size(), columns.size()):
-			if d is GDSQL.DictionaryObject:
-				if not (d.get_prop_usage_by_index(j) & PROPERTY_USAGE_READ_ONLY):
-					d._set_by_index(j, vals[j])
-
+	var content = DisplayServer.clipboard_get()
+	var map = null
+	var prefix = "~~@@GDSQL-TABLE-COPY-CONTENT@@~~"
+	if content.begins_with(prefix):
+		map = str_to_var(content.substr(prefix.length()))
+		if not map is Dictionary:
+			map = null
+			var msg = "Clipboard has content that begins with %s but fail to convert to a Dictionary." % prefix
+			EditorInterface.get_editor_toaster().push_toast(msg, EditorToaster.SEVERITY_WARNING)
+			push_warning(msg)
+	if map == null:
+		for border in selected_borders:
+			var rect = border["rect"] as Rect2
+			for i in range(int(rect.position.x), int(rect.end.x)):
+				var dict_obj = datas_flat[i] as GDSQL.DictionaryObject
+				for j in range(int(rect.position.y), int(rect.end.y)):
+					if dict_obj.get_prop_usage_by_index(j) & PROPERTY_USAGE_READ_ONLY:
+						var msg = "Skip a readonly cell. row: %d, col: %d" % [i, j]
+						push_warning(msg)
+						GDSQL.WorkbenchManager.add_log_history.emit("Warn", 0, "Paste", msg)
+					else:
+						dict_obj._set_by_index(j, type_convert(content, dict_obj.get_prop_type_by_index(j)))
+	else:
+		map = map as Dictionary
+		var map_width = map.size()
+		var map_height = (map[map.keys()[0]] as Dictionary).size()
+		if selected_borders.size() == 1:
+			var rect = selected_borders.front()["rect"] as Rect2
+			var rows = range(int(rect.position.x),
+				min(datas_flat.size(), int(rect.position.x) + max(map_width, map_width * int(rect.size.x / map_width))))
+			var cols = range(int(rect.position.y),
+				min(columns.size(), int(rect.position.y) + max(map_height, map_height * int(rect.size.y / map_height))))
+			var i_index = -1
+			for i in rows:
+				i_index += 1
+				i_index %= map_width
+				var dict_obj = datas_flat[i] as GDSQL.DictionaryObject
+				var j_index = -1
+				for j in cols:
+					j_index += 1
+					j_index %= map_height
+					if dict_obj.get_prop_usage_by_index(j) & PROPERTY_USAGE_READ_ONLY:
+						var msg = "Skip a readonly cell. row: %d, col: %d" % [i, j]
+						push_warning(msg)
+						GDSQL.WorkbenchManager.add_log_history.emit("Warn", 0, "Paste", msg)
+					else:
+						dict_obj._set_by_index(j, type_convert(map[i_index][j_index], dict_obj.get_prop_type_by_index(j)))
+			var border = {
+				"start": selected_borders.front()["start"],
+				"rect": Rect2(rect.position, Vector2(rows.size(), cols.size()))
+			}
+			add_border(border)
+		else:
+			for border in selected_borders:
+				var rect = border["rect"] as Rect2
+				if not ((rect.size.x == 1 and rect.size.y == 1) \
+				or int(rect.size.x) % map_width == 0 or int(rect.size.y) % map_height == 0):
+					GDSQL.WorkbenchManager.create_accept_dialog(tr("Cannot paste because the target areas' shape are different with source area."))
+					return
+			var selected_borders_bak = selected_borders.duplicate(true)
+			clear_borders()
+			for a_border in selected_borders_bak:
+				var rect = a_border["rect"] as Rect2
+				var rows = range(int(rect.position.x),
+					min(datas_flat.size(), int(rect.position.x) + max(map_width, map_width * int(rect.size.x / map_width))))
+				var cols = range(int(rect.position.y),
+					min(columns.size(), int(rect.position.y) + max(map_height, map_height * int(rect.size.y / map_height))))
+				var i_index = -1
+				for i in rows:
+					i_index += 1
+					i_index %= map_width
+					var dict_obj = datas_flat[i] as GDSQL.DictionaryObject
+					var j_index = -1
+					for j in cols:
+						j_index += 1
+						j_index %= map_height
+						if dict_obj.get_prop_usage_by_index(j) & PROPERTY_USAGE_READ_ONLY:
+							var msg = "Skip a readonly cell. row: %d, col: %d" % [i, j]
+							push_warning(msg)
+							GDSQL.WorkbenchManager.add_log_history.emit("Warn", 0, "Paste", msg)
+						else:
+							dict_obj._set_by_index(j, type_convert(map[i_index][j_index], dict_obj.get_prop_type_by_index(j)))
+				var border = {
+					"start": a_border["start"],
+					"rect": Rect2(rect.position, Vector2(rows.size(), cols.size())),
+					"ctrl": true
+				}
+				add_border(border)
 func _on_button_delete_pressed():
 	var data_list = get_data_of_highlight_rows()
 	for d in data_list:
@@ -2371,21 +2452,19 @@ func _on_button_edit_button_down():
 
 func _on_button_delete_row_pressed():
 	var rows_idx = []
+	var deleted_datas = {}
 	for b in selected_borders:
 		var r = b["rect"] as Rect2
 		for i in range(int(r.position.x), int(r.end.x)):
 			if not rows_idx.has(i):
 				rows_idx.append(i)
+				deleted_datas[i] = datas[i]
 	rows_idx.sort()
 	rows_idx.reverse()
 	for i in rows_idx:
 		if i < datas_flat.size():
-			row_deleted.emit(datas_flat[i])
-			datas_flat.remove_at(i)
-	clear_borders()
-	update_content_size()
-	update_frame_col_width_if_needed()
-	_on_scroll(data_scroll.scroll_vertical)
+			remove_data_at(i, true)
+	row_deleted.emit(deleted_datas)
 
 # ── Popup menu ─────────────────────────────────────────────────────────
 
