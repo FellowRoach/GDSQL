@@ -2,6 +2,7 @@
 extends Control
 
 signal row_clicked(row_index: int, mouse_button_index: int, data)
+const ALL_STATES = ["hover", "pressed", "hover_pressed", "hover_mirrored", "pressed_mirrored", "hover_pressed_mirrored"]
 signal row_deleted(datas) # {index: data}
 
 # ── Exports ──────────────────────────────────────────────────────────────────
@@ -512,6 +513,7 @@ var _drag_col_idx := -1
 var _drag_start_x := 0.0
 var _drag_start_width := 0.0
 var _drag_press_active := false
+var _saved_hover_styles: Array = []
 
 func _get_col_boundary_at_x(local_x: float) -> int:
 	# local_x is in header_container coordinates.
@@ -547,6 +549,23 @@ func _input(event):
 					_drag_start_x = mouse_global.x
 					_drag_start_width = col_widths[col_idx]
 					_drag_press_active = true
+					# 拖拽时禁用表头所有状态样式，避免闪烁
+					_saved_hover_styles.clear()
+					for hbtn in header_buttons:
+						_saved_hover_styles.append(hbtn.get_theme_stylebox("hover"))
+						_saved_hover_styles.append(hbtn.get_theme_stylebox("pressed"))
+						_saved_hover_styles.append(hbtn.get_theme_stylebox("hover_pressed"))
+						_saved_hover_styles.append(hbtn.get_theme_stylebox("hover_mirrored"))
+						_saved_hover_styles.append(hbtn.get_theme_stylebox("pressed_mirrored"))
+						_saved_hover_styles.append(hbtn.get_theme_stylebox("hover_pressed_mirrored"))
+						var hbtn_ns = hbtn.get_theme_stylebox("normal")
+						if hbtn_ns:
+							hbtn.add_theme_stylebox_override("hover", hbtn_ns)
+							hbtn.add_theme_stylebox_override("pressed", hbtn_ns)
+							hbtn.add_theme_stylebox_override("hover_pressed", hbtn_ns)
+							hbtn.add_theme_stylebox_override("hover_mirrored", hbtn_ns)
+							hbtn.add_theme_stylebox_override("pressed_mirrored", hbtn_ns)
+							hbtn.add_theme_stylebox_override("hover_pressed_mirrored", hbtn_ns)
 					return  # don't let _gui_input see this event
 			elif not mb.pressed:
 				if _drag_press_active:
@@ -590,6 +609,19 @@ func _input(event):
 func _clear_drag_flag():
 	_drag_press_active = false
 	_drag_col_idx = -1
+	# 恢复表头所有状态样式
+	var si = 0
+	for hbtn in header_buttons:
+		for state_name in ALL_STATES:
+			if si >= _saved_hover_styles.size():
+				break
+			var saved = _saved_hover_styles[si]
+			si += 1
+			if saved:
+				hbtn.add_theme_stylebox_override(state_name, saved)
+			else:
+				hbtn.remove_theme_stylebox_override(state_name)
+	_saved_hover_styles.clear()
 
 ## 双击列分隔线时，自动调整列宽以适应文字内容（仅文本，忽略非文本控件）
 func _auto_fit_column(col_idx: int):
