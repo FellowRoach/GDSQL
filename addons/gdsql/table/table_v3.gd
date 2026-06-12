@@ -1949,6 +1949,13 @@ func _on_data_row_container_gui_input(event: InputEvent):
 			if mb.button_index == MOUSE_BUTTON_LEFT or mb.button_index == MOUSE_BUTTON_RIGHT:
 				if cell_pos.x < datas_flat.size():
 					row_clicked.emit(cell_pos.x, mb.button_index, datas_flat[cell_pos.x])
+				if mb.button_index == MOUSE_BUTTON_RIGHT:
+					popup_menu_text.set_item_metadata(0, [cell_pos.y, cell_pos.x])
+					popup_menu_text.set_item_metadata(1, [cell_pos.y, cell_pos.x])
+					popup_menu_text.set_item_metadata(2, [cell_pos.y, cell_pos.x])
+					popup_menu_text.position = DisplayServer.mouse_get_position()
+					if not popup_menu_text.visible:
+						popup_menu_text.popup()
 		else:
 			# Mouse release
 			if exclude_mode and start_drag:
@@ -2469,38 +2476,74 @@ func _on_button_delete_row_pressed():
 # ── Popup menu ─────────────────────────────────────────────────────────
 
 func _on_popup_menu_index_pressed(index: int):
-	match index:
-		0:  # Copy Field
-			var data_list = get_data_of_highlight_rows()
-			if data_list.is_empty():
+	match popup_menu_text.get_item_text(index):
+		"Copy Field":
+			var info = popup_menu_text.get_item_metadata(index)
+			if not info:
 				return
+			var highlight_rows = get_data_of_highlight_rows()
+			if highlight_rows.is_empty():
+				var row_idx = info[1]
+				highlight_rows.push_back(datas_flat[row_idx])
+				
+			var col_index = info[0]
+			var arr_content = []
+			for data in highlight_rows:
+				var value = data[col_index] if (data is Array or data is Dictionary) \
+					else (data as GDSQL.DictionaryObject)._get_by_index(col_index)
+				match typeof(value):
+					TYPE_NIL, TYPE_BOOL, TYPE_INT, TYPE_FLOAT, TYPE_STRING, TYPE_STRING_NAME:
+						arr_content.push_back(str(value))
+					TYPE_OBJECT:
+						if value is Resource:
+							arr_content.push_back(value.resource_path)
+						else:
+							arr_content.push_back(var_to_str(value))
+					_:
+						arr_content.push_back(var_to_str(value))
+			DisplayServer.clipboard_set("\n".join(arr_content))
+		"Copy Line":
+			var info = popup_menu_text.get_item_metadata(index)
+			if not info:
+				return
+				
+			var highlight_rows = get_data_of_highlight_rows()
+			if highlight_rows.is_empty():
+				var row_idx = info[1]
+				highlight_rows.push_back(datas_flat[row_idx])
+				
 			var arr = []
-			for d in data_list:
-				for c in columns.size():
-					var val = str(d._get_by_index(c)) if d is GDSQL.DictionaryObject else str(d)
-					arr.append(val)
-					break
+			for data in highlight_rows:
+				var arr_content = []
+				for col_index in columns.size():
+					var value = data[col_index] if (data is Array or data is Dictionary) \
+						else (data as GDSQL.DictionaryObject)._get_by_index(col_index)
+					match typeof(value):
+						TYPE_NIL, TYPE_BOOL, TYPE_INT, TYPE_FLOAT, TYPE_STRING, TYPE_STRING_NAME:
+							arr_content.push_back(var_to_str(value))
+						TYPE_OBJECT:
+							if value is Resource:
+								arr_content.push_back(var_to_str(value.resource_path))
+							else:
+								arr_content.push_back(var_to_str(value))
+						_:
+							arr_content.push_back(var_to_str(value))
+				arr.push_back("\t".join(arr_content))
 			DisplayServer.clipboard_set("\n".join(arr))
-		1:  # Copy Line
-			var data_list = get_data_of_highlight_rows()
-			if data_list.is_empty():
-				return
-			var lines = []
-			for d in data_list:
-				var row_arr = []
-				for c in columns.size():
-					var val = str(d._get_by_index(c)) if d is GDSQL.DictionaryObject else str(d)
-					row_arr.append(val)
-				lines.append("\t".join(row_arr))
-			DisplayServer.clipboard_set("\n".join(lines))
-		2:  # Delete
-			var data_list = get_data_of_highlight_rows()
-			for d in data_list:
-				if d is GDSQL.DictionaryObject:
-					for c in columns.size():
-						if not (d.get_prop_usage_by_index(c) & PROPERTY_USAGE_READ_ONLY):
-							d._set_default_by_index(c)
-
+		"Delete":
+			if selected_borders.is_empty():
+				var info = popup_menu_text.get_item_metadata(index)
+				if info:
+					var row_idx = info[1]
+					if row_idx >= 0 and row_idx < datas_flat.size():
+						var deleted_datas = {row_idx: datas_flat[row_idx]}
+						remove_data_at(row_idx, true)
+						row_deleted.emit(deleted_datas)
+			else:
+				_on_button_delete_row_pressed()
+				
+	popup_menu_text.set_item_metadata(index, null)
+	
 # ── Inspector ──────────────────────────────────────────────────────────
 
 func inspect_highlight_rows():
