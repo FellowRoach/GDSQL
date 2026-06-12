@@ -1556,6 +1556,17 @@ func borders_has_same_rows() -> bool:
 			return false
 	return true
 
+func borders_has_same_cols() -> bool:
+	if selected_borders.is_empty():
+		return false
+	var start_c = (selected_borders.front()["rect"] as Rect2).position.y
+	var end_c = (selected_borders.front()["rect"] as Rect2).end.y
+	for b in selected_borders:
+		var r = b["rect"] as Rect2
+		if r.position.y != start_c or r.end.y != end_c:
+			return false
+	return true
+
 func pos_is_selected(pos: Vector2i) -> bool:
 	for b in selected_borders:
 		var r = b["rect"] as Rect2
@@ -1931,6 +1942,8 @@ func _on_data_row_container_gui_input(event: InputEvent):
 					_handle_shift_click(cell_pos)
 				elif mb.ctrl_pressed:
 					_handle_ctrl_click(cell_pos)
+				elif mb.double_click and editable:
+					_on_button_edit_button_down()
 				else:
 					_handle_normal_click(cell_pos)
 
@@ -2161,6 +2174,193 @@ func _on_button_delete_pressed():
 			for c in columns.size():
 				if not (d.get_prop_usage_by_index(c) & PROPERTY_USAGE_READ_ONLY):
 					d._set_default_by_index(c)
+
+
+func _on_button_edit_button_down():
+	if not editable:
+		return
+
+	var selected_index
+	if borders_has_same_cols():
+		selected_index = range(selected_borders.front()["rect"].position.y, selected_borders.front()["rect"].end.y)
+	elif borders_has_same_rows():
+		selected_index = []
+		for border in selected_borders:
+			var rect = border["rect"] as Rect2
+			for i in range(rect.position.y, rect.end.y):
+				if not selected_index.has(i):
+					selected_index.push_back(i)
+		selected_index.sort()
+	else:
+		return
+
+	var rows = get_data_of_highlight_rows()
+	if rows.is_empty():
+		return
+
+	var selected_cols = []
+	for i in selected_index:
+		selected_cols.push_back((rows.front() as GDSQL.DictionaryObject).__get_index_prop(i))
+
+	var readonly_props = []
+	var p_usage = {}
+	for data in rows:
+		var plist = (data as Object).get_property_list()
+		for F in plist:
+			if not p_usage.has(F["name"]):
+				p_usage[F["name"]] = F["usage"]
+				if F["usage"] & PROPERTY_USAGE_READ_ONLY and not readonly_props.has(F["name"]):
+					readonly_props.push_back(F["name"])
+			elif p_usage[F["name"]] != F["usage"] and p_usage[F["name"]] != PROPERTY_USAGE_DEFAULT:
+				p_usage[F["name"]] = PROPERTY_USAGE_DEFAULT
+
+	var usage = {}
+	var p_list = []
+	var data_list = []
+	var nc = 0
+	for data in rows:
+		if not data is Object:
+			continue
+
+		var plist = (data as Object).get_property_list()
+		for F in plist:
+			F["usage"] = p_usage[F["name"]]
+			if not usage.has(F["name"]):
+				usage[F["name"]] = {"uses": 0, "info": F}
+				data_list.push_back(usage[F["name"]])
+
+			if usage[F["name"]]["info"] == F:
+				usage[F["name"]]["uses"] += 1
+
+		nc += 1
+
+	for E in data_list:
+		if nc == E["uses"]:
+			p_list.push_back(E["info"])
+
+	var get_common_class_name = func():
+		var a_class_name = null
+		var check_again = true
+		while check_again:
+			check_again = false
+			for data in rows:
+				if not data is Object:
+					continue
+				data = data as Object
+				var obj_class_name = data.get_class()
+				if a_class_name == null:
+					a_class_name = obj_class_name
+				if obj_class_name == "Object":
+					return obj_class_name
+				if a_class_name == obj_class_name or ClassDB.is_parent_class(obj_class_name, a_class_name):
+					continue
+				a_class_name = ClassDB.get_parent_class(a_class_name)
+				check_again = true
+				break
+		return a_class_name
+
+	var common_class_name = get_common_class_name.call()
+	if common_class_name == null:
+		push_error("Can not find common parent class name")
+		return
+
+	var gdscript = GDSQL.GDSQLUtils.gdscript
+	gdscript.source_code = "extends %s" % common_class_name
+	gdscript.reload()
+	var obj = gdscript.new()
+	var props_of_common_class = obj.get_property_list()
+	if obj.has_method("free") and not obj is RefCounted:
+		obj.free()
+
+	for i in props_of_common_class:
+		for j in p_list.size():
+			if i == p_list[j]:
+				p_list.remove_at(j)
+				break
+
+	var dummy_dict_obj = GDSQL.DictionaryObject.new({})
+	for i in dummy_dict_obj.get_property_list():
+		for j in p_list.size():
+			if i == p_list[j]:
+				p_list.remove_at(j)
+				break
+
+	var tmp_p_list = []
+	for j in p_list.size():
+		if selected_cols.has(p_list[j]["name"]):
+			tmp_p_list.push_back(p_list[j])
+			continue
+		if p_list[j]["usage"] & PROPERTY_USAGE_CATEGORY \
+		or p_list[j]["usage"] & PROPERTY_USAGE_GROUP \
+		or p_list[j]["usage"] & PROPERTY_USAGE_SUBGROUP:
+			for i: String in selected_cols:
+				if i.begins_with(p_list[j]["name"]):
+					tmp_p_list.push_back(p_list[j])
+					break
+	p_list = tmp_p_list
+
+	var impl_data = {}
+	var impl_hint = {}
+	var contains_readonly_prop = false
+	for i in p_list:
+		var prop = i["name"]
+		if not contains_readonly_prop and readonly_props.has(prop):
+			contains_readonly_prop = true
+		var common_value = null
+		var inited = false
+		for data in rows:
+			if not data is Object:
+				continue
+			if not inited:
+				common_value = data.get(prop)
+				impl_hint[prop] = {
+					"type": i["type"],
+					"usage": i["usage"],
+					"hint": i["hint"],
+					"hint_string": i["hint_string"],
+				}
+				inited = true
+			elif common_value != data.get(prop):
+				common_value = null
+				break
+		impl_data[prop] = common_value
+
+	var impl_dict_obj = GDSQL.DictionaryObject.new(impl_data, impl_hint)
+
+	var on_value_changed_ref = []
+	var on_value_changed = func(prop, new_value, _old_value):
+		var valid = false
+		for data in rows:
+			if not data is Object or not is_instance_valid(data):
+				continue
+			if data is GDSQL.DictionaryObject:
+				if not (data.get_prop_usage(prop) & PROPERTY_USAGE_READ_ONLY):
+					data.set(prop, new_value)
+			else:
+				var props = data.get_property_list()
+				for ii in props:
+					if ii["name"] == prop:
+						if not ii["usage"] & PROPERTY_USAGE_READ_ONLY:
+							data.set(prop, new_value)
+						break
+			valid = true
+		if not valid:
+			impl_dict_obj.value_changed.disconnect(on_value_changed_ref[0])
+			EditorInterface.inspect_object(null)
+	on_value_changed_ref.push_back(on_value_changed)
+	impl_dict_obj.value_changed.connect(on_value_changed)
+	impl_dict_obj.set_meta("align", "vertical")
+	var arr: Array[Array] = [
+		[impl_dict_obj],
+	]
+	if rows.size() > 1:
+		arr.insert(0, ["Edit %d rows%s" % [rows.size(), "" if selected_cols.size() > 1 else "'s " + Array(selected_cols[0].rsplit(" ")).back()]])
+	if contains_readonly_prop:
+		arr.insert(0, ["NOTICE: Some rows that contain \nreadonly prop can not be modified!"])
+	var min_width = 300 if selected_cols.size() == 1 else 600
+	var min_height = 0 if selected_cols.size() < 5 else 800
+	var pos = DisplayServer.mouse_get_position() + Vector2i(20, 15)
+	GDSQL.WorkbenchManager.create_custom_popup_panel(arr, pos, Callable(), Callable(), Vector2i(min_width, min_height))
 
 func _on_button_delete_row_pressed():
 	var rows_idx = []
