@@ -125,7 +125,6 @@ var frame_row_pool: Array[Control] = []   # pooled frame row nodes
 var frame_pool_in_use: Array[bool] = []
 var first_visible_idx := 0
 var last_visible_idx := -1
-var _syncing_scroll := false
 
 var datas_flat: Array = []                # working copy (mirror of datas)
 var _entered_tree := false
@@ -141,7 +140,7 @@ var exclude_mode := false
 var exclude_border: Dictionary = {}
 var exclude_border_active := false
 
-var actual_row_height := row_height
+var actual_row_height = row_height
 
 # Autofill state
 var cornor_dragger: Control = null
@@ -1755,7 +1754,7 @@ func _on_corner_drag_start():
 	}
 	borders_overlay.queue_redraw()
 
-func _on_corner_drag_moving(diff: Vector2):
+func _on_corner_drag_moving(_diff: Vector2):
 	if autofill_info.is_empty() or not autofill_info.has("start"):
 		return
 	var src_start = autofill_info["start"] as Vector2
@@ -1860,7 +1859,7 @@ func _commit_autofill():
 		borders_overlay.queue_redraw()
 		return
 
-	var af_start = af_rect.position
+	#var af_start = af_rect.position
 	var af_end = af_rect.end
 
 	# Handle sub mode (shrink selection, set removed cells to defaults)
@@ -2150,7 +2149,7 @@ func _handle_ctrl_click(cell_pos: Vector2i):
 
 # ── Frame / header click handlers ──────────────────────────────────────
 
-func _on_frame_btn_pressed(data_idx: int, btn: Button):
+func _on_frame_btn_pressed(data_idx: int, _btn: Button):
 	if Input.is_key_pressed(KEY_SHIFT):
 		var anchor = last_selected_pos
 		var start_r = min(anchor.x, data_idx)
@@ -2938,8 +2937,8 @@ func _on_menu_copy_field():
 	var arr = []
 	for d in data_list:
 		if columns.size() > 0:
-			var val = _get_data_by_cell(datas_flat.find(d), 0) if datas_flat.has(d) else ""
-			arr.append(str(val))
+			var val = str(_get_data_by_cell(datas_flat.find(d), 0)) if datas_flat.has(d) else ""
+			arr.append(val)
 	DisplayServer.clipboard_set("\n".join(arr))
 
 func _on_menu_copy_line():
@@ -2951,8 +2950,8 @@ func _on_menu_copy_line():
 		var row_arr = []
 		var idx = datas_flat.find(d)
 		for c in columns.size():
-			var val = _get_data_by_cell(idx, c) if idx >= 0 else ""
-			row_arr.append(str(val))
+			var val = str(_get_data_by_cell(idx, c)) if idx >= 0 else ""
+			row_arr.append(val)
 		lines.append("\t".join(row_arr))
 	DisplayServer.clipboard_set("\n".join(lines))
 
