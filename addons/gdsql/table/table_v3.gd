@@ -2,6 +2,8 @@
 extends Control
 
 signal row_clicked(row_index: int, mouse_button_index: int, data)
+enum MENU_ID { COPY_FIELD = 0, COPY_LINE = 1, DELETE = 2 }
+
 const ALL_STATES = ["hover", "pressed", "hover_pressed", "hover_mirrored", "pressed_mirrored", "hover_pressed_mirrored"]
 signal row_deleted(datas) # {index: data}
 
@@ -299,15 +301,15 @@ func _construct_tree():
 	popup_menu_text.name = "PopupMenuText"
 	var icon_copy = load("res://addons/gdsql/img/copy.svg")
 	var icon_trash = load("res://addons/gdsql/img/trash-can.svg")
-	popup_menu_text.add_item("Copy Field", 0)
+	popup_menu_text.add_item("Copy Field", MENU_ID.COPY_FIELD)
 	if icon_copy:
-		popup_menu_text.set_item_icon(popup_menu_text.get_item_index(0), icon_copy)
-	popup_menu_text.add_item("Copy Line", 1)
+		popup_menu_text.set_item_icon(popup_menu_text.get_item_index(MENU_ID.COPY_FIELD), icon_copy)
+	popup_menu_text.add_item("Copy Line", MENU_ID.COPY_LINE)
 	popup_menu_text.add_separator()
-	popup_menu_text.add_item("Delete", 2)
+	popup_menu_text.add_item("Delete", MENU_ID.DELETE)
 	if icon_trash:
-		popup_menu_text.set_item_icon(popup_menu_text.get_item_index(2), icon_trash)
-	popup_menu_text.set_item_disabled(2, true)
+		popup_menu_text.set_item_icon(popup_menu_text.get_item_index(MENU_ID.DELETE), icon_trash)
+	popup_menu_text.set_item_disabled(popup_menu_text.get_item_index(MENU_ID.DELETE), true)
 	popup_menu_text.index_pressed.connect(_on_popup_menu_index_pressed)
 	vbox_container.add_child(popup_menu_text)
 
@@ -2057,16 +2059,16 @@ func _on_data_row_container_gui_input(event: InputEvent):
 				if mb.button_index == MOUSE_BUTTON_RIGHT:
 					if not pos_is_selected(cell_pos):
 						_handle_normal_click(cell_pos)
-					popup_menu_text.set_item_metadata(0, [cell_pos.y, cell_pos.x])
-					popup_menu_text.set_item_metadata(1, [cell_pos.y, cell_pos.x])
-					popup_menu_text.set_item_metadata(2, [cell_pos.y, cell_pos.x])
+					popup_menu_text.set_item_metadata(popup_menu_text.get_item_index(MENU_ID.COPY_FIELD), [cell_pos.y, cell_pos.x])
+					popup_menu_text.set_item_metadata(popup_menu_text.get_item_index(MENU_ID.COPY_LINE), [cell_pos.y, cell_pos.x])
+					popup_menu_text.set_item_metadata(popup_menu_text.get_item_index(MENU_ID.DELETE), [cell_pos.y, cell_pos.x])
 					if show_menu:
 						popup_menu_text.position = DisplayServer.mouse_get_position()
 						if not popup_menu_text.visible:
 							popup_menu_text.popup()
-							popup_menu_text.set_item_disabled(2, not support_delete_row)
+							popup_menu_text.set_item_disabled(popup_menu_text.get_item_index(MENU_ID.DELETE), not support_delete_row or not editable)
 					else:
-						popup_menu_text.set_item_disabled(2, true)
+						popup_menu_text.set_item_disabled(popup_menu_text.get_item_index(MENU_ID.DELETE), true)
 		else:
 			# Mouse release
 			if exclude_mode and start_drag:
