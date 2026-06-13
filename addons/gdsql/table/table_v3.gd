@@ -1031,15 +1031,15 @@ func _add_control_to_cell(wrapper: Control, control: Control, col_idx: int):
 	)
 
 func _fit_control_to_cell(control: Control, wrapper: Control):
-	control.anchor_left = 0.0
-	control.anchor_top = 0.0
-	control.anchor_right = 1.0
-	control.anchor_bottom = 1.0
+	control.anchor_left = ANCHOR_BEGIN
+	control.anchor_top = ANCHOR_BEGIN
+	control.anchor_right = ANCHOR_END
+	control.anchor_bottom = ANCHOR_END
 	control.offset_left = 0.0
 	control.offset_top = 0.0
 	control.offset_right = 0.0
 	control.offset_bottom = 0.0
-	control.size = wrapper.size
+	control.set_deferred("size", wrapper.size)
 
 func _on_cell_content_wrapper_resized(wrapper: Control):
 	if not is_instance_valid(wrapper):
