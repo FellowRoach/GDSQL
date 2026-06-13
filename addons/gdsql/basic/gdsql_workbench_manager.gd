@@ -290,6 +290,8 @@ vertical_scroll: bool = false) -> ConfirmationDialog:
 		sc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		sc.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		vbox_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		vbox_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		sc.add_child(vbox_container)
 		dialog.add_child(sc)
 	else:
