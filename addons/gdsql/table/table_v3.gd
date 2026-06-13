@@ -218,6 +218,7 @@ func _construct_tree():
 	label_model = Label.new()
 	label_model.name = "LabelModel"
 	label_model.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label_model.clip_text = true
 	models.add_child(label_model)
 
 	texture_rect_model = TextureRect.new()
@@ -292,6 +293,10 @@ func _construct_tree():
 
 	# ── Popup menu ──
 	popup_menu_text = PopupMenu.new()
+	# 根据 show_frame 控制序号列显示
+	frame_scroll.visible = show_frame
+	if not show_frame:
+		frame_scroll.custom_minimum_size.x = 0
 	popup_menu_text.name = "PopupMenuText"
 	var icon_copy = load("res://addons/gdsql/img/copy.svg")
 	var icon_trash = load("res://addons/gdsql/img/trash-can.svg")
@@ -918,6 +923,7 @@ func _create_data_row_node() -> Control:
 	hbox.name = "DataRowHBox"
 	hbox.add_theme_constant_override("separation", 0)
 	hbox.mouse_filter = Control.MOUSE_FILTER_PASS
+	hbox.clip_contents = true
 	hbox.custom_minimum_size.y = row_height
 	row.add_child(hbox)
 
