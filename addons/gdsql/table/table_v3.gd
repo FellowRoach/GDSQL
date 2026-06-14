@@ -3,6 +3,17 @@ extends Control
 
 signal row_clicked(row_index: int, mouse_button_index: int, data)
 enum MENU_ID { COPY_FIELD = 0, COPY_LINE = 1, DELETE = 2 }
+enum RowHeightMode { FIXED, ADAPTIVE }
+enum FRAME_MENU_ID {
+	MODE_FIXED = 100,
+	MODE_ADAPTIVE = 101,
+	CUSTOM_ALL = 200,
+	CUSTOM_SELECTED = 201,
+	CUSTOM_CURRENT = 202,
+	RESET_SELECTED = 203,
+	RESET_CURRENT = 204,
+	RESET_ALL = 205,
+}
 
 const ALL_STATES = ["hover", "pressed", "hover_pressed", "hover_mirrored", "pressed_mirrored", "hover_pressed_mirrored"]
 signal row_deleted(datas) # {index: data}
@@ -23,6 +34,8 @@ signal row_deleted(datas) # {index: data}
 @export var show_frame: bool = false
 ## 行的高度是否进行扩展并填充
 @export var row_expend_and_fill: bool = false
+## 是否允许用户通过序号列右键菜单自定义行高
+@export var enable_custom_row_height: bool = false
 ## 是否显示网格线（类似Excel）
 @export var show_grid: bool = false:
 	set(val):
@@ -83,7 +96,18 @@ signal row_deleted(datas) # {index: data}
 
 # ── Constants ───────────────────────────────────────────────────────────────
 
-@export var row_height: int = 28
+@export var row_height: int = 28:
+	set(val):
+		row_height = maxi(1, val)
+		actual_row_height = row_height
+		if is_node_ready():
+			invalidate_all_row_heights()
+
+@export var row_height_mode: RowHeightMode = RowHeightMode.FIXED:
+	set(val):
+		row_height_mode = val
+		if is_node_ready():
+			invalidate_all_row_heights()
 const BUFFER_ROWS := 5
 const MIN_COL_WIDTH := 30
 const GRABBER_WIDTH := 5
@@ -104,6 +128,11 @@ var frame_row_container: Control
 var data_row_container: Control
 var borders_overlay: Control
 var popup_menu_text: PopupMenu
+var frame_popup_menu: PopupMenu
+var row_height_mode_popup: PopupMenu
+var custom_row_height_popup: PopupMenu
+var row_height_dialog: AcceptDialog
+var row_height_spin_box: SpinBox
 var frame_header_btn: Button
 var data_header_wrapper: Control
 var data_header_hbox: HBoxContainer
@@ -143,6 +172,15 @@ var exclude_border: Dictionary = {}
 var exclude_border_active := false
 
 var actual_row_height = row_height
+var row_heights: Array[float] = []
+var row_offsets: Array[float] = [0.0]
+var row_height_dirty: Dictionary = {}
+var custom_row_heights: Dictionary = {}
+var _row_offsets_dirty := true
+var _force_row_layout_refresh := false
+var _row_height_menu_row := -1
+var _row_height_edit_scope := ""
+var _row_height_edit_row := -1
 
 # Autofill state
 var cornor_dragger: Control = null
@@ -312,6 +350,42 @@ func _construct_tree():
 	popup_menu_text.set_item_disabled(popup_menu_text.get_item_index(MENU_ID.DELETE), true)
 	popup_menu_text.index_pressed.connect(_on_popup_menu_index_pressed)
 	vbox_container.add_child(popup_menu_text)
+
+	frame_popup_menu = PopupMenu.new()
+	frame_popup_menu.name = "FramePopupMenu"
+	row_height_mode_popup = PopupMenu.new()
+	row_height_mode_popup.name = "RowHeightModePopup"
+	custom_row_height_popup = PopupMenu.new()
+	custom_row_height_popup.name = "CustomRowHeightPopup"
+	row_height_mode_popup.add_check_item("Fixed", FRAME_MENU_ID.MODE_FIXED)
+	row_height_mode_popup.add_check_item("Adaptive", FRAME_MENU_ID.MODE_ADAPTIVE)
+	custom_row_height_popup.add_item("All Rows", FRAME_MENU_ID.CUSTOM_ALL)
+	custom_row_height_popup.add_item("Selected Rows", FRAME_MENU_ID.CUSTOM_SELECTED)
+	custom_row_height_popup.add_item("Current Row", FRAME_MENU_ID.CUSTOM_CURRENT)
+	custom_row_height_popup.add_separator()
+	custom_row_height_popup.add_item("Reset Selected Rows", FRAME_MENU_ID.RESET_SELECTED)
+	custom_row_height_popup.add_item("Reset Current Row", FRAME_MENU_ID.RESET_CURRENT)
+	custom_row_height_popup.add_item("Reset All Custom Heights", FRAME_MENU_ID.RESET_ALL)
+	frame_popup_menu.add_child(row_height_mode_popup)
+	frame_popup_menu.add_child(custom_row_height_popup)
+	frame_popup_menu.add_submenu_item("Row Height Mode", "RowHeightModePopup")
+	frame_popup_menu.add_submenu_item("Custom Row Height", "CustomRowHeightPopup")
+	row_height_mode_popup.id_pressed.connect(_on_frame_popup_id_pressed)
+	custom_row_height_popup.id_pressed.connect(_on_frame_popup_id_pressed)
+	vbox_container.add_child(frame_popup_menu)
+
+	row_height_dialog = AcceptDialog.new()
+	row_height_dialog.name = "RowHeightDialog"
+	row_height_dialog.title = "Row Height"
+	row_height_spin_box = SpinBox.new()
+	row_height_spin_box.name = "RowHeightSpinBox"
+	row_height_spin_box.min_value = 1
+	row_height_spin_box.max_value = 4096
+	row_height_spin_box.step = 1
+	row_height_spin_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row_height_dialog.add_child(row_height_spin_box)
+	row_height_dialog.confirmed.connect(_on_row_height_dialog_confirmed)
+	vbox_container.add_child(row_height_dialog)
 
 	# ── Shortcut buttons (invisible) ──
 	var shortcut_layer = Control.new()
@@ -586,6 +660,8 @@ func _input(event):
 				col_widths[_drag_col_idx] = new_w
 				_apply_header_widths()
 				sync_data_row_widths()
+				if row_height_mode == RowHeightMode.ADAPTIVE:
+					invalidate_all_row_heights()
 				# Update total content width for horizontal scrollbar
 				var tw = 0.0
 				for w in col_widths:
@@ -698,6 +774,8 @@ func _auto_fit_column(col_idx: int):
 		col_widths[col_idx] = new_width
 		_apply_header_widths()
 		sync_data_row_widths()
+		if row_height_mode == RowHeightMode.ADAPTIVE:
+			invalidate_all_row_heights()
 
 		var tw = 0.0
 		for w in col_widths:
@@ -746,10 +824,213 @@ func _apply_data_row_widths(row_node: Control):
 		_apply_cell_width(child as PanelContainer, col_widths[wi])
 		wi += 1
 
+func _ensure_row_height_arrays():
+	var count = datas_flat.size()
+	while row_heights.size() < count:
+		row_heights.append(float(row_height))
+	while row_heights.size() > count:
+		row_heights.pop_back()
+	if row_offsets.size() != count + 1:
+		_row_offsets_dirty = true
+
+func _rebuild_row_offsets():
+	_ensure_row_height_arrays()
+	row_offsets.resize(datas_flat.size() + 1)
+	row_offsets[0] = 0.0
+	for i in datas_flat.size():
+		row_offsets[i + 1] = row_offsets[i] + _get_row_height(i)
+	_row_offsets_dirty = false
+
+func _ensure_row_offsets():
+	if _row_offsets_dirty:
+		_rebuild_row_offsets()
+
+func _get_row_height(row: int) -> float:
+	if row < 0 or row >= datas_flat.size():
+		return float(row_height)
+	if custom_row_heights.has(row):
+		return float(custom_row_heights[row])
+	_ensure_row_height_arrays()
+	return max(float(row_height), row_heights[row])
+
+func _get_row_top(row: int) -> float:
+	_ensure_row_offsets()
+	if row <= 0:
+		return 0.0
+	if row >= row_offsets.size():
+		return row_offsets.back()
+	return row_offsets[row]
+
+func _get_row_bottom(row: int) -> float:
+	_ensure_row_offsets()
+	if row < 0:
+		return 0.0
+	if row + 1 >= row_offsets.size():
+		return row_offsets.back()
+	return row_offsets[row + 1]
+
+func _get_total_content_height() -> float:
+	_ensure_row_offsets()
+	return row_offsets.back() if not row_offsets.is_empty() else 0.0
+
+func _get_row_at_content_y(content_y: float) -> int:
+	if datas_flat.is_empty():
+		return -1
+	_ensure_row_offsets()
+	var y = clampf(content_y, 0.0, max(0.0, _get_total_content_height() - 0.001))
+	var lo = 0
+	var hi = datas_flat.size() - 1
+	while lo <= hi:
+		var mid = (lo + hi) / 2
+		if y < row_offsets[mid]:
+			hi = mid - 1
+		elif y >= row_offsets[mid + 1]:
+			lo = mid + 1
+		else:
+			return mid
+	return clampi(lo, 0, datas_flat.size() - 1)
+
+func _get_visible_row_range(scroll_val: float, view_h: float) -> Vector2i:
+	if datas_flat.is_empty() or view_h <= 0:
+		return Vector2i(0, -1)
+	var first = max(0, _get_row_at_content_y(scroll_val) - BUFFER_ROWS)
+	var last = min(datas_flat.size() - 1, _get_row_at_content_y(scroll_val + view_h) + BUFFER_ROWS)
+	return Vector2i(first, last)
+
+func _has_dirty_rows_in_range(first: int, last: int) -> bool:
+	if row_height_dirty.is_empty():
+		return false
+	for row in row_height_dirty:
+		var row_idx = int(row)
+		if row_idx >= first and row_idx <= last:
+			return true
+	return false
+
+func _set_row_height_cache(row: int, height: float) -> bool:
+	if row < 0 or row >= datas_flat.size() or custom_row_heights.has(row):
+		return false
+	_ensure_row_height_arrays()
+	var new_height = max(float(row_height), height)
+	if abs(row_heights[row] - new_height) < 0.5:
+		row_height_dirty.erase(row)
+		return false
+	row_heights[row] = new_height
+	row_height_dirty.erase(row)
+	_row_offsets_dirty = true
+	return true
+
+func invalidate_row_height(row: int):
+	if row < 0 or row >= datas_flat.size():
+		return
+	if row_height_mode == RowHeightMode.ADAPTIVE and not custom_row_heights.has(row):
+		row_heights[row] = float(row_height)
+		row_height_dirty[row] = true
+	else:
+		row_height_dirty.erase(row)
+	_row_offsets_dirty = true
+	_force_row_layout_refresh = true
+	update_content_size()
+	_on_scroll(data_scroll.scroll_vertical)
+	borders_overlay.queue_redraw()
+
+func invalidate_all_row_heights():
+	_ensure_row_height_arrays()
+	row_height_dirty.clear()
+	for i in datas_flat.size():
+		if not custom_row_heights.has(i):
+			row_heights[i] = float(row_height)
+			if row_height_mode == RowHeightMode.ADAPTIVE:
+				row_height_dirty[i] = true
+	_row_offsets_dirty = true
+	_force_row_layout_refresh = true
+	update_content_size()
+	_on_scroll(data_scroll.scroll_vertical)
+	borders_overlay.queue_redraw()
+
+func refresh_row_heights():
+	invalidate_all_row_heights()
+
+func _reset_adaptive_row_height_cache():
+	row_heights.clear()
+	row_offsets = [0.0]
+	row_height_dirty.clear()
+	_row_offsets_dirty = true
+	_force_row_layout_refresh = true
+
+func _shift_custom_row_heights(start_index: int, delta: int) -> Dictionary:
+	var shifted = {}
+	for row in custom_row_heights:
+		var row_idx = int(row)
+		if row_idx >= start_index:
+			shifted[row_idx + delta] = custom_row_heights[row]
+		else:
+			shifted[row_idx] = custom_row_heights[row]
+	return shifted
+
+func _move_custom_row_height(from: int, to: int):
+	if from == to:
+		return
+	var moved_value = custom_row_heights.get(from, null)
+	var had_value = custom_row_heights.has(from)
+	custom_row_heights.erase(from)
+	if from < to:
+		var shifted = {}
+		for row in custom_row_heights:
+			var row_idx = int(row)
+			if row_idx > from and row_idx <= to:
+				shifted[row_idx - 1] = custom_row_heights[row]
+			else:
+				shifted[row_idx] = custom_row_heights[row]
+		custom_row_heights = shifted
+	else:
+		var shifted = {}
+		for row in custom_row_heights:
+			var row_idx = int(row)
+			if row_idx >= to and row_idx < from:
+				shifted[row_idx + 1] = custom_row_heights[row]
+			else:
+				shifted[row_idx] = custom_row_heights[row]
+		custom_row_heights = shifted
+	if had_value:
+		custom_row_heights[to] = moved_value
+	_row_offsets_dirty = true
+	_force_row_layout_refresh = true
+
+func _apply_row_height_to_row(row_node: Control, height: float):
+	row_node.custom_minimum_size.y = height
+	row_node.size.y = height
+	var hbox = row_node.get_child(0) if row_node.get_child_count() > 0 else null
+	if hbox is Control:
+		(hbox as Control).custom_minimum_size.y = height
+		(hbox as Control).size.y = height
+		for child in (hbox as Control).get_children():
+			if child is PanelContainer:
+				(child as PanelContainer).custom_minimum_size.y = height
+				(child as PanelContainer).size.y = height
+				var wrapper = _get_cell_content_wrapper(child as PanelContainer)
+				wrapper.custom_minimum_size.y = height
+				wrapper.size.y = height
+
+func _measure_data_row_height(row_node: Control) -> float:
+	if row_height_mode == RowHeightMode.FIXED:
+		return float(row_height)
+	var measured = float(row_height)
+	var hbox = row_node.get_child(0) if row_node.get_child_count() > 0 else null
+	if hbox is Control:
+		for cell in (hbox as Control).get_children():
+			if not (cell is PanelContainer):
+				continue
+			var wrapper = _get_cell_content_wrapper(cell as PanelContainer)
+			for child in wrapper.get_children():
+				if child is Control:
+					measured = max(measured, (child as Control).get_combined_minimum_size().y)
+	return measured
+
 # ── Virtual Scrolling ─────────────────────────────────────────────────────
 
 func update_content_size():
-	var total_h = datas_flat.size() * actual_row_height
+	_ensure_row_height_arrays()
+	var total_h = _get_total_content_height()
 	data_row_container.custom_minimum_size.y = total_h
 	if show_frame:
 		frame_row_container.custom_minimum_size.y = total_h
@@ -781,10 +1062,11 @@ func _on_scroll(value: float):
 	# Update dragger position on every scroll, even if visible rows don't change
 	_update_dragger_position()
 
-	var new_first = max(0, floor(value / actual_row_height) - BUFFER_ROWS)
-	var new_last = min(datas_flat.size() - 1, ceil((value + view_h) / actual_row_height) + BUFFER_ROWS)
+	var visible_range = _get_visible_row_range(value, view_h)
+	var new_first = visible_range.x
+	var new_last = visible_range.y
 
-	if new_first == first_visible_idx and new_last == last_visible_idx:
+	if new_first == first_visible_idx and new_last == last_visible_idx and not _force_row_layout_refresh and not _has_dirty_rows_in_range(new_first, new_last):
 		borders_overlay.queue_redraw()
 		return  # no row change, still need to redraw grid/dragger/overlay
 
@@ -793,9 +1075,10 @@ func _on_scroll(value: float):
 
 	first_visible_idx = new_first
 	last_visible_idx = new_last
+	_force_row_layout_refresh = false
 
 	_position_visible_rows()
-	# actual_row_height 可能已改变，重新计算总内容尺寸
+	# Row heights may have changed during visible row measurement.
 	update_content_size()
 	_update_borders_overlay_size()
 	borders_overlay.queue_redraw()
@@ -819,6 +1102,7 @@ func _position_visible_rows():
 		_ensure_frame_pool_size(needed)
 
 	# 分配数据
+	var height_changed = false
 	for i in range(needed):
 		var data_idx = first_visible_idx + i
 
@@ -826,35 +1110,47 @@ func _position_visible_rows():
 		var data_row = data_row_pool[i]
 		_assign_data_row_data(data_row, data_idx)
 		_apply_data_row_widths(data_row)
+		if row_height_mode == RowHeightMode.ADAPTIVE and not custom_row_heights.has(data_idx):
+			height_changed = _set_row_height_cache(data_idx, _measure_data_row_height(data_row)) or height_changed
 
 		# Frame row
 		if show_frame:
 			var frame_row = frame_row_pool[i]
 			_assign_frame_row_data(frame_row, data_idx)
 
-	# 测量实际行高
-	actual_row_height = row_height
-	if needed > 0 and is_instance_valid(data_row_pool[0]):
-		var first_row = data_row_pool[0]
-		var min_size = first_row.get_combined_minimum_size()
-		actual_row_height = max(row_height, min_size.y)
+	if height_changed:
+		update_content_size()
+		var adjusted_range = _get_visible_row_range(data_scroll.scroll_vertical, data_scroll.size.y)
+		if adjusted_range.x != first_visible_idx or adjusted_range.y != last_visible_idx:
+			first_visible_idx = adjusted_range.x
+			last_visible_idx = adjusted_range.y
+			_position_visible_rows()
+			return
 
 	# 定位所有可见行
 	for i in range(needed):
 		var data_idx = first_visible_idx + i
+		var row_top = _get_row_top(data_idx)
+		var row_h = _get_row_height(data_idx)
 
 		var data_row = data_row_pool[i]
 		data_row.visible = true
 		data_pool_in_use[i] = true
-		data_row.position = Vector2(0, data_idx * actual_row_height)
-		data_row.size = Vector2(data_row_container.size.x, actual_row_height)
+		data_row.position = Vector2(0, row_top)
+		data_row.size = Vector2(data_row_container.size.x, row_h)
+		_apply_row_height_to_row(data_row, row_h)
 
 		if show_frame:
 			var frame_row = frame_row_pool[i]
 			frame_row.visible = true
 			frame_pool_in_use[i] = true
-			frame_row.position = Vector2(0, data_idx * actual_row_height)
-			frame_row.size = Vector2(frame_col_width, actual_row_height)
+			frame_row.position = Vector2(0, row_top)
+			frame_row.size = Vector2(frame_col_width, row_h)
+			frame_row.custom_minimum_size.y = row_h
+			var btn = frame_row.get_child(0) if frame_row.get_child_count() > 0 else null
+			if btn is Button:
+				(btn as Button).custom_minimum_size.y = row_h
+				(btn as Button).size.y = row_h
 
 	for i in range(needed, data_row_pool.size()):
 		data_row_pool[i].visible = false
@@ -874,19 +1170,20 @@ func _dump_border_debug():
 	print("overlay gpos=", borders_overlay.global_position, " size=", borders_overlay.size)
 	print("scroll gpos=", data_scroll.global_position)
 	print("scroll_val=", data_scroll.scroll_vertical)
-	print("actual_row_height=", actual_row_height)
+	print("row_heights=", row_heights)
 	for bi in selected_borders.size():
 		var b = selected_borders[bi]
 		var rect = b["rect"] as Rect2
 		print("border[", bi, "] start=", b["start"], " rect=", rect)
 		for r in range(int(rect.position.x), int(rect.end.x)):
-			var y0 = r * actual_row_height - data_scroll.scroll_vertical
-			if y0 + actual_row_height < 0 or y0 > data_scroll.size.y:
+			var y0 = _get_row_top(r) - data_scroll.scroll_vertical
+			var row_h = _get_row_height(r)
+			if y0 + row_h < 0 or y0 > data_scroll.size.y:
 				continue
 			for c in range(int(rect.position.y), int(rect.end.y)):
 				var x0 = _get_col_x(c)
 				var cell_global = borders_overlay.global_position + Vector2(x0, y0)
-				print("  cell[", r, ",", c, "] local=", Vector2(x0, y0), " global=", cell_global, " w=", col_widths[c], " h=", actual_row_height)
+				print("  cell[", r, ",", c, "] local=", Vector2(x0, y0), " global=", cell_global, " w=", col_widths[c], " h=", row_h)
 	print("=== END BORDER DEBUG ====")
 
 func _hide_all_frame_pool_rows():
@@ -957,6 +1254,8 @@ func _create_frame_row_node() -> Control:
 	var arrow_right = load("res://addons/gdsql/img/arrow_right.svg")
 	if arrow_right:
 		btn.mouse_entered.connect(DisplayServer.cursor_set_custom_image.bind(arrow_right, DisplayServer.CURSOR_HELP, Vector2(12, 12)))
+	btn.pressed.connect(_on_frame_btn_pressed_from_button.bind(btn))
+	btn.gui_input.connect(_on_frame_btn_gui_input_from_button.bind(btn))
 	row.add_child(btn)
 	return row
 
@@ -992,7 +1291,7 @@ func _assign_data_row_data(row_node: Control, data_idx: int):
 		var value = data_arr[data_col]
 		var ctl = _create_cell_control(value, data, data_col)
 		if ctl:
-			_add_control_to_cell(content_wrapper, ctl, data_col)
+			_add_control_to_cell(content_wrapper, ctl, data_idx, data_col)
 
 		# Assign cell meta for border lookup
 		(cell as PanelContainer).set_meta("row", data_idx)
@@ -1024,19 +1323,38 @@ func _apply_cell_width(cell: PanelContainer, width: float):
 		if child is Control:
 			_fit_control_to_cell(child as Control, wrapper)
 
-func _add_control_to_cell(wrapper: Control, control: Control, col_idx: int):
+func _add_control_to_cell(wrapper: Control, control: Control, row_idx: int, col_idx: int):
 	control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	control.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	if control.get_parent() == null:
 		wrapper.add_child(control)
 	else:
 		control.reparent(wrapper)
+	control.set_meta("_gdsql_table_row", row_idx)
+	control.set_meta("_gdsql_table_col", col_idx)
+	_connect_row_height_control_signals(control)
 	_fit_control_to_cell(control, wrapper)
 	var min_size = control.get_combined_minimum_size()
 	wrapper.custom_minimum_size = Vector2(
 		col_widths[col_idx] if col_idx < col_widths.size() else float(MIN_COL_WIDTH),
-		max(float(row_height), min_size.y)
+		max(float(row_height), min_size.y) if row_height_mode == RowHeightMode.ADAPTIVE else float(row_height)
 	)
+
+func _connect_row_height_control_signals(control: Control):
+	var old_callable = control.get_meta("_gdsql_size_changed_callable", Callable())
+	if old_callable is Callable and old_callable.is_valid():
+		if control.minimum_size_changed.is_connected(old_callable):
+			control.minimum_size_changed.disconnect(old_callable)
+	var cb = _on_cell_control_size_changed.bind(control)
+	control.set_meta("_gdsql_size_changed_callable", cb)
+	control.minimum_size_changed.connect(cb)
+
+func _on_cell_control_size_changed(control: Control):
+	if row_height_mode != RowHeightMode.ADAPTIVE or not is_instance_valid(control):
+		return
+	var row_idx = int(control.get_meta("_gdsql_table_row", -1))
+	if row_idx >= 0:
+		invalidate_row_height(row_idx)
 
 func _fit_control_to_cell(control: Control, wrapper: Control):
 	control.anchor_left = ANCHOR_BEGIN
@@ -1047,7 +1365,6 @@ func _fit_control_to_cell(control: Control, wrapper: Control):
 	control.offset_top = 0.0
 	control.offset_right = 0.0
 	control.offset_bottom = 0.0
-	control.set_deferred("size", wrapper.size)
 
 func _on_cell_content_wrapper_resized(wrapper: Control):
 	if not is_instance_valid(wrapper):
@@ -1061,9 +1378,7 @@ func _assign_frame_row_data(row_node: Control, data_idx: int):
 	if not (btn is Button):
 		return
 	btn.text = str(data_idx + 1)
-	if btn.pressed.is_connected(_on_frame_btn_pressed):
-		btn.pressed.disconnect(_on_frame_btn_pressed)
-	btn.pressed.connect(_on_frame_btn_pressed.bind(data_idx, btn))
+	btn.set_meta("data_index", data_idx)
 
 
 	# end for
@@ -1246,6 +1561,8 @@ func append_data(a_data):
 		for key in a_data:
 			columns.append(key)
 		rebuild_header()
+	_ensure_row_height_arrays()
+	invalidate_row_height(datas_flat.size() - 1)
 	update_content_size()
 	# If the new row is near the viewport, refresh
 	if datas_flat.size() - 1 <= last_visible_idx + BUFFER_ROWS:
@@ -1255,10 +1572,14 @@ func insert_data(pos: int, a_data):
 	clear_borders()
 	datas.insert(pos, a_data)
 	datas_flat.insert(pos, a_data)
+	custom_row_heights = _shift_custom_row_heights(pos, 1)
+	_reset_adaptive_row_height_cache()
 	if columns.is_empty() and a_data is Dictionary:
 		for key in a_data:
 			columns.append(key)
 		rebuild_header()
+	_ensure_row_height_arrays()
+	invalidate_row_height(pos)
 	update_content_size()
 	_on_scroll(data_scroll.scroll_vertical)
 
@@ -1270,6 +1591,9 @@ func remove_data_at(index: int, free_data: bool):
 		datas_flat[index].free_all_custom_display_controls()
 	datas.remove_at(index)
 	datas_flat.remove_at(index)
+	custom_row_heights.erase(index)
+	custom_row_heights = _shift_custom_row_heights(index + 1, -1)
+	_reset_adaptive_row_height_cache()
 	update_content_size()
 	_on_scroll(data_scroll.scroll_vertical)
 
@@ -1282,12 +1606,19 @@ func move_data(from: int, to: int):
 	datas.insert(to, data)
 	datas_flat.remove_at(from)
 	datas_flat.insert(to, data)
+	_move_custom_row_height(from, to)
+	_reset_adaptive_row_height_cache()
 	update_content_size()
 	_on_scroll(data_scroll.scroll_vertical)
 
 func clear_all():
 	clear_borders()
 	datas_flat.clear()
+	row_heights.clear()
+	row_offsets = [0.0]
+	row_height_dirty.clear()
+	custom_row_heights.clear()
+	_row_offsets_dirty = true
 	for i in range(data_row_pool.size()):
 		data_row_pool[i].visible = false
 		data_pool_in_use[i] = false
@@ -1302,7 +1633,7 @@ func _get_row_node(data_idx: int):
 # ── Borders overlay ─────────────────────────────────────────────────────
 
 func _draw_grid():
-	if datas_flat.is_empty() or actual_row_height <= 0 or col_widths.is_empty():
+	if datas_flat.is_empty() or col_widths.is_empty():
 		return
 	if not is_instance_valid(borders_overlay) or not is_instance_valid(data_scroll):
 		return
@@ -1311,9 +1642,9 @@ func _draw_grid():
 	var scroll_val = data_scroll.scroll_vertical
 	var scroll_h = data_scroll.scroll_horizontal
 
-	# Visible row range
-	var first_r = max(0, int(scroll_val / actual_row_height))
-	var last_r = min(datas_flat.size() - 1, int((scroll_val + view_h) / actual_row_height))
+	var visible_range = _get_visible_row_range(scroll_val, view_h)
+	var first_r = visible_range.x
+	var last_r = visible_range.y
 	if last_r < first_r:
 		return
 
@@ -1327,8 +1658,8 @@ func _draw_grid():
 	var right_x = (_get_col_x(last_dc) + col_widths[last_dc]) - scroll_h
 
 	# Y range clamped to viewport
-	var y0 = first_r * actual_row_height - scroll_val
-	var y1 = (last_r + 1) * actual_row_height - scroll_val
+	var y0 = _get_row_top(first_r) - scroll_val
+	var y1 = _get_row_bottom(last_r) - scroll_val
 	if y0 < 0.0:
 		y0 = 0.0
 	if y1 > view_h:
@@ -1336,7 +1667,7 @@ func _draw_grid():
 
 	# Horizontal grid lines — at bottom of each visible row
 	for r in range(first_r, last_r + 1):
-		var y = (r + 1) * actual_row_height - scroll_val
+		var y = _get_row_bottom(r) - scroll_val
 		if y < y0 or y > y1:
 			continue
 		borders_overlay.draw_line(Vector2(left_x, y), Vector2(right_x, y), GRID_COLOR, 1.0)
@@ -1373,8 +1704,9 @@ func _on_borders_overlay_draw():
 		var end_c = int(rect.end.y)
 
 		for r in range(start_r, end_r):
-			var y0 = r * actual_row_height - scroll_val
-			if y0 + actual_row_height < 0 or y0 > view_h:
+			var y0 = _get_row_top(r) - scroll_val
+			var row_h = _get_row_height(r)
+			if y0 + row_h < 0 or y0 > view_h:
 				continue
 
 			for c in range(start_c, end_c):
@@ -1388,14 +1720,14 @@ func _on_borders_overlay_draw():
 				if not is_start:
 					var alpha = DEFAULT_BORDER_BG.a * _get_overlap_count(r, c) * 1.05
 					var bg = Color(DEFAULT_BORDER_BG.r, DEFAULT_BORDER_BG.g, DEFAULT_BORDER_BG.b, alpha)
-					borders_overlay.draw_rect(Rect2(x0, y0, bw, actual_row_height), bg)
+					borders_overlay.draw_rect(Rect2(x0, y0, bw, row_h), bg)
 
 		# Draw continuous outer boundary (4 lines)
 		var sl = _get_col_x(start_c) - scroll_h
 		var last_ci = end_c - 1
 		var sr = (_get_col_x(last_ci) + col_widths[last_ci]) - scroll_h if last_ci >= 0 else sl
-		var st = start_r * actual_row_height - scroll_val
-		var sb = end_r * actual_row_height - scroll_val
+		var st = _get_row_top(start_r) - scroll_val
+		var sb = _get_row_top(end_r) - scroll_val
 		var bc = DEFAULT_BORDER_LINE
 		if multi:
 			bc = Color(DEFAULT_BORDER_LINE, 0.5)
@@ -1408,8 +1740,9 @@ func _on_borders_overlay_draw():
 	if not exclude_border.is_empty():
 		var ex_rect = exclude_border["rect"] as Rect2
 		for er in range(int(ex_rect.position.x), int(ex_rect.end.x)):
-			var ey = er * actual_row_height - scroll_val
-			if ey + actual_row_height < 0 or ey > view_h:
+			var ey = _get_row_top(er) - scroll_val
+			var row_h = _get_row_height(er)
+			if ey + row_h < 0 or ey > view_h:
 				continue
 			for ec in range(int(ex_rect.position.y), int(ex_rect.end.y)):
 				var eci = ec
@@ -1417,7 +1750,7 @@ func _on_borders_overlay_draw():
 					continue
 				var ex0 = _get_col_x(eci) - scroll_h
 				var ew = col_widths[eci]
-				borders_overlay.draw_rect(Rect2(ex0, ey, ew, actual_row_height), Color(Color.DARK_BLUE, 0.25))
+				borders_overlay.draw_rect(Rect2(ex0, ey, ew, row_h), Color(Color.DARK_BLUE, 0.25))
 
 	# Autofill dashed border
 	if autofill_info.has("rect"):
@@ -1432,8 +1765,8 @@ func _on_borders_overlay_draw():
 					if ci >= col_widths.size():
 						continue
 					var cx = _get_col_x(ci) - scroll_h
-					var cy = r * actual_row_height - scroll_val
-					_draw_dashed_rect(Rect2(cx, cy, col_widths[ci], actual_row_height),
+					var cy = _get_row_top(r) - scroll_val
+					_draw_dashed_rect(Rect2(cx, cy, col_widths[ci], _get_row_height(r)),
 						r == int(af_start.x), r == int(af_end.x) - 1,
 						c == int(af_start.y), c == int(af_end.y) - 1)
 
@@ -1504,8 +1837,8 @@ func _get_col_x(col: int) -> float:
 
 func _get_cell_screen_rect(data_row: int, data_col: int) -> Rect2:
 	var x = _get_col_x(data_col)
-	var y = data_row * actual_row_height - data_scroll.scroll_vertical
-	return Rect2(x, y, col_widths[data_col], actual_row_height)
+	var y = _get_row_top(data_row) - data_scroll.scroll_vertical
+	return Rect2(x, y, col_widths[data_col], _get_row_height(data_row))
 
 func _get_overlap_count(row: int, col: int) -> int:
 	var count = 0
@@ -1716,7 +2049,7 @@ func _add_corner_dragger():
 	if ci < 0 or ci >= col_widths.size():
 		return
 	var cx = _get_col_x(ci) + col_widths[ci] - data_scroll.scroll_horizontal
-	var cy = (last_row + 1) * actual_row_height - data_scroll.scroll_vertical
+	var cy = _get_row_bottom(last_row) - data_scroll.scroll_vertical
 	cornor_dragger = load("res://addons/gdsql/table/cornor_dragger.tscn").instantiate()
 	borders_overlay.add_child(cornor_dragger)
 	cornor_dragger.position = Vector2(cx, cy) - Vector2(5, 5)
@@ -1744,7 +2077,7 @@ func _update_dragger_position():
 	if ci < 0 or ci >= col_widths.size():
 		return
 	var cx = _get_col_x(ci) + col_widths[ci] - data_scroll.scroll_horizontal
-	var cy = (last_row + 1) * actual_row_height - data_scroll.scroll_vertical
+	var cy = _get_row_bottom(last_row) - data_scroll.scroll_vertical
 	cornor_dragger.position = Vector2(cx, cy) - Vector2(5, 5)
 
 # ── Autofill handlers ──────────────────────────────────────────────────
@@ -1784,9 +2117,9 @@ func _on_corner_drag_moving(diff: Vector2, start: Vector2, end: Vector2):
 	local_mouse.y += data_scroll.scroll_vertical
 
 	# 获取单元格位置（仿照 table.gd 的 get_panel_container_under_mouse + get_index）
-	if datas_flat.is_empty() or actual_row_height <= 0:
+	if datas_flat.is_empty():
 		return
-	var pos_row = int(local_mouse.y / actual_row_height)
+	var pos_row = _get_row_at_content_y(local_mouse.y)
 	var pos_col = -1
 	var x = 0.0
 	for c in range(col_widths.size()):
@@ -1845,8 +2178,8 @@ func _on_corner_drag_moving(diff: Vector2, start: Vector2, end: Vector2):
 			else:
 				# 向上缩小一块
 				if pos_row > start.x:
-					var cell_top = pos_row * actual_row_height
-					var half_h = actual_row_height * 0.5
+					var cell_top = _get_row_top(pos_row)
+					var half_h = _get_row_height(pos_row) * 0.5
 					if local_mouse.y < cell_top + half_h:
 						add_autofill_border(start, Vector2(pos_row, end.y),
 							"sub" if pos_row != end.x - 1 else "start")
@@ -1855,8 +2188,8 @@ func _on_corner_drag_moving(diff: Vector2, start: Vector2, end: Vector2):
 							"sub" if pos_row + 1 != end.x else "start")
 				# 全部缩
 				elif pos_row == start.x:
-					var cell_top = pos_row * actual_row_height
-					var half_h = actual_row_height * 0.5
+					var cell_top = _get_row_top(pos_row)
+					var half_h = _get_row_height(pos_row) * 0.5
 					if local_mouse.y < cell_top + half_h:
 						add_autofill_border(start, end, "sub")
 					else:
@@ -1924,8 +2257,8 @@ func _on_corner_drag_moving(diff: Vector2, start: Vector2, end: Vector2):
 			else:
 				# 向上缩小一块
 				if pos_row > start.x:
-					var cell_top = pos_row * actual_row_height
-					var half_h = actual_row_height * 0.5
+					var cell_top = _get_row_top(pos_row)
+					var half_h = _get_row_height(pos_row) * 0.5
 					if local_mouse.y < cell_top + half_h:
 						add_autofill_border(start, Vector2(pos_row, end.y),
 							"sub" if pos_row != end.x - 1 else "start")
@@ -1934,8 +2267,8 @@ func _on_corner_drag_moving(diff: Vector2, start: Vector2, end: Vector2):
 							"sub" if pos_row + 1 != end.x else "start")
 				# 全部缩
 				elif pos_row == start.x:
-					var cell_top = pos_row * actual_row_height
-					var half_h = actual_row_height * 0.5
+					var cell_top = _get_row_top(pos_row)
+					var half_h = _get_row_height(pos_row) * 0.5
 					if local_mouse.y < cell_top + half_h:
 						add_autofill_border(start, end, "sub")
 					else:
@@ -2136,9 +2469,9 @@ func commit_vertical_autofill():
 # ── Mouse input ────────────────────────────────────────────────────────
 
 func get_cell_at_pos(pos: Vector2) -> Vector2i:
-	if datas_flat.is_empty() or actual_row_height <= 0:
+	if datas_flat.is_empty():
 		return Vector2i(-1, -1)
-	var row = int(pos.y / actual_row_height)
+	var row = _get_row_at_content_y(pos.y)
 	if row < 0 or row >= datas_flat.size():
 		return Vector2i(-1, -1)
 
@@ -2270,7 +2603,15 @@ func _handle_ctrl_click(cell_pos: Vector2i):
 
 # ── Frame / header click handlers ──────────────────────────────────────
 
+func _on_frame_btn_pressed_from_button(btn: Button):
+	_on_frame_btn_pressed(int(btn.get_meta("data_index", -1)), btn)
+
+func _on_frame_btn_gui_input_from_button(event: InputEvent, btn: Button):
+	_on_frame_btn_gui_input(event, int(btn.get_meta("data_index", -1)))
+
 func _on_frame_btn_pressed(data_idx: int, _btn: Button):
+	if data_idx < 0 or data_idx >= datas_flat.size():
+		return
 	if Input.is_key_pressed(KEY_SHIFT):
 		var anchor = last_selected_pos
 		var start_r = min(anchor.x, data_idx)
@@ -2300,6 +2641,107 @@ func _on_frame_btn_pressed(data_idx: int, _btn: Button):
 			inspect_highlight_rows()
 		# 确保表格内任一节点获得焦点，这样 shortcut 才能生效
 		data_row_container.grab_focus()
+
+func _on_frame_btn_gui_input(event: InputEvent, data_idx: int):
+	if not enable_custom_row_height or not (event is InputEventMouseButton):
+		return
+	var mb = event as InputEventMouseButton
+	if not mb.pressed or mb.button_index != MOUSE_BUTTON_RIGHT:
+		return
+	_row_height_menu_row = data_idx
+	_refresh_frame_popup_state()
+	frame_popup_menu.position = DisplayServer.mouse_get_position()
+	frame_popup_menu.popup()
+	accept_event()
+
+func _refresh_frame_popup_state():
+	if not is_instance_valid(row_height_mode_popup) or not is_instance_valid(custom_row_height_popup):
+		return
+	row_height_mode_popup.set_item_checked(row_height_mode_popup.get_item_index(FRAME_MENU_ID.MODE_FIXED), row_height_mode == RowHeightMode.FIXED)
+	row_height_mode_popup.set_item_checked(row_height_mode_popup.get_item_index(FRAME_MENU_ID.MODE_ADAPTIVE), row_height_mode == RowHeightMode.ADAPTIVE)
+	var has_selected_rows = not _get_selected_rows().is_empty()
+	custom_row_height_popup.set_item_disabled(custom_row_height_popup.get_item_index(FRAME_MENU_ID.CUSTOM_SELECTED), not has_selected_rows)
+	custom_row_height_popup.set_item_disabled(custom_row_height_popup.get_item_index(FRAME_MENU_ID.RESET_SELECTED), not has_selected_rows)
+	custom_row_height_popup.set_item_disabled(custom_row_height_popup.get_item_index(FRAME_MENU_ID.CUSTOM_CURRENT), _row_height_menu_row < 0)
+	custom_row_height_popup.set_item_disabled(custom_row_height_popup.get_item_index(FRAME_MENU_ID.RESET_CURRENT), _row_height_menu_row < 0)
+	custom_row_height_popup.set_item_disabled(custom_row_height_popup.get_item_index(FRAME_MENU_ID.RESET_ALL), custom_row_heights.is_empty())
+
+func _on_frame_popup_id_pressed(id: int):
+	match id:
+		FRAME_MENU_ID.MODE_FIXED:
+			row_height_mode = RowHeightMode.FIXED
+		FRAME_MENU_ID.MODE_ADAPTIVE:
+			row_height_mode = RowHeightMode.ADAPTIVE
+		FRAME_MENU_ID.CUSTOM_ALL:
+			_open_row_height_dialog("all", _row_height_menu_row)
+		FRAME_MENU_ID.CUSTOM_SELECTED:
+			_open_row_height_dialog("selected", _row_height_menu_row)
+		FRAME_MENU_ID.CUSTOM_CURRENT:
+			_open_row_height_dialog("current", _row_height_menu_row)
+		FRAME_MENU_ID.RESET_SELECTED:
+			_clear_custom_row_heights(_get_selected_rows())
+		FRAME_MENU_ID.RESET_CURRENT:
+			_clear_custom_row_heights([_row_height_menu_row])
+		FRAME_MENU_ID.RESET_ALL:
+			custom_row_heights.clear()
+			invalidate_all_row_heights()
+
+func _open_row_height_dialog(scope: String, row: int):
+	_row_height_edit_scope = scope
+	_row_height_edit_row = row
+	var value = float(row_height)
+	match scope:
+		"current":
+			if row >= 0 and row < datas_flat.size():
+				value = _get_row_height(row)
+		"selected":
+			var rows = _get_selected_rows()
+			if not rows.is_empty():
+				value = _get_row_height(rows.front())
+		"all":
+			value = float(row_height)
+	row_height_spin_box.value = value
+	row_height_dialog.popup_centered(Vector2i(220, 90))
+
+func _on_row_height_dialog_confirmed():
+	var value = maxi(1, int(row_height_spin_box.value))
+	match _row_height_edit_scope:
+		"all":
+			row_height = value
+		"selected":
+			_apply_custom_row_heights(_get_selected_rows(), value)
+		"current":
+			_apply_custom_row_heights([_row_height_edit_row], value)
+	_row_height_edit_scope = ""
+	_row_height_edit_row = -1
+
+func _apply_custom_row_heights(rows: Array, height: int):
+	for row in rows:
+		var row_idx = int(row)
+		if row_idx >= 0 and row_idx < datas_flat.size():
+			custom_row_heights[row_idx] = float(height)
+			row_heights[row_idx] = float(height)
+	_row_offsets_dirty = true
+	_force_row_layout_refresh = true
+	update_content_size()
+	_on_scroll(data_scroll.scroll_vertical)
+	borders_overlay.queue_redraw()
+
+func _clear_custom_row_heights(rows: Array):
+	for row in rows:
+		var row_idx = int(row)
+		custom_row_heights.erase(row_idx)
+		if row_idx >= 0 and row_idx < row_heights.size():
+			row_heights[row_idx] = float(row_height)
+			if row_height_mode == RowHeightMode.ADAPTIVE:
+				row_height_dirty[row_idx] = true
+			else:
+				row_height_dirty.erase(row_idx)
+	_row_offsets_dirty = true
+	_force_row_layout_refresh = true
+	update_content_size()
+	_on_scroll(data_scroll.scroll_vertical)
+	borders_overlay.queue_redraw()
 
 func _on_header_col_pressed(i: int):
 	if _drag_press_active:
@@ -2359,8 +2801,9 @@ func highlight_row(data_idx: int, skip_await: bool = false):
 	# 自动滚动到高亮行
 	if not skip_await:
 		await get_tree().create_timer(0.01).timeout
-	if data_idx >= 0 and data_idx * actual_row_height > data_scroll.scroll_vertical:
-		data_scroll.scroll_vertical = data_idx * actual_row_height
+	var row_top = _get_row_top(data_idx)
+	if data_idx >= 0 and row_top > data_scroll.scroll_vertical:
+		data_scroll.scroll_vertical = row_top
 
 func scroll_to_bottom():
 	var v_bar = data_scroll.get_v_scroll_bar()
@@ -2917,7 +3360,7 @@ func _draw_corner_dragger():
 	if ci < 0 or ci >= col_widths.size():
 		return
 	var cx = _get_col_x(ci) + col_widths[ci] - data_scroll.scroll_horizontal
-	var cy = (last_row + 1) * actual_row_height - data_scroll.scroll_vertical
+	var cy = _get_row_bottom(last_row) - data_scroll.scroll_vertical
 	var s = 5.0
 	var pts = PackedVector2Array([
 		Vector2(cx, cy - s),
@@ -2932,9 +3375,7 @@ func get_cell_at_screen_pos(screen_pos: Vector2) -> Vector2i:
 		return Vector2i(-1, -1)
 	var local_pos = screen_pos - borders_overlay.global_position
 	var scroll_val = data_scroll.scroll_vertical
-	if actual_row_height <= 0:
-		return Vector2i(-1, -1)
-	var row = int((local_pos.y + scroll_val) / actual_row_height)
+	var row = _get_row_at_content_y(local_pos.y + scroll_val)
 	if row < 0 or row >= datas_flat.size():
 		return Vector2i(-1, -1)
 
@@ -3109,7 +3550,7 @@ func _ensure_selection_visible():
 		return
 	var rect = selected_borders.front()["rect"] as Rect2
 	var last_row = int(rect.end.x) - 1
-	if last_row >= 0 and last_row < data_row_container.custom_minimum_size.y / max(1, actual_row_height):
+	if last_row >= 0 and _get_row_bottom(last_row) <= data_row_container.custom_minimum_size.y:
 		return
 	update_content_size()
 
