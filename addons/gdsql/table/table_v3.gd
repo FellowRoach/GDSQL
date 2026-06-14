@@ -1721,7 +1721,7 @@ func _add_corner_dragger():
 	borders_overlay.add_child(cornor_dragger)
 	cornor_dragger.position = Vector2(cx, cy) - Vector2(5, 5)
 	cornor_dragger.cornor_drag_start.connect(_on_corner_drag_start)
-	cornor_dragger.cornor_drag_moving.connect(_on_corner_drag_moving)
+	cornor_dragger.cornor_drag_moving.connect(_on_corner_drag_moving.bind(rect.position, rect.end))
 	cornor_dragger.cornor_drag_end.connect(_on_corner_drag_end)
 	cornor_dragger.cornor_double_clicked.connect(_on_corner_double_clicked)
 
@@ -1761,93 +1761,200 @@ func _on_corner_drag_start():
 	}
 	borders_overlay.queue_redraw()
 
-func _on_corner_drag_moving(_diff: Vector2):
-	if autofill_info.is_empty() or not autofill_info.has("start"):
-		return
-	var src_start = autofill_info["start"] as Vector2
-	var src_end = autofill_info["end"] as Vector2
-
-	# Get cell under mouse using overlay-relative coordinates
+func _on_corner_drag_moving(diff: Vector2, start: Vector2, end: Vector2):
+	# 获取鼠标在 data_scroll 局部坐标系中的位置（用于自动滚动判断）
 	var mouse_gpos = get_global_mouse_position()
-	var overlay_gpos = borders_overlay.global_position
-	var local_mouse = mouse_gpos - overlay_gpos
+	var ds_local = mouse_gpos - data_scroll.global_position
+	var ds_rect = Rect2(Vector2.ZERO, data_scroll.size)
+
+	# 自动滚动：仿照 table.gd 的 scroll_container.ensure_control_visible(panel_container)
+	# 超出 scroll_container 的边界时，要让 scroll_container 自己滚动
+	if ds_local.x > ds_rect.size.x:
+		data_scroll.scroll_horizontal += int((ds_local.x - ds_rect.size.x) * 0.3)
+	elif ds_local.x < 0:
+		data_scroll.scroll_horizontal += int(ds_local.x * 0.3)
+	if ds_local.y > ds_rect.size.y:
+		data_scroll.scroll_vertical += int((ds_local.y - ds_rect.size.y) * 0.3)
+	elif ds_local.y < 0:
+		data_scroll.scroll_vertical += int(ds_local.y * 0.3)
+
+	# 计算数据坐标下的鼠标位置（加上滚动偏移）
+	var local_mouse = mouse_gpos - borders_overlay.global_position
 	local_mouse.x += data_scroll.scroll_horizontal
 	local_mouse.y += data_scroll.scroll_vertical
-	var cell_pos = get_cell_at_pos(local_mouse)
-	var pos_row = cell_pos.x
-	var pos_col = cell_pos.y
 
-	if pos_row < 0 or pos_col < 0:
+	# 获取单元格位置（仿照 table.gd 的 get_panel_container_under_mouse + get_index）
+	if datas_flat.is_empty() or actual_row_height <= 0:
 		return
+	var pos_row = int(local_mouse.y / actual_row_height)
+	var pos_col = -1
+	var x = 0.0
+	for c in range(col_widths.size()):
+		if local_mouse.x < x + col_widths[c]:
+			pos_col = c
+			break
+		x += col_widths[c]
 
+	# 钳制到有效范围（table.gd 通过节点树 get_index 天然就是有效范围）
+	pos_row = clampi(pos_row, 0, datas_flat.size() - 1)
+	pos_col = clampi(pos_col, 0, col_widths.size() - 1)
 
-	# Compute cell center for threshold
-	var ci = pos_col
-	var cell_cx = local_mouse.x
-	var cell_cy = local_mouse.y
-	var expand_cx = local_mouse.x
-	var expand_cy = local_mouse.y
-	if ci >= 0 and ci < col_widths.size():
-		var cell_x = _get_col_x(ci)
-		cell_cx = cell_x + col_widths[ci] * 0.5  # shrink threshold (50%)
-		expand_cx = cell_x + col_widths[ci] * 0.2  # expand threshold (20%)
-		cell_cy = pos_row * actual_row_height + actual_row_height * 0.5  # shrink threshold (50%)
-		expand_cy = pos_row * actual_row_height + actual_row_height * 0.2  # expand threshold (20%)
+	# 如果panel_container在上下左右外侧（非内侧、非斜外侧），则稳定多出一块。否则再使用下方的逻辑。
+	if pos_col >= start.y and pos_col <= end.y - 1:
+		# 向上多出一块
+		if pos_row < start.x:
+			add_autofill_border(Vector2(pos_row, start.y), end, "add")
+			return
+		# 向下多出一块
+		if pos_row > end.x - 1:
+			add_autofill_border(start, Vector2(pos_row + 1, end.y), "add")
+			return
+	if pos_row >= start.x and pos_row <= end.x - 1:
+		# 向左多出一块
+		if pos_col < start.y:
+			add_autofill_border(Vector2(start.x, pos_col), end, "add")
+			return
+		# 向右多出一块
+		if pos_col > end.y - 1:
+			add_autofill_border(start, Vector2(end.x, pos_col + 1), "add")
+			return
 
-	# Compute desired end based on mouse position with threshold
-	var cur_end = autofill_info.get("rect", Rect2(src_start, src_end - src_start)).end
-	var desired_end = cur_end
-
-	# --- Column ---
-	if pos_col < src_start.y:
-		# Extending left: recompute full rect including new start
-		var sp = Vector2(min(src_start.x, pos_row), pos_col)
-		var ep = Vector2(max(src_end.x, pos_row + 1), src_end.y)
-		add_autofill_border(sp, ep, "add")
-		return
-	elif pos_col >= src_end.y:
-		# Right of selection → expand right (past center required)
-		if local_mouse.x > expand_cx:
-			desired_end.y = pos_col + 1
-	elif pos_col == src_end.y - 1:
-		# In last col: left half→shrink, right half→expand back
-		if local_mouse.x < cell_cx:
-			desired_end.y = pos_col
+	# 内侧或斜外侧
+	if diff.x > 0:
+		if diff.y > 0:
+			if diff.x > diff.y:
+				# 向右多出一块
+				# #####¯¯¯⌉
+				# #####   |
+				# #####___⌋
+				add_autofill_border(start, Vector2(end.x, pos_col + 1), "add")
+			else:
+				# 向下多出一块
+				# #########
+				# #########
+				# |       |
+				# ⌊_______⌋
+				add_autofill_border(start, Vector2(pos_row + 1, end.y), "add")
 		else:
-			desired_end.y = pos_col + 1
-	elif pos_col < src_end.y - 1:
-		if local_mouse.x < cell_cx:
-			desired_end.y = pos_col
-
-	# --- Row ---
-	if pos_row < src_start.x:
-		# Extending up: recompute full rect
-		var sp = Vector2(pos_row, min(src_start.y, pos_col))
-		var ep = Vector2(src_end.x, max(src_end.y, pos_col + 1))
-		add_autofill_border(sp, ep, "add")
-		return
-	elif pos_row >= src_end.x:
-		if local_mouse.y > expand_cy:
-			desired_end.x = pos_row + 1
-	elif pos_row == src_end.x - 1:
-		# In last row: top half→shrink, bottom half→expand back
-		if local_mouse.y < cell_cy:
-			desired_end.x = pos_row
+			if diff.x > -diff.y:
+				# 向右多出一块
+				# #####¯¯¯⌉
+				# #####   |
+				# #####___⌋
+				add_autofill_border(start, Vector2(end.x, pos_col + 1), "add")
+			else:
+				# 向上缩小一块
+				if pos_row > start.x:
+					var cell_top = pos_row * actual_row_height
+					var half_h = actual_row_height * 0.5
+					if local_mouse.y < cell_top + half_h:
+						add_autofill_border(start, Vector2(pos_row, end.y),
+							"sub" if pos_row != end.x - 1 else "start")
+					else:
+						add_autofill_border(start, Vector2(pos_row + 1, end.y),
+							"sub" if pos_row + 1 != end.x else "start")
+				# 全部缩
+				elif pos_row == start.x:
+					var cell_top = pos_row * actual_row_height
+					var half_h = actual_row_height * 0.5
+					if local_mouse.y < cell_top + half_h:
+						add_autofill_border(start, end, "sub")
+					else:
+						add_autofill_border(start, Vector2(pos_row + 1, end.y),
+							"sub" if pos_row + 1 != end.x else "start")
+				# 向上扩展
+				else:
+					add_autofill_border(Vector2(pos_row, start.y), end, "add")
+	else:
+		if diff.y > 0:
+			if -diff.x > diff.y:
+				# 向左缩一块
+				if pos_col > start.y:
+					var cell_x = _get_col_x(pos_col)
+					var half_w = col_widths[pos_col] * 0.5
+					if local_mouse.x < cell_x + half_w:
+						add_autofill_border(start, Vector2(end.x, pos_col),
+							"sub" if pos_col != end.y - 1 else "start")
+					else:
+						add_autofill_border(start, Vector2(end.x, pos_col + 1),
+							"sub" if pos_col + 1 != end.y else "start")
+				# 全部缩
+				elif pos_col == start.y:
+					var cell_x = _get_col_x(pos_col)
+					var half_w = col_widths[pos_col] * 0.5
+					if local_mouse.x < cell_x + half_w:
+						add_autofill_border(start, end, "sub")
+					else:
+						add_autofill_border(start, Vector2(end.x, pos_col + 1),
+							"sub" if pos_col + 1 != end.y else "start")
+				# 向左扩展
+				else:
+					add_autofill_border(Vector2(start.x, pos_col), end, "add")
+			else:
+				# 向下多出一块
+				# #########
+				# #########
+				# |       |
+				# ⌊_______⌋
+				add_autofill_border(start, Vector2(pos_row + 1, end.y), "add")
 		else:
-			desired_end.x = pos_row + 1
-	elif pos_row < src_end.x - 1:
-		if local_mouse.y < cell_cy:
-			desired_end.x = pos_row
-
-	# Determine mode and apply (compare against current rect, not original)
-	var mode = "add" if (desired_end.x > src_end.x or desired_end.y > src_end.y) else "sub"
-	if desired_end != cur_end:
-		add_autofill_border(src_start, desired_end, mode)
+			if -diff.x > -diff.y:
+				# 向左缩一块
+				if pos_col > start.y:
+					var cell_x = _get_col_x(pos_col)
+					var half_w = col_widths[pos_col] * 0.5
+					if local_mouse.x < cell_x + half_w:
+						add_autofill_border(start, Vector2(end.x, pos_col),
+							"sub" if pos_col != end.y - 1 else "start")
+					else:
+						add_autofill_border(start, Vector2(end.x, pos_col + 1),
+							"sub" if pos_col + 1 != end.y else "start")
+				# 全部缩
+				elif pos_col == start.y:
+					var cell_x = _get_col_x(pos_col)
+					var half_w = col_widths[pos_col] * 0.5
+					if local_mouse.x < cell_x + half_w:
+						add_autofill_border(start, end, "sub")
+					else:
+						add_autofill_border(start, Vector2(end.x, pos_col + 1),
+							"sub" if pos_col + 1 != end.y else "start")
+				# 向左扩展
+				else:
+					add_autofill_border(Vector2(start.x, pos_col), end, "add")
+			else:
+				# 向上缩小一块
+				if pos_row > start.x:
+					var cell_top = pos_row * actual_row_height
+					var half_h = actual_row_height * 0.5
+					if local_mouse.y < cell_top + half_h:
+						add_autofill_border(start, Vector2(pos_row, end.y),
+							"sub" if pos_row != end.x - 1 else "start")
+					else:
+						add_autofill_border(start, Vector2(pos_row + 1, end.y),
+							"sub" if pos_row + 1 != end.x else "start")
+				# 全部缩
+				elif pos_row == start.x:
+					var cell_top = pos_row * actual_row_height
+					var half_h = actual_row_height * 0.5
+					if local_mouse.y < cell_top + half_h:
+						add_autofill_border(start, end, "sub")
+					else:
+						add_autofill_border(start, Vector2(pos_row + 1, end.y),
+							"sub" if pos_row + 1 != end.x else "start")
+				# 向上扩展
+				else:
+					add_autofill_border(Vector2(pos_row, start.y), end, "add")
 
 func add_autofill_border(start_pos: Vector2, end_pos: Vector2, mode: String):
-	# Clear old dashed borders
+	# 清旧的
 	autofill_info["rect"] = Rect2(start_pos, end_pos - start_pos)
 	autofill_info["mode"] = mode
+
+	if mode == "start":
+		autofill_info.erase("rect")
+		borders_overlay.queue_redraw()
+		return
+
 	borders_overlay.queue_redraw()
 
 func _on_corner_drag_end():
@@ -1892,6 +1999,12 @@ func _commit_autofill():
 		
 		var sstart = Vector2i(autofill_info["start"])
 		add_border({"start": sstart, "rect": af_rect})
+		autofill_info = {}
+		borders_overlay.queue_redraw()
+		return
+
+	# mode == "start"：用户缩回原始选区，不执行任何填充
+	if autofill_info.get("mode", "") == "start":
 		autofill_info = {}
 		borders_overlay.queue_redraw()
 		return
