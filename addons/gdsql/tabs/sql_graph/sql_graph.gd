@@ -737,14 +737,17 @@ func gen_table_node(columns: Array, table_datas: Array, is_union_all: bool, join
 		margin_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		margin_container.add_theme_constant_override("margin_top", 10)
 		margin_container.add_theme_constant_override("margin_bottom", 10)
-		table = load("res://addons/gdsql/table/table.tscn").instantiate()
+		table = load("res://addons/gdsql/table/table_v3.gd").new()
 		table.show_frame = true
+		table.show_grid = true
+		table.enable_custom_row_height = true
 		table.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		margin_container.add_child(table)
 		table.set_meta("columns", columns)
 		table.column_tips = columns.map(func(v): 
 			return type_string(v["Data Type"]) if v.has("Data Type") else "")
 		table.columns = columns.map(func(v): return v["field_as"])
+		graph_node.custom_minimum_size.x = columns.size() * 120
 		
 		var flow_container = HFlowContainer.new()
 		flow_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -974,8 +977,11 @@ func gen_table_node(columns: Array, table_datas: Array, is_union_all: bool, join
 						
 			# 弹对话框让用户选择更新哪些数据
 			var arr: Array[Array] = [["Please confirm:"]]
-			var table_2 = load("res://addons/gdsql/table/table.tscn").instantiate()
-			table_2.ratios = [15.0, 0.4, 2.0, 4.0, 8.0] as Array[float]
+			var table_2 = load("res://addons/gdsql/table/table_v3.gd").instantiate()
+			table_2.show_frame = true
+			table_2.show_grid = true
+			table_2.enable_custom_row_height = true
+			table_2.ratios = [0.1, 0.4, 0.2, 0.1, 0.2] as Array[float]
 			table_2.columns = ["#", tr("Action"), tr("Extra info"), tr("Do"), tr("Status")]
 			table_2.column_tips = ["", "", "If necessary.", "Only execute checked actions.", "Execute status."]
 			var check_all_btn = CheckBox.new()
@@ -3017,9 +3023,12 @@ func on_link_node_query(node: GraphNode):
 								daos.push_back(dao)
 						# 弹对话框
 						var arr: Array[Array] = [["Please confirm:"]]
-						var table_2 = load("res://addons/gdsql/table/table.tscn").instantiate()
-						table_2.ratios = [15.0, 0.2, 2.0, 10.0, 8.0] as Array[float]
-						table_2.columns = ["#", "action", "status"]
+						var table_2 = load("res://addons/gdsql/table/table_v3.gd").instantiate()
+						table_2.ratios = [1, 10, 2] as Array[float]
+						table_2.show_grid = true
+						table_2.show_frame = true
+						table_2.enable_custom_row_height = true
+						table_2.columns = ["#", tr("action"), tr("status")]
 						var datas = []
 						var k = 0
 						for i: GDSQL.BaseDao in daos:

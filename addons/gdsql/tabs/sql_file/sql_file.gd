@@ -614,6 +614,7 @@ func gen_table_node(columns: Array, table_datas: Array, is_union_all: bool, join
 	#mc.add_child(table_scroll)
 	
 	var table: Control = load("res://addons/gdsql/table/table_v3.gd").new()
+	table.enable_custom_row_height = true
 	table.name = "Table"
 	table.show_frame = true
 	table.show_grid = true
@@ -826,6 +827,8 @@ func gen_table_node(columns: Array, table_datas: Array, is_union_all: bool, join
 			table_2.columns = ["#", tr("Action"), tr("Extra info"), tr("Do"), tr("Status")]
 			table_2.column_tips = ["", "", "If necessary.", "Only execute checked actions.", "Execute status."]
 			table_2.show_grid = true
+			table_2.show_frame = true
+			table_2.enable_custom_row_height = true
 			var check_all_btn = CheckBox.new()
 			check_all_btn.text = tr("Check all")
 			check_all_btn.button_pressed = true
@@ -859,7 +862,6 @@ func gen_table_node(columns: Array, table_datas: Array, is_union_all: bool, join
 					else:
 						check_all_btn.set_pressed_no_signal(false)
 				)
-				cb.custom_minimum_size.y = randi_range(50, 100)
 				row.push_back(cb)
 				
 				var pb = ProgressBar.new()
