@@ -580,8 +580,11 @@ func _on_table_resized():
 
 func _update_borders_overlay_size():
 	if is_instance_valid(borders_overlay) and is_instance_valid(data_scroll):
-		borders_overlay.position = data_scroll.position + data_area.position
-		borders_overlay.size = data_scroll.size
+		var sb = data_scroll.get_theme_stylebox("panel")
+		var off = sb.get_offset() if sb else Vector2()
+		var min_sz = sb.get_minimum_size() if sb else Vector2()
+		borders_overlay.position = data_scroll.position + data_area.position + off
+		borders_overlay.size = data_scroll.size - min_sz
 
 func _apply_header_widths():
 	for i in min(header_buttons.size(), col_widths.size()):
