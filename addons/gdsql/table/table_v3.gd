@@ -946,6 +946,7 @@ func invalidate_all_row_heights():
 	update_content_size()
 	_on_scroll(data_scroll.scroll_vertical)
 	borders_overlay.queue_redraw()
+	call_deferred("_force_refresh_visible_rows")
 
 func refresh_row_heights():
 	invalidate_all_row_heights()
