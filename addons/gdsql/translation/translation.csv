@@ -895,3 +895,13 @@ The database name used for game configuration (e.g. for storing runtime game set
 Inspector:%s,,,,Inspector:%s,检查器：%s,檢查器：%s,インスペクター：%s,검사기:%s,Inspector:%s,Inspetor:%s,Inspecteur :%s,Inspektor:%s,Инспектор:%s,Ispettore:%s,Inspektor:%s,Denetçi:%s
 SCHEMA：%s,,,,SCHEMA：%s,架构：%s,結構：%s,スキーマ：%s,스키마:%s,ESQUEMA:%s,ESQUEMA:%s,SCHÉMA :%s,SCHEMA:%s,СХЕМА:%s,SCHEMA:%s,SCHEMA:%s,ŞEMA:%s
 Result,,,,Result,结果,結果,結果,결과,Resultado,Resultado,Résultat,Ergebnis,Результат,Risultato,Wynik,Sonuç
+Adaptive,,,,Adaptive,自适应,自適應,アダプティブ,적응형,Adaptativo,Adaptativo,Adaptatif,Adaptiv,Адаптивный,Adattivo,Adaptacyjny,Uyarlanabilir
+Fixed,,,,Fixed,固定,固定,固定,고정,Fijo,Fixo,Fixé,Fest,Фиксированный,Fisso,Stały,Sabit
+All Rows,,,,All Rows,所有行,所有列,すべての行,모든 행,Todas las filas,Todas as linhas,Toutes les lignes,Alle Zeilen,Все строки,Tutte le righe,Wszystkie wiersze,Tüm Satırlar
+Selected Rows,,,,Selected Rows,所选行,所選列,選択した行,선택한 행,Filas seleccionadas,Linhas selecionadas,Lignes sélectionnées,Ausgewählte Zeilen,Выбранные строки,Righe selezionate,Wybrane wiersze,Seçili Satırlar
+Current Row,,,,Current Row,当前行,目前列,現在の行,현재 행,Fila actual,Linha atual,Ligne actuelle,Aktuelle Zeile,Текущая строка,Riga corrente,Bieżący wiersz,Geçerli Satır
+Reset Selected Rows,,,,Reset Selected Rows,重置所选行,重設所選列,選択した行をリセット,선택한 행 재설정,Restablecer filas seleccionadas,Redefinir linhas selecionadas,Réinitialiser les lignes sélectionnées,Ausgewählte Zeilen zurücksetzen,Сбросить выбранные строки,Reimposta righe selezionate,Zresetuj wybrane wiersze,Seçili Satırları Sıfırla
+Reset Current Row,,,,Reset Current Row,重置当前行,重設目前列,現在の行をリセット,현재 행 재설정,Restablecer fila actual,Redefinir linha atual,Réinitialiser la ligne actuelle,Aktuelle Zeile zurücksetzen,Сбросить текущую строку,Reimposta riga corrente,Zresetuj bieżący wiersz,Geçerli Satırı Sıfırla
+Reset All Custom Heights,,,,Reset All Custom Heights,重置所有自定义高度,重設所有自訂高度,すべてのカスタム高さをリセット,모든 사용자 지정 높이 재설정,Restablecer todas las alturas personalizadas,Redefinir todas as alturas personalizadas,Réinitialiser toutes les hauteurs personnalisées,Alle benutzerdefinierten Höhen zurücksetzen,Сбросить все настраиваемые высоты,Reimposta tutte le altezze personalizzate,Zresetuj wszystkie niestandardowe wysokości,Tüm Özel Yükseklikleri Sıfırla
+Row Height Mode,,,,Row Height Mode,行高模式,列高模式,行の高さモード,행 높이 모드,Modo de altura de fila,Modo de altura da linha,Mode de hauteur de ligne,Zeilenhöhenmodus,Режим высоты строки,Modalità altezza riga,Tryb wysokości wiersza,Satır Yüksekliği Modu
+Custom Row Height,,,,Custom Row Height,自定义行高,自訂列高,カスタム行の高さ,사용자 지정 행 높이,Altura de fila personalizada,Altura da linha personalizada,Hauteur de ligne personnalisée,Benutzerdefinierte Zeilenhöhe,Пользовательская высота строки,Altezza riga personalizzata,Niestandardowa wysokość wiersza,Özel Satır Yüksekliği
