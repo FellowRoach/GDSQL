@@ -1046,6 +1046,9 @@ func update_content_size():
 	data_scroll.queue_sort()
 
 func _on_scroll(value: float):
+	if _scroll_guard:
+		return
+	_scroll_guard = true
 	if datas_flat.is_empty():
 		_hide_all_data_pool_rows()
 		if show_frame:
@@ -1053,10 +1056,12 @@ func _on_scroll(value: float):
 		borders_overlay.queue_redraw()
 		first_visible_idx = 0
 		last_visible_idx = -1
+		_scroll_guard = false
 		return
 
 	var view_h = data_scroll.size.y
 	if view_h <= 0:
+		_scroll_guard = false
 		return
 
 	# Update dragger position on every scroll, even if visible rows don't change
@@ -1068,9 +1073,11 @@ func _on_scroll(value: float):
 
 	if new_first == first_visible_idx and new_last == last_visible_idx and not _force_row_layout_refresh and not _has_dirty_rows_in_range(new_first, new_last):
 		borders_overlay.queue_redraw()
+		_scroll_guard = false
 		return  # no row change, still need to redraw grid/dragger/overlay
 
 	if new_first > new_last:
+		_scroll_guard = false
 		return
 
 	first_visible_idx = new_first
@@ -1082,6 +1089,7 @@ func _on_scroll(value: float):
 	update_content_size()
 	_update_borders_overlay_size()
 	borders_overlay.queue_redraw()
+	_scroll_guard = false
 
 func _on_data_scroll_changed(value: float):
 	_on_scroll(value)
@@ -1101,31 +1109,43 @@ func _position_visible_rows():
 	if show_frame:
 		_ensure_frame_pool_size(needed)
 
-	# 分配数据
-	var height_changed = false
-	for i in range(needed):
-		var data_idx = first_visible_idx + i
+	# Stabilize adaptive row heights with bounded loop.
+	# 只在行数据发生变化时才调用 _assign_data_row_data 重新创建控件，
+	# 避免每轮循环都重建控件触发 minimum_size_changed 信号级联。
+	var max_iter = 10
+	while max_iter > 0:
+		max_iter -= 1
+		var height_changed = false
+		for i in range(needed):
+			var data_idx = first_visible_idx + i
 
-		# Data row
-		var data_row = data_row_pool[i]
-		_assign_data_row_data(data_row, data_idx)
-		_apply_data_row_widths(data_row)
-		if row_height_mode == RowHeightMode.ADAPTIVE and not custom_row_heights.has(data_idx):
-			height_changed = _set_row_height_cache(data_idx, _measure_data_row_height(data_row)) or height_changed
+			# Data row
+			var data_row = data_row_pool[i]
+			if data_row.get_meta("data_index", -1) != data_idx:
+				_assign_data_row_data(data_row, data_idx)
+			_apply_data_row_widths(data_row)
+			if row_height_mode == RowHeightMode.ADAPTIVE and not custom_row_heights.has(data_idx):
+				height_changed = _set_row_height_cache(data_idx, _measure_data_row_height(data_row)) or height_changed
 
-		# Frame row
-		if show_frame:
-			var frame_row = frame_row_pool[i]
-			_assign_frame_row_data(frame_row, data_idx)
+			# Frame row
+			if show_frame:
+				var frame_row = frame_row_pool[i]
+				_assign_frame_row_data(frame_row, data_idx)
 
-	if height_changed:
+		if not height_changed:
+			break
+
 		update_content_size()
 		var adjusted_range = _get_visible_row_range(data_scroll.scroll_vertical, data_scroll.size.y)
-		if adjusted_range.x != first_visible_idx or adjusted_range.y != last_visible_idx:
-			first_visible_idx = adjusted_range.x
-			last_visible_idx = adjusted_range.y
-			_position_visible_rows()
-			return
+		if adjusted_range.x == first_visible_idx and adjusted_range.y == last_visible_idx:
+			break
+
+		first_visible_idx = adjusted_range.x
+		last_visible_idx = adjusted_range.y
+		needed = last_visible_idx - first_visible_idx + 1
+		_ensure_data_pool_size(needed)
+		if show_frame:
+			_ensure_frame_pool_size(needed)
 
 	# 定位所有可见行
 	for i in range(needed):
@@ -1351,6 +1371,10 @@ func _connect_row_height_control_signals(control: Control):
 
 func _on_cell_control_size_changed(control: Control):
 	if row_height_mode != RowHeightMode.ADAPTIVE or not is_instance_valid(control):
+		return
+	# 在滚动/布局过程中忽略 minimum_size_changed 信号，
+	# 因为 _position_visible_rows 已经在测量和设置正确的行高。
+	if _scroll_guard:
 		return
 	var row_idx = int(control.get_meta("_gdsql_table_row", -1))
 	if row_idx >= 0:
@@ -3600,6 +3624,7 @@ func _get_selected_cols() -> Array:
 
 
 var _last_data_scroll_v: float = -1
+var _scroll_guard := false
 
 func _process(_delta):
 	# Sync frame row container position
