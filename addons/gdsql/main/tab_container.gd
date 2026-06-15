@@ -612,19 +612,46 @@ func receive_content(_content: String, force_new: bool = false, file_path: Strin
 func receive_content_and_execute(title: String, info: Dictionary):
 	# 因为要执行，所以直接创建新页面
 	_on_tab_clicked(get_tab_count()-1)
-	
+
 	set_tab_title(current_tab, title)
-	
-	var sql_graph = get_tab_control(current_tab)
-	if not sql_graph.is_node_ready():
-		await sql_graph.ready
-		
-	if not sql_graph.graph_edit.is_node_ready():
-		await sql_graph.graph_edit.ready
-		
-	match info["cmd"]:
-		"select":
-			sql_graph.add_select_node(info["db_name"], info["table_name"], info["fields"])
+
+	var tab_control = get_tab_control(current_tab)
+	var tab_type: String = tab_control.get_meta("type", "")
+
+	match tab_type:
+		"sql_graph":
+			if not tab_control.is_node_ready():
+				await tab_control.ready
+			if not tab_control.graph_edit.is_node_ready():
+				await tab_control.graph_edit.ready
+
+			match info["cmd"]:
+				"select":
+					tab_control.add_select_node(info["db_name"], info["table_name"], info["fields"])
+
+		"sql_file":
+			if not tab_control.is_node_ready():
+				await tab_control.ready
+
+			match info["cmd"]:
+				"select":
+					var sql = _build_select_sql(info)
+					tab_control.code_edit.text = sql
+					tab_control.code_edit.set_caret_line(tab_control.code_edit.get_line_count() - 1)
+					tab_control.code_edit.set_caret_column(sql.length())
+
+
+func _build_select_sql(info: Dictionary) -> String:
+	var fields_str: String
+	if info["fields"] is Array:
+		fields_str = ", ".join(info["fields"])
+	else:
+		fields_str = str(info["fields"])
+
+	var db_name: String = info.get("db_name", "")
+	if db_name.is_empty():
+		return "SELECT %s FROM %s;" % [fields_str, info["table_name"]]
+	return "SELECT %s FROM %s.%s;" % [fields_str, db_name, info["table_name"]]
 			
 func _on_child_exiting_tree(node: Node) -> void:
 	if node in _tab_history:
