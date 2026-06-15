@@ -453,17 +453,25 @@ func _fuzzy_match_score(candidate: String, prefix_lower: String) -> int:
 	if lower.begins_with(prefix_lower):
 		return 500 + (100 - candidate.length())
 
-	# 子序列匹配（如 "slt" 匹配 "select"）
+	# 包含匹配
+	if lower.contains(prefix_lower):
+		return 300
+
+	# 严格子序列匹配（如 "slt" 匹配 "select"）
 	var pi = 0
 	for ci in range(lower.length()):
 		if pi < prefix_lower.length() and lower[ci] == prefix_lower[pi]:
 			pi += 1
 	if pi >= prefix_lower.length():
-		return 100 + int(_similarity_ratio(lower, prefix_lower) * 50)
+		return 150 + int(_similarity_ratio(lower, prefix_lower) * 50)
 
-	# 包含匹配
-	if lower.contains(prefix_lower):
-		return 200
+	# 模糊匹配：用 LCS 比率兜底，处理多打/漏打字符的情况
+	# 如 "seel"/"sell"/"sellect" 都能匹配 "select"
+	var lcs_len = _longest_common_subsequence(lower, prefix_lower)
+	var max_len = maxi(lower.length(), prefix_lower.length())
+	var ratio = float(lcs_len) / float(max_len)
+	if ratio >= 0.5:
+		return 50 + int(ratio * 100)
 
 	return 0
 
@@ -481,6 +489,28 @@ func _similarity_ratio(a: String, b: String) -> float:
 		if a[i] == b[i]:
 			matches += 1
 	return float(matches) / float(max_len)
+
+
+## 最长公共子序列长度，用于模糊匹配兜底
+func _longest_common_subsequence(a: String, b: String) -> int:
+	var n = a.length()
+	var m = b.length()
+	if n == 0 or m == 0:
+		return 0
+	var prev := PackedInt32Array()
+	prev.resize(m + 1)
+	var cur := PackedInt32Array()
+	cur.resize(m + 1)
+	for i in range(1, n + 1):
+		for j in range(1, m + 1):
+			if a[i - 1] == b[j - 1]:
+				cur[j] = prev[j - 1] + 1
+			else:
+				cur[j] = maxi(prev[j], cur[j - 1])
+		var tmp = prev
+		prev = cur
+		cur = tmp
+	return prev[m]
 
 
 ## 检测光标是否在字符串或注释内
