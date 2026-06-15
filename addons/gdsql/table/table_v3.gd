@@ -182,6 +182,13 @@ var _row_height_menu_row := -1
 var _row_height_edit_scope := ""
 var _row_height_edit_row := -1
 var _default_row_height := 44
+var _header_drag_start_col := -1
+var _header_drag_active := false
+var _header_drag_ctrl := false
+var _frame_drag_start_row := -1
+var _frame_drag_active := false
+var _frame_drag_ctrl := false
+var _header_did_drag := false
 
 # Autofill state
 var cornor_dragger: Control = null
@@ -613,6 +620,18 @@ func _get_col_boundary_at_x(local_x: float) -> int:
 			return i
 	return -1
 
+func _get_col_at_x(local_x: float) -> int:
+	var hx = local_x
+	if show_frame:
+		hx -= frame_col_width
+	hx += data_scroll.scroll_horizontal
+	var x = 0.0
+	for i in range(col_widths.size()):
+		if hx >= x and hx < x + col_widths[i]:
+			return i
+		x += col_widths[i]
+	return -1
+
 func _input(event):
 	if not is_node_ready() or not header_container.is_visible_in_tree():
 		return
@@ -652,12 +671,36 @@ func _input(event):
 							hbtn.add_theme_stylebox_override("pressed_mirrored", hbtn_ns)
 							hbtn.add_theme_stylebox_override("hover_pressed_mirrored", hbtn_ns)
 					return  # don't let _gui_input see this event
+				if col_idx < 0:
+					var click_col = _get_col_at_x(header_pos.x)
+					if click_col >= 0:
+						_header_drag_start_col = click_col
+						_header_drag_active = true
+						_header_drag_ctrl = Input.is_key_pressed(KEY_CTRL)
+
 			elif not mb.pressed:
 				if _drag_press_active:
 					call_deferred("_clear_drag_flag")
 				_drag_col_idx = -1
+				_header_drag_active = false
+				_header_drag_start_col = -1
 
 	if event is InputEventMouseMotion:
+		if _header_drag_active and (event as InputEventMouseMotion).button_mask & MOUSE_BUTTON_MASK_LEFT:
+			var hp = mouse_global - header_container.global_position
+			var cur_col = _get_col_at_x(hp.x)
+			if cur_col >= 0:
+				_header_did_drag = true
+				var start_c = mini(_header_drag_start_col, cur_col)
+				var end_c = maxi(_header_drag_start_col, cur_col) + 1
+				if _header_drag_ctrl:
+					var rect = Rect2(0, start_c, datas_flat.size(), end_c - start_c)
+					var border = {"start": Vector2i(0, _header_drag_start_col), "rect": rect, "ctrl": true}
+					add_border(border)
+				else:
+					var rect = Rect2(0, start_c, datas_flat.size(), end_c - start_c)
+					var border = {"start": Vector2i(0, _header_drag_start_col), "rect": rect}
+					add_border(border)
 		if _drag_col_idx >= 0:
 			var dx = mouse_global.x - _drag_start_x
 			var new_w = max(MIN_COL_WIDTH, _drag_start_width + dx)
@@ -2686,16 +2729,41 @@ func _on_frame_btn_pressed(data_idx: int, _btn: Button):
 		data_row_container.grab_focus()
 
 func _on_frame_btn_gui_input(event: InputEvent, data_idx: int):
-	if not enable_custom_row_height or not (event is InputEventMouseButton):
-		return
-	var mb = event as InputEventMouseButton
-	if not mb.pressed or mb.button_index != MOUSE_BUTTON_RIGHT:
-		return
-	_row_height_menu_row = data_idx
-	_refresh_frame_popup_state()
-	frame_popup_menu.position = DisplayServer.mouse_get_position()
-	frame_popup_menu.popup()
-	accept_event()
+	if event is InputEventMouseButton:
+		var mb = event as InputEventMouseButton
+		if mb.button_index == MOUSE_BUTTON_LEFT:
+			if mb.pressed:
+				_frame_drag_start_row = data_idx
+				_frame_drag_active = true
+				_frame_drag_ctrl = Input.is_key_pressed(KEY_CTRL)
+				_on_frame_btn_pressed(data_idx, null)
+				accept_event()
+			else:
+				_frame_drag_active = false
+				_frame_drag_start_row = -1
+		elif mb.button_index == MOUSE_BUTTON_RIGHT and mb.pressed:
+			_row_height_menu_row = data_idx
+			_refresh_frame_popup_state()
+			frame_popup_menu.position = DisplayServer.mouse_get_position()
+			frame_popup_menu.popup()
+			accept_event()
+	elif event is InputEventMouseMotion and _frame_drag_active:
+		var mm = event as InputEventMouseMotion
+		if mm.button_mask & MOUSE_BUTTON_MASK_LEFT:
+			var mouse_gpos = get_global_mouse_position()
+			var local_y = mouse_gpos.y - frame_row_container.global_position.y + data_scroll.scroll_vertical
+			var cur_row = _get_row_at_content_y(local_y)
+			if cur_row >= 0 and cur_row != _frame_drag_start_row:
+				var start_r = mini(_frame_drag_start_row, cur_row)
+				var end_r = maxi(_frame_drag_start_row, cur_row) + 1
+				if _frame_drag_ctrl:
+					var rect = Rect2(start_r, 0, end_r - start_r, columns.size())
+					var border = {"start": Vector2i(_frame_drag_start_row, 0), "rect": rect, "ctrl": true}
+					add_border(border)
+				else:
+					var rect = Rect2(start_r, 0, end_r - start_r, columns.size())
+					var border = {"start": Vector2i(_frame_drag_start_row, 0), "rect": rect}
+					add_border(border)
 
 func _refresh_frame_popup_state():
 	if not is_instance_valid(row_height_mode_popup) or not is_instance_valid(custom_row_height_popup):
@@ -2803,6 +2871,9 @@ func _force_refresh_visible_rows():
 
 func _on_header_col_pressed(i: int):
 	if _drag_press_active:
+		return
+	if _header_did_drag:
+		_header_did_drag = false
 		return
 	if i >= columns.size() or datas_flat.is_empty():
 		return
