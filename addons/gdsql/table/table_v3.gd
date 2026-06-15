@@ -689,6 +689,16 @@ func _input(event):
 
 	if event is InputEventMouseMotion:
 		if _header_drag_active and (event as InputEventMouseMotion).button_mask & MOUSE_BUTTON_MASK_LEFT:
+			var ds_local = mouse_global - data_scroll.global_position
+			var ds_rect = Rect2(Vector2.ZERO, data_scroll.size)
+			if ds_local.x > ds_rect.size.x:
+				data_scroll.scroll_horizontal += int((ds_local.x - ds_rect.size.x) * 0.3)
+			elif ds_local.x < 0:
+				data_scroll.scroll_horizontal += int(ds_local.x * 0.3)
+			if ds_local.y > ds_rect.size.y:
+				data_scroll.scroll_vertical += int((ds_local.y - ds_rect.size.y) * 0.3)
+			elif ds_local.y < 0:
+				data_scroll.scroll_vertical += int(ds_local.y * 0.3)
 			var hp = mouse_global - header_container.global_position
 			var cur_col = _get_col_at_x(hp.x)
 			if cur_col >= 0:
@@ -2755,6 +2765,16 @@ func _on_frame_btn_gui_input(event: InputEvent, data_idx: int):
 		var mm = event as InputEventMouseMotion
 		if mm.button_mask & MOUSE_BUTTON_MASK_LEFT:
 			var mouse_gpos = get_global_mouse_position()
+			var ds_local = mouse_gpos - data_scroll.global_position
+			var ds_rect = Rect2(Vector2.ZERO, data_scroll.size)
+			if ds_local.x > ds_rect.size.x:
+				data_scroll.scroll_horizontal += int((ds_local.x - ds_rect.size.x) * 0.3)
+			elif ds_local.x < 0:
+				data_scroll.scroll_horizontal += int(ds_local.x * 0.3)
+			if ds_local.y > ds_rect.size.y:
+				data_scroll.scroll_vertical += int((ds_local.y - ds_rect.size.y) * 0.3)
+			elif ds_local.y < 0:
+				data_scroll.scroll_vertical += int(ds_local.y * 0.3)
 			var local_y = mouse_gpos.y - frame_row_container.global_position.y
 			var cur_row = _get_row_at_content_y(local_y)
 			if cur_row >= 0 and cur_row != _frame_drag_start_row:
