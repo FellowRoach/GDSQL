@@ -1152,8 +1152,20 @@ func _on_scroll(value: float):
 	borders_overlay.queue_redraw()
 	_scroll_guard = false
 
+func _gui_input(event: InputEvent):
+	if event is InputEventMouseButton:
+		var mb = event as InputEventMouseButton
+		if mb.button_index == MOUSE_BUTTON_WHEEL_UP or mb.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			# GUI 事件从叶子节点向根传播。ScrollContainer 已先处理完滚动，
+			# 此处捕获未消耗的滚轮事件，阻止继续传播到 GraphEdit 被解释为缩放。
+			if is_instance_valid(data_scroll) and data_scroll.get_global_rect().has_point(get_global_mouse_position()):
+				accept_event()
+			elif show_frame and is_instance_valid(frame_scroll) and frame_scroll.get_global_rect().has_point(get_global_mouse_position()):
+				accept_event()
+
 func _on_data_scroll_changed(value: float):
 	_on_scroll(value)
+
 
 func _on_data_hscroll_changed(value: float):
 	if is_instance_valid(data_header_hbox):
