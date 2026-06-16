@@ -32,7 +32,7 @@ gdscript/warnings/directory_rules={
 
 [editor]
 
-script/search_in_file_extensions=PackedStringArray("gd", "tscn", "gdshader")
+script/search_in_file_extensions=PackedStringArray("gd", "tscn", "gdshader", "cfg")
 
 [editor_plugins]
 
