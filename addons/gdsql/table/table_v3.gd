@@ -637,15 +637,14 @@ func _get_col_at_x(local_x: float) -> int:
 func _input(event):
 	if not is_node_ready() or not header_container.is_visible_in_tree():
 		return
-	var header_rect = Rect2(header_container.global_position, header_container.size)
 	var mouse_global = get_global_mouse_position()
-	var over_header = header_rect.has_point(mouse_global)
+	var over_header = header_container.get_rect().has_point(header_container.get_local_mouse_position())
 
 	if event is InputEventMouseButton:
 		var mb = event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_LEFT:
 			if mb.pressed and over_header:
-				var header_pos = mb.position - header_container.global_position
+				var header_pos = header_container.get_local_mouse_position()
 				var col_idx = _get_col_boundary_at_x(header_pos.x)
 				if col_idx >= 0:
 					if mb.double_click:
@@ -690,11 +689,11 @@ func _input(event):
 
 		if mb.button_index == MOUSE_BUTTON_WHEEL_UP or mb.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 			var redirect_scroll = false
-			if is_instance_valid(data_scroll) and data_scroll.get_global_rect().has_point(get_global_mouse_position()):
+			if is_instance_valid(data_scroll) and data_scroll.get_rect().has_point(data_scroll.get_local_mouse_position()):
 				redirect_scroll = true
-			elif show_frame and is_instance_valid(frame_scroll) and frame_scroll.get_global_rect().has_point(get_global_mouse_position()):
+			elif show_frame and is_instance_valid(frame_scroll) and frame_scroll.get_rect().has_point(frame_scroll.get_local_mouse_position()):
 				redirect_scroll = true
-			elif is_instance_valid(header_container) and header_container.get_global_rect().has_point(get_global_mouse_position()):
+			elif is_instance_valid(header_container) and header_container.get_rect().has_point(header_container.get_local_mouse_position()):
 				redirect_scroll = true
 			if redirect_scroll:
 				if Input.is_key_pressed(KEY_SHIFT):
@@ -722,7 +721,7 @@ func _input(event):
 				data_scroll.scroll_vertical += int((ds_local.y - ds_rect.size.y) * 0.3)
 			elif ds_local.y < 0:
 				data_scroll.scroll_vertical += int(ds_local.y * 0.3)
-			var hp = mouse_global - header_container.global_position
+			var hp = header_container.get_local_mouse_position()
 			var cur_col = _get_col_at_x(hp.x)
 			if cur_col >= 0:
 				_header_did_drag = true
@@ -754,7 +753,7 @@ func _input(event):
 				_update_dragger_position()
 				borders_overlay.queue_redraw()
 		elif over_header:
-			var header_pos = mouse_global - header_container.global_position
+			var header_pos = header_container.get_local_mouse_position()
 			var col_idx = _get_col_boundary_at_x(header_pos.x)
 			var want_hsize = col_idx >= 0
 			for btn in header_buttons:
