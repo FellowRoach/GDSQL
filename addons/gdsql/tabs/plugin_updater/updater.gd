@@ -189,6 +189,7 @@ func _on_notes_completed(result: int, _code: int, _headers: PackedStringArray, b
 
 ## Show the final version info UI once we have the correct release notes.
 func _finalize_version_info(notes: String) -> void:
+	notes = GDSQL.GDSQLUtils.markdown_to_bbcode(notes)
 	var cmp = GDSQL.GDSQLUtils.cmp_version(_current_version, _latest_version)
 	if cmp > 0:
 		_status_label.text = "Your version (v%s) is ahead of the latest release (v%s)." % [_current_version, _latest_version]

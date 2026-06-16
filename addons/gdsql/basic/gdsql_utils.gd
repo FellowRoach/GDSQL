@@ -451,3 +451,385 @@ static func parse_max_upgrade(body: String, current_ver: String) -> String:
 		if cmp_version(current_ver, from_v) >= 0 and cmp_version(current_ver, to_v) <= 0:
 			return to_v
 	return ""
+	
+## Convert Markdown/HTML text to BBCode for RichTextLabel display.
+## Handles both HTML tags (from GitHub API) and Markdown syntax.
+## Supported: headings, bold, italic, inline code, links, code blocks,
+## ul/ol lists, tables (rendered in [code] monospace), horizontal rules.
+static func markdown_to_bbcode(md: String) -> String:
+	if md.is_empty():
+		return ""
+
+	# Pass 1: Convert HTML tags to BBCode (for content from GitHub that has HTML)
+	var result = _html_to_bbcode(md)
+
+	# Pass 2: Process remaining Markdown syntax
+	# Strip upgrade_ranges metadata line
+	var lines = result.split("\n")
+	var filtered: PackedStringArray = []
+	for line in lines:
+		if not line.strip_edges(true, false).begins_with("upgrade_ranges:"):
+			filtered.append(line)
+	lines = filtered
+
+	var out: PackedStringArray = []
+	var in_code_block = false
+	var in_table = false
+	var table_rows: PackedStringArray = []
+
+	for line in lines:
+		var trimmed = line.strip_edges()
+
+		# Skip HTML comment remnants
+		if trimmed.begins_with("<!--"):
+			continue
+
+		# Fenced code block start/end
+		if trimmed.begins_with("```"):
+			if in_code_block:
+				out.append("[/code]")
+				in_code_block = false
+			else:
+				out.append("[code]")
+				in_code_block = true
+			continue
+
+		if in_code_block:
+			out.append(line)
+			continue
+
+		# Table rows — detect pipe tables (even without leading |)
+		if _is_table_row(trimmed):
+			# Check if it's a separator row (---|---)
+			var sep_check = trimmed.replace("|", "").strip_edges()
+			if not sep_check.is_empty():
+				var _is_sep = true
+				for c in sep_check:
+					if c not in ["-", ":", " "]:
+						_is_sep = false
+						break
+				if _is_sep:
+					continue
+			if not in_table:
+				in_table = true
+				table_rows.clear()
+			# Convert pipe separators to [cell] tags
+			var cells = trimmed.split("|")
+			var row = ""
+			for cell in cells:
+				var c = cell.strip_edges()
+				if not c.is_empty():
+					row += "[cell border=gray]" + c + "[/cell]"
+			table_rows.append(row)
+			continue
+		else:
+			if in_table:
+				var _cols = (table_rows[0].count("[cell]") + table_rows[0].count("[cell ")) if table_rows.size() > 0 else 2
+				out.append("\n[table=" + str(_cols) + "]\n" + "\n".join(table_rows) + "\n[/table]\n")
+				in_table = false
+				table_rows.clear()
+
+		# Horizontal rule
+		# Horizontal rule
+		if trimmed == "---":
+			out.append("\n[color=gray]" + "─".repeat(50) + "[/color]")
+			continue
+
+		# Headings with font size
+		if trimmed.begins_with("### "):
+			line = "[b][font_size=24]" + line.trim_prefix("### ") + "[/font_size][/b]"
+		elif trimmed.begins_with("## "):
+			line = "[b][font_size=28]" + line.trim_prefix("## ") + "[/font_size][/b]"
+		elif trimmed.begins_with("# "):
+			line = "[b][font_size=32]" + line.trim_prefix("# ") + "[/font_size][/b]"
+
+		# Inline formatting: bold italic, bold, italic, code, links
+		line = _replace_pair(line, "***", "***", "[b][i]", "[/i][/b]")
+		line = _replace_pair(line, "**", "**", "[b]", "[/b]")
+		line = _replace_pair(line, "*", "*", "[i]", "[/i]")
+		line = _replace_pair(line, "`", "`", "[code]", "[/code]")
+		line = _replace_links(line)
+
+		out.append(line)
+
+	# Flush remaining code block or table
+	if in_code_block:
+		out.append("[/code]")
+	if in_table:
+		var _cols = (table_rows[0].count("[cell]") + table_rows[0].count("[cell ")) if table_rows.size() > 0 else 2
+		out.append("\n[table=" + str(_cols) + "]\n" + "\n".join(table_rows) + "\n[/table]\n")
+
+	return "\n".join(out)
+
+
+## Check if a line looks like a pipe table row (contains | with content on both sides).
+static func _is_table_row(text: String) -> bool:
+	var trimmed = text.strip_edges()
+	if not trimmed.contains("|"):
+		return false
+	var parts = trimmed.split("|")
+	# Need at least 2 columns with content
+	if parts.size() < 2:
+		return false
+	var non_empty = 0
+	for p in parts:
+		if not p.strip_edges().is_empty():
+			non_empty += 1
+	return non_empty >= 2
+
+## Convert HTML tags to BBCode equivalents.
+static func _html_to_bbcode(text: String) -> String:
+	var result = text
+
+	# Decode HTML entities
+	result = result.replace("&amp;", "&")
+	result = result.replace("&lt;", "<")
+	result = result.replace("&gt;", ">")
+	result = result.replace("&quot;", "\"")
+	result = result.replace("&#39;", "'")
+	result = result.replace("&#x27;", "'")
+	result = result.replace("&nbsp;", " ")
+
+	# Remove HTML comments
+	result = RegEx.create_from_string("<!--[\\s\\S]*?-->").sub(result, "", true)
+
+	# Block-level tags — replace with newline-wrapped BBCode
+	result = _replace_html_tag(result, "h1", "\n[b][font_size=32]", "[/font_size][/b]\n")
+	result = _replace_html_tag(result, "h2", "\n[b][font_size=28]", "[/font_size][/b]\n")
+	result = _replace_html_tag(result, "h3", "\n[b][font_size=24]", "[/font_size][/b]\n")
+	result = _replace_html_tag(result, "h4", "\n[b]", "[/b]\n")
+	result = _replace_html_tag(result, "h5", "\n[b]", "[/b]\n")
+	result = _replace_html_tag(result, "h6", "\n[b]", "[/b]\n")
+
+	# Lists
+	result = _replace_html_tag_pair(result, "ul", "", "")
+	result = _replace_html_tag_pair(result, "ol", "", "")
+	result = _replace_html_tag_pair(result, "li", "[ul]", "[/ul]")
+
+	# Paragraphs and divs
+	result = _replace_html_tag_pair(result, "p", "", "\n")
+	result = _replace_html_tag_pair(result, "div", "", "\n")
+
+	# Horizontal rule
+	result = result.replace("<hr />", "\n[color=gray]" + "─".repeat(50) + "[/color]\n")
+	result = result.replace("<hr/>", "\n[color=gray]" + "─".repeat(50) + "[/color]\n")
+
+	# Line breaks
+	result = result.replace("<br />", "\n")
+	result = result.replace("<br/>", "\n")
+	result = result.replace("<br>", "\n")
+
+	# Inline tags
+	result = _replace_html_tag(result, "strong", "[b]", "[/b]")
+	result = _replace_html_tag(result, "b", "[b]", "[/b]")
+	result = _replace_html_tag(result, "em", "[i]", "[/i]")
+	result = _replace_html_tag(result, "i", "[i]", "[/i]")
+	result = _replace_html_tag(result, "u", "[u]", "[/u]")
+	result = _replace_html_tag(result, "s", "[s]", "[/s]")
+	result = _replace_html_tag(result, "del", "[s]", "[/s]")
+	result = _replace_html_tag(result, "code", "[code]", "[/code]")
+	result = _replace_html_tag(result, "kbd", "[kbd]", "[/kbd]")
+
+	# Links
+	result = _replace_html_links(result)
+
+	# Tables
+	result = _replace_html_tag_pair(result, "table", "
+[table=2]", "[/table]
+")
+	result = _replace_html_tag_pair(result, "thead", "", "")
+	result = _replace_html_tag_pair(result, "tbody", "", "")
+	result = _replace_html_tag_pair(result, "tr", "", "
+")
+	result = _replace_html_tag(result, "th", "[cell border=gray]", "[/cell]")
+	result = _replace_html_tag(result, "td", "[cell border=gray]", "[/cell]")
+
+	# Images — show as alt text or placeholder
+	result = _replace_html_img(result)
+
+	# Strip any remaining HTML tags
+	result = _strip_html_tags(result)
+
+	return result
+
+
+## Replace a specific HTML tag pair with BBCode equivalents.
+## Handles <tag>content</tag> and <tag attr="val">content</tag>.
+static func _replace_html_tag(text: String, tag: String, bb_open: String, bb_close: String) -> String:
+	var result = text
+	var open_prefix = "<" + tag
+	var close_tag = "</" + tag + ">"
+	var i = 0
+	while i < result.length():
+		var start = result.find(open_prefix, i)
+		if start == -1:
+			break
+		# Make sure it's actually a tag (followed by >, space, /, or newline)
+		var after = start + open_prefix.length()
+		if after < result.length() and result[after] not in [">", " ", "/", "\t", "\n"]:
+			i = start + 1
+			continue
+		var gt = result.find(">", start)
+		if gt == -1:
+			break
+		# Self-closing tag — skip
+		if gt > 0 and result[gt - 1] == "/":
+			result = result.substr(0, start) + result.substr(gt + 1)
+			i = start
+			continue
+		var end = result.find(close_tag, gt + 1)
+		if end == -1:
+			i = gt + 1
+			continue
+		var inner = result.substr(gt + 1, end - gt - 1)
+		result = result.substr(0, start) + bb_open + inner + bb_close + result.substr(end + close_tag.length())
+		i = start + bb_open.length() + inner.length() + bb_close.length()
+	return result
+
+
+## Replace a container tag pair, keeping content inside.
+static func _replace_html_tag_pair(text: String, tag: String, bb_open: String, bb_close: String) -> String:
+	var result = text
+	var open_prefix = "<" + tag
+	var close_tag = "</" + tag + ">"
+	var i = 0
+	while i < result.length():
+		var start = result.find(open_prefix, i)
+		if start == -1:
+			break
+		var after = start + open_prefix.length()
+		if after < result.length() and result[after] not in [">", " ", "/", "\t", "\n"]:
+			i = start + 1
+			continue
+		var gt = result.find(">", start)
+		if gt == -1:
+			break
+		var end = result.find(close_tag, gt + 1)
+		if end == -1:
+			result = result.substr(0, start) + bb_open + result.substr(gt + 1)
+			i = start + bb_open.length()
+			continue
+		var inner = result.substr(gt + 1, end - gt - 1)
+		result = result.substr(0, start) + bb_open + inner + bb_close + result.substr(end + close_tag.length())
+		i = start + bb_open.length() + inner.length() + bb_close.length()
+	return result
+
+
+## Convert <a href="url">text</a> to [url=url]text[/url].
+static func _replace_html_links(text: String) -> String:
+	var result = text
+	var i = 0
+	while i < result.length():
+		var start = result.find("<a ", i)
+		if start == -1:
+			break
+		var gt = result.find(">", start)
+		if gt == -1:
+			break
+		var tag_html = result.substr(start, gt - start)
+		# Extract href value
+		var href_idx = tag_html.find("href=")
+		if href_idx == -1:
+			i = start + 1
+			continue
+		var val_start = href_idx + 5  # after "href="
+		var quote_char = ""
+		if val_start < tag_html.length() and tag_html[val_start] in ['"', "'"]:
+			quote_char = tag_html[val_start]
+			val_start += 1
+		var href_end = tag_html.length()
+		if not quote_char.is_empty():
+			var qpos = tag_html.find(quote_char, val_start)
+			if qpos != -1:
+				href_end = qpos
+		var href = tag_html.substr(val_start, href_end - val_start)
+		var close = result.find("</a>", gt)
+		if close == -1:
+			i = start + 1
+			continue
+		var link_text = result.substr(gt + 1, close - gt - 1)
+		var replacement = "[url=" + href + "]" + link_text + "[/url]"
+		result = result.substr(0, start) + replacement + result.substr(close + 4)
+		i = start + replacement.length()
+	return result
+
+
+## Convert <img src="url" alt="text"> to alt text or placeholder.
+static func _replace_html_img(text: String) -> String:
+	var result = text
+	var i = 0
+	while i < result.length():
+		var start = result.find("<img ", i)
+		if start == -1:
+			break
+		var gt = result.find(">", start)
+		if gt == -1:
+			break
+		var tag_html = result.substr(start, gt - start)
+		var alt = ""
+		var alt_idx = tag_html.find("alt=")
+		if alt_idx != -1:
+			var av = alt_idx + 4
+			if av < tag_html.length() and tag_html[av] in ['"', "'"]:
+				var q = tag_html[av]
+				var ae = tag_html.find(q, av + 1)
+				if ae != -1:
+					alt = tag_html.substr(av + 1, ae - av - 1)
+		var replacement = alt if not alt.is_empty() else "[image]"
+		result = result.substr(0, start) + replacement + result.substr(gt + 1)
+		i = start + replacement.length()
+	return result
+
+
+## Strip specific single (non-pair) HTML tags.
+static func _strip_single_tags(text: String, tags: Array[String]) -> String:
+	var result = text
+	for tag in tags:
+		result = RegEx.create_from_string("<" + tag + "[^>]*>").sub(result, "", true)
+	return result
+
+
+## Strip all remaining HTML tags.
+static func _strip_html_tags(text: String) -> String:
+	return RegEx.create_from_string("<[^>]*>").sub(text, "", true)
+
+
+## Replace a pair of delimiters with BBCode tags.
+static func _replace_pair(text: String, open_delim: String, close_delim: String, bb_open: String, bb_close: String) -> String:
+	var result = text
+	var i = 0
+	while i < result.length():
+		var start = result.find(open_delim, i)
+		if start == -1:
+			break
+		var end = result.find(close_delim, start + open_delim.length())
+		if end == -1:
+			break
+		var inner = result.substr(start + open_delim.length(), end - start - open_delim.length())
+		result = result.substr(0, start) + bb_open + inner + bb_close + result.substr(end + close_delim.length())
+		i = start + bb_open.length() + inner.length() + bb_close.length()
+	return result
+
+
+## Convert Markdown links [text](url) to BBCode [url=url]text[/url].
+static func _replace_links(text: String) -> String:
+	var result = text
+	var i = 0
+	while i < result.length():
+		var start = result.find("[", i)
+		if start == -1:
+			break
+		var mid = result.find("](", start)
+		if mid == -1 or mid - start > 300:
+			i = start + 1
+			continue
+		var end = result.find(")", mid + 2)
+		if end == -1 or end - mid > 500:
+			i = mid + 2
+			continue
+		var link_text = result.substr(start + 1, mid - start - 1)
+		var link_url = result.substr(mid + 2, end - mid - 2)
+		var replacement = "[url=" + link_url + "]" + link_text + "[/url]"
+		result = result.substr(0, start) + replacement + result.substr(end + 1)
+		i = start + replacement.length()
+	return result
