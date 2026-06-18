@@ -742,6 +742,7 @@ func gen_table_node(columns: Array, table_datas: Array, is_union_all: bool, join
 		table.show_grid = true
 		table.enable_custom_row_height = true
 		table.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		table.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		margin_container.add_child(table)
 		table.set_meta("columns", columns)
 		table.column_tips = columns.map(func(v): 
@@ -977,13 +978,15 @@ func gen_table_node(columns: Array, table_datas: Array, is_union_all: bool, join
 						
 			# 弹对话框让用户选择更新哪些数据
 			var arr: Array[Array] = [["Please confirm:"]]
-			var table_2 = load("res://addons/gdsql/table/table_v3.gd").instantiate()
+			var table_2 = load("res://addons/gdsql/table/table_v3.gd").new()
 			table_2.show_frame = true
 			table_2.show_grid = true
 			table_2.enable_custom_row_height = true
 			table_2.ratios = [0.1, 0.4, 0.2, 0.1, 0.2] as Array[float]
 			table_2.columns = ["#", tr("Action"), tr("Extra info"), tr("Do"), tr("Status")]
 			table_2.column_tips = ["", "", "If necessary.", "Only execute checked actions.", "Execute status."]
+			table_2.custom_minimum_size.x = columns.size() * 120
+			table_2.size_flags_horizontal = SIZE_EXPAND_FILL
 			var check_all_btn = CheckBox.new()
 			check_all_btn.text = tr("Check all")
 			check_all_btn.button_pressed = true
@@ -3023,12 +3026,14 @@ func on_link_node_query(node: GraphNode):
 								daos.push_back(dao)
 						# 弹对话框
 						var arr: Array[Array] = [["Please confirm:"]]
-						var table_2 = load("res://addons/gdsql/table/table_v3.gd").instantiate()
+						var table_2 = load("res://addons/gdsql/table/table_v3.gd").new()
 						table_2.ratios = [1, 10, 2] as Array[float]
 						table_2.show_grid = true
 						table_2.show_frame = true
 						table_2.enable_custom_row_height = true
 						table_2.columns = ["#", tr("action"), tr("status")]
+						table_2.custom_minimum_size.x = table_2.columns.size() * 120
+						table_2.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 						var datas = []
 						var k = 0
 						for i: GDSQL.BaseDao in daos:
