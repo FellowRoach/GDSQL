@@ -342,3 +342,4 @@
 +,0.5.4,addons/gdsql/tabs/sql_graph/gdsqlgraph_format_loader.gd.uid
 +,0.5.4,addons/gdsql/tabs/welcome/tips.gd
 +,0.5.4,addons/gdsql/tabs/welcome/tips.gd.uid
++,0.5.9,addons/gdsql/LICENSE
