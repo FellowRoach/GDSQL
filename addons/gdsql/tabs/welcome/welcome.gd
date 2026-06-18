@@ -72,6 +72,19 @@ func _on_update_button_pressed() -> void:
 	_updater = load("res://addons/gdsql/tabs/plugin_updater/updater.gd").new()
 	add_child(_updater)
 	_updater.popup_centered()
+	_updater.visibility_changed.connect(_refresh_version)
+
+
+func _refresh_version() -> void:
+	if not _updater.visible:
+		return
+	var plugin_cfg := ConfigFile.new()
+	plugin_cfg.load("res://addons/gdsql/plugin.cfg")
+	_version = "v" + plugin_cfg.get_value('plugin', 'version', 'unknown version')
+	version.text = _version
+	version.icon = null
+	version.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	version.tooltip_text = ""
 
 
 func _on_license_button_pressed() -> void:
