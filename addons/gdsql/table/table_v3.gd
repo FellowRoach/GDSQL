@@ -1726,10 +1726,13 @@ func clear_all():
 	datas_flat.clear()
 	row_heights.clear()
 	row_offsets = [0.0]
+	first_visible_idx = 0
+	last_visible_idx = -1
 	row_height_dirty.clear()
 	custom_row_heights.clear()
 	_row_offsets_dirty = true
 	for i in range(data_row_pool.size()):
+		data_row_pool[i].set_meta("data_index", -1)
 		data_row_pool[i].visible = false
 		data_pool_in_use[i] = false
 
