@@ -1590,6 +1590,8 @@ func _create_cell_control(value, a_data, col_idx: int) -> Control:
 		control = label_model.duplicate()
 		control.text = var_to_str(value)
 		control.tooltip_text = _split_tooltip(control.text)
+		if a_data is GDSQL.DictionaryObject:
+			_bind_update_callback(a_data, col_idx, control)
 
 	# Set mouse filter so events pass through to data_row_container for selection
 	if control:
@@ -1637,7 +1639,7 @@ func _bind_update_callback(a_data: GDSQL.DictionaryObject, col_idx: int, control
 				else:
 					_replace_control(ctl, _create_cell_control(new_value, a_data, col_idx))
 			TYPE_OBJECT:
-				if (new_value is Resource or new_value is Control) and ctl is not Label:
+				if new_value is Resource or new_value is Control:
 					_replace_control(ctl, _create_cell_control(new_value, a_data, col_idx))
 				else:
 					if ctl is Label:
