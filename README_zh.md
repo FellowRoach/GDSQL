@@ -110,7 +110,7 @@ else:
 使用 `数据库.表名` 格式引用其他数据库中的表：
 
 ```gdscript
-var dao = GDSQL.SQLParser.parse_to_dao("SELECT * FROM GameConfig.c_hero WHERE hp > 100")
+var dao = GDSQL.SQLParser.parse_to_dao("SELECT * FROM UserData.t_hero t1 LEFT JOIN GameConfig.c_hero t2 on t2.id == t1.hid WHERE t1.hp > 100")
 var result = dao.query()
 ```
 
