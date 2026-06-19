@@ -16,16 +16,129 @@ A database SQL workbench plugin for Godot Engine built on top of the `ConfigFile
 
 ---
 
+## Basic Usage
+
+### Fluent DAO API
+Complete database operations through GDScript method chaining — no XML required:
+
+```gdscript
+# Select
+var result = GDSQL.BaseDao.new() \
+	.use_db("GameConfig") \
+	.select("id, name, hp, mp") \ # Or: .select("id", "name", "hp", "mp") Or: .select("*")
+	.from("c_hero") \
+	.where("hp > 100 AND mp >= 50") \
+	.order_by("hp") \
+	.limit(10) \
+	.query()
+
+# Insert
+GDSQL.BaseDao.new() \
+	.use_db("GameConfig") \
+	.insert_into("c_hero") \
+	.values({"id": 101, "name": "NewHero", "hp": 200}) \
+	.query()
+
+# Update
+GDSQL.BaseDao.new() \
+	.use_db("GameConfig") \
+	.update("c_hero") \
+	.sets({"hp": 300}) \
+	.where("id == 101") \
+	.query()
+
+# Delete
+GDSQL.BaseDao.new() \
+	.use_db("GameConfig") \
+	.delete_from("c_hero") \
+	.where("id == 101") \
+	.query()
+```
+
+### Execute SQL Strings with SQLParser
+
+Parse and execute any SQL string directly — the parser returns a ready-to-run `BaseDao`:
+
+```gdscript
+# SELECT
+var dao = GDSQL.SQLParser.parse_to_dao("SELECT id, name, hp FROM GameConfig.c_hero WHERE hp > 100 ORDER BY hp DESC")
+var result = dao.query()
+if result and result.ok():
+    var head = result.get_head()   # ["id", "name", "hp"]
+    var rows = result.get_data()   # [[1, "Warrior", 200], ...]
+    for row in rows:
+        print(row)
+
+# INSERT
+GDSQL.SQLParser.parse_to_dao("INSERT INTO GameConfig.c_hero (id, name, hp) VALUES (101, 'Mage', 80)").query()
+
+# UPDATE
+GDSQL.SQLParser.parse_to_dao("UPDATE GameConfig.c_hero SET hp = 300 WHERE id == 101").query()
+
+# DELETE
+GDSQL.SQLParser.parse_to_dao("DELETE FROM GameConfig.c_hero WHERE id == 101").query()
+```
+
+SQL keywords are case-insensitive. The parser includes an LRU cache (1024 entries) so repeated queries are faster.
+
+### Working with QueryResult
+
+`QueryResult` wraps query output with status checks and data access:
+
+```gdscript
+var result = GDSQL.BaseDao.new() \
+    .use_db("GameConfig") \
+    .select("id, name, hp") \
+    .from("c_hero") \
+    .where("hp > 100") \
+    .query()
+
+if result and result.ok():
+    var head = result.get_head()   # Column names: ["id", "name", "hp"]
+    var data = result.get_data()   # Rows: [[1, "Warrior", 200], ...]
+    print("Row count: ", result.size())
+    
+    for row in data:
+        var name = row[head.find("name")]
+        print(name)
+else:
+    print("Query failed: ", result.get_err() if result else "null")
+```
+
+### Cross-Database Queries
+
+Reference tables from other databases using `database.table` notation:
+
+```gdscript
+var dao = GDSQL.SQLParser.parse_to_dao("SELECT * FROM GameConfig.c_hero WHERE hp > 100")
+var result = dao.query()
+```
+
+### Aggregate Queries
+
+```gdscript
+var dao = GDSQL.SQLParser.parse_to_dao("SELECT name, AVG(hp) as avg_hp FROM GameConfig.c_hero GROUP BY name WHERE avg_hp > 100")
+var result = dao.query()
+```
+
+### LEFT JOIN
+
+```gdscript
+var dao = GDSQL.SQLParser.parse_to_dao("SELECT a.id, a.name, b.score FROM GameConfig.c_hero a LEFT JOIN c_score b ON a.id == b.hero_id WHERE b.score > 50")
+var result = dao.query()
+```
+
+---
+
 ## Features
 
 ### SQL Query Engine
 - **Full SQL syntax**: SELECT / INSERT / UPDATE / DELETE / REPLACE
-- **Conditional queries**: WHERE, AND, OR, IN, NOT IN, BETWEEN, LIKE, IS NULL
-- **Sorting & grouping**: ORDER BY, GROUP BY, HAVING
+- **Conditional queries**: WHERE, AND, OR, IN, NOT IN, Godot built-in operator or function (eg. contains)
+- **Sorting & grouping**: ORDER BY, GROUP BY
 - **Pagination**: LIMIT, OFFSET
-- **Joins**: LEFT JOIN with chainable multi-table support
+- **Joins**: LEFT JOIN with chainable multi-table support; Cross database join query!
 - **Set operations**: UNION ALL
-- **Subqueries**: Correlated and non-correlated
 - **Aggregate functions**: COUNT, SUM, AVG, MIN, MAX, GROUP_CONCAT, and more
 - **Expression evaluation**: SQL-compatible null semantics, operators, function calls, type conversion
 - **LRU cache**: Auto-caches the last 1024 parsed SQL statements
@@ -48,43 +161,6 @@ Available as a dedicated main screen in the Godot Editor:
 - **Least-squares fitting**: Predicts and fills subsequent data based on existing samples
 - **Multi-type support**: Numbers, strings (with numeric placeholders), Vector2/3/4, Vector2i/3i/4i, Resource paths
 - **Pattern recognition**: Detects numbering patterns (e.g. `"name_001"`, `"name_002"`) and fills accordingly
-
-### Fluent DAO API
-Complete database operations through GDScript method chaining — no XML required:
-
-```gdscript
-# Select
-var result = GDSQL.BaseDao.new()
-	.use_db("game_config")
-	.select("id, name, hp, mp")
-	.from("c_hero")
-	.where("hp > 100 AND mp >= 50")
-	.order_by("hp")
-	.limit(10)
-	.query()
-
-# Insert
-GDSQL.BaseDao.new()
-	.use_db("game_config")
-	.insert_into("c_hero")
-	.values({"id": 101, "name": "NewHero", "hp": 200})
-	.query()
-
-# Update
-GDSQL.BaseDao.new()
-	.use_db("game_config")
-	.update("c_hero")
-	.sets({"hp": 300})
-	.where("id = 101")
-	.query()
-
-# Delete
-GDSQL.BaseDao.new()
-	.use_db("game_config")
-	.delete_from("c_hero")
-	.where("id = 101")
-	.query()
-```
 
 ### Mapper Graph Visual Editor
 A drag-and-drop graph editor for designing table relationships:
@@ -113,6 +189,26 @@ A drag-and-drop graph editor for designing table relationships:
 
 ### Internationalization
 13 languages: Simplified Chinese, Traditional Chinese, English, Japanese, Korean, French, German, Spanish, Italian, Portuguese (BR), Russian, Polish, Turkish.
+
+---
+
+## Screenshots
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/jinyangcruise/GDSQL-ICON/refs/heads/main/Screenshot-2026-06-17-193925.jpg" alt="GDSQL Screenshot 1" width="800"/>
+</p>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/jinyangcruise/GDSQL-ICON/refs/heads/main/Screenshot-2026-06-17-193934.jpg" alt="GDSQL Screenshot 2" width="800"/>
+</p>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/jinyangcruise/GDSQL-ICON/refs/heads/main/Screenshot-2026-06-17-193947.jpg" alt="GDSQL Screenshot 3" width="800"/>
+</p>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/jinyangcruise/GDSQL-ICON/refs/heads/main/Screenshot-2026-06-17-194000.jpg" alt="GDSQL Screenshot 4" width="800"/>
+</p>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/jinyangcruise/GDSQL-ICON/refs/heads/main/Screenshot-2026-06-17-194147.jpg" alt="GDSQL Screenshot 5" width="800"/>
+</p>
 
 ---
 
@@ -241,7 +337,6 @@ Create a class extending `GBatisMapper` and point its `mapper_xml` property to t
 
 - **Performance roadmap**: Identify hot paths and optimize — both GDScript-level and via GDExtension for critical sections
 - **Extended SQL syntax**: Window functions, CTEs (Common Table Expressions), full JOIN support (INNER, RIGHT, FULL)
-- **DDL language support**: `CREATE TABLE`, `ALTER TABLE`, `DROP TABLE` statements
 - **Query planner optimization**: Better execution order, LEFT JOIN predicate push-down
 - **More ease-of-use features**: Simplify common workflows, lower the learning curve
 - **Quality-of-life improvements**: Better error messages, undo/redo, batch operations, enhanced keyboard shortcuts
