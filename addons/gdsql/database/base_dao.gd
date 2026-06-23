@@ -179,7 +179,7 @@ func commit() -> void:
 	if __table == "":
 		_assert_false("commit", "table name is empty")
 		return
-	var path = __db_path.path_join(__table)
+	var path = GDSQL.RootConfig.get_table_data_path(__db_name, __table)
 	var conf: GDSQL.ImprovedConfigFile = _get_conf(__db_name, __table, _PASSWORD)
 	if conf == null:
 		_assert_false("commit", "load conf err!")
@@ -195,7 +195,7 @@ func discard() -> void:
 	if __table == "":
 		_assert_false("commit", "table name is empty")
 		return
-	var path = __db_path.path_join(__table)
+	var path = GDSQL.RootConfig.get_table_data_path(__db_name, __table)
 	GDSQL.ConfManager.remove_conf(path)
 	
 ## 开启求值操作。仅在update操作时有效。仅在值为字符串时进行取值
