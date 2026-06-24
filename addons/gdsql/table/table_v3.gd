@@ -1370,6 +1370,9 @@ func _assign_data_row_data(row_node: Control, data_idx: int):
 	if hbox == null:
 		return
 
+	# Sync cell count in the row to match current column count
+	_sync_row_cell_count(hbox)
+
 	var data = datas_flat[data_idx]
 	if data == null:
 		return
@@ -1419,6 +1422,27 @@ func _get_cell_content_wrapper(cell: PanelContainer) -> Control:
 	wrapper.resized.connect(_on_cell_content_wrapper_resized.bind(wrapper))
 	cell.add_child(wrapper)
 	return wrapper
+
+
+func _sync_row_cell_count(hbox: HBoxContainer):
+	var target = col_widths.size()
+	var cells = []
+	for c in hbox.get_children():
+		if c is PanelContainer:
+			cells.append(c)
+	while cells.size() > target:
+		var extra = cells.pop_back()
+		hbox.remove_child(extra)
+		extra.queue_free()
+	while cells.size() < target:
+		var cell = PanelContainer.new()
+		cell.mouse_filter = Control.MOUSE_FILTER_PASS
+		cell.clip_contents = true
+		cell.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		cell.add_theme_stylebox_override("panel", style_box_empty)
+		_apply_cell_width(cell, col_widths[cells.size()] if cells.size() < col_widths.size() else float(MIN_COL_WIDTH))
+		hbox.add_child(cell)
+		cells.append(cell)
 
 func _apply_cell_width(cell: PanelContainer, width: float):
 	cell.custom_minimum_size.x = width
