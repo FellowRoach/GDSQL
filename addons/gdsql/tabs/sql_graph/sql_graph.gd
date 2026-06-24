@@ -796,6 +796,7 @@ func gen_table_node(columns: Array, table_datas: Array, is_union_all: bool, join
 			return type_string(v["Data Type"]) if v.has("Data Type") else "")
 		table.columns = columns.map(func(v): return v["field_as"])
 		table.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		graph_node.custom_minimum_size.x = columns.size() * 120
 		# 除了最后一个导出按钮，其他按钮删除
 		var flow_container: HFlowContainer = graph_datas[1][2]
 		while flow_container.get_child_count() > 1:
