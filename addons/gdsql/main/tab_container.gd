@@ -310,7 +310,10 @@ func add_tab_table_inspector(db_name, table_name) -> void:
 	table_inspector.data_file_path = data_file_path if data_file_path == absolute_path \
 		else "%s (%s)" % [data_file_path, absolute_path]
 	var data_file = FileAccess.open(absolute_path, FileAccess.READ)
-	table_inspector.data_file_size = "%d KB (%d Byte)" % [ceili(data_file.get_length() / 1024.0), data_file.get_length()]
+	var file_size_str = "0 KB (0 Byte)"
+	if data_file != null:
+		file_size_str = "%d KB (%d Byte)" % [ceili(data_file.get_length() / 1024.0), data_file.get_length()]
+	table_inspector.data_file_size = file_size_str
 	var update_total_data_count = func():
 		if mgr.databases[db_name]["tables"][table_name]["encrypted"] == "" or GDSQL.ConfManager.has_conf(data_file_path):
 			table_inspector.total_data_count = str(GDSQL.ConfManager.get_conf(data_file_path, "").get_sections().size())
