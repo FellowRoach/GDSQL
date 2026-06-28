@@ -72,5 +72,4 @@
 # Only include the addons folder when downloading from the Asset Library.
 /**        export-ignore
 /addons    !export-ignore
-/addons/godot !export-ignore
-/addons/godot/** !export-ignore
+/addons/** !export-ignore
