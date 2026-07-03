@@ -99,8 +99,8 @@ item_2/id = 2
 
 [node name="PopupMenuTables" type="PopupMenu" parent="." unique_id=2049760709]
 oversampling_override = 1.0
-size = Vector2i(299, 146)
-item_count = 4
+size = Vector2i(334, 194)
+item_count = 6
 item_0/text = "Create Table..."
 item_0/icon = ExtResource("3_lxxmd")
 item_0/id = 0
@@ -108,8 +108,13 @@ item_1/text = "Create Table Like..."
 item_1/id = 1
 item_2/id = 2
 item_2/separator = true
-item_3/text = "Refresh All"
+item_3/text = "Truncate All Tables..."
+item_3/icon = ExtResource("4_lxxmd")
 item_3/id = 3
+item_4/id = 4
+item_4/separator = true
+item_5/text = "Refresh All"
+item_5/id = 5
 
 [node name="PopupMenuCreateTableLike" type="PopupMenu" parent="PopupMenuTables" unique_id=1687542528]
 oversampling_override = 1.0

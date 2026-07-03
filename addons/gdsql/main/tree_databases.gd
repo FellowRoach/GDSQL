@@ -223,6 +223,14 @@ func truncate_table_from_config(db_name: String, table_name: String) -> void:
 	if err == OK:
 		refresh()
 		
+func clear_all_tables_from_config(db_name: String) -> void:
+	var dao = GDSQL.AdminDao.new()
+	for table_name in mgr.databases[db_name]["tables"]:
+		var err = await dao.truncate_table(db_name, table_name)
+		if err != OK:
+			push_error("Failed to truncate table %s.%s" % [db_name, table_name])
+	refresh()
+	
 func _ready():
 	if mgr == null or not mgr.run_in_plugin(self):
 		return
@@ -1002,6 +1010,15 @@ func _on_popup_menu_tables_index_pressed(index: int) -> void:
 				mgr.open_add_table_tab.emit(item.get_meta("db_name"))
 		"Create Table Like...":
 			pass # 子menu实现，所以留空
+		"Truncate All Tables...":
+			var item := get_selected()
+			if item:
+				var db_name = item.get_meta("db_name")
+				var open_dialog = func():
+					mgr.create_confirmation_dialog(
+						tr("Are you sure to clear all data tables in `%s`?") % db_name,
+						clear_all_tables_from_config.bind(db_name))
+				deal_password_before_table_cmd(item, "", open_dialog)
 		"Refresh All":
 			refresh()
 			
