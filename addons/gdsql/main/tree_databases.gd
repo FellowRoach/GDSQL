@@ -78,12 +78,41 @@ func _notification(what: int) -> void:
 			if not disk_changed.visible:
 				disk_changed.popup_centered_ratio(0.3)
 				
+func _save_collapsed_state(item: TreeItem, saved: Dictionary, path: Array) -> void:
+	if item == null:
+		return
+	var key = item.get_meta("type", "")
+	if key != "":
+		var name = item.get_meta("display_name", item.get_text(0))
+		path.push_back(name)
+		saved["/".join(path)] = item.collapsed
+	# collect children
+	var c = item.get_first_child()
+	while c:
+		_save_collapsed_state(c, saved, path.duplicate())
+		c = c.get_next()
+
+func _restore_collapsed_state(item: TreeItem, saved: Dictionary, path: Array) -> void:
+	if item == null:
+		return
+	var key = item.get_meta("type", "")
+	if key != "":
+		var name = item.get_meta("display_name", item.get_text(0))
+		path.push_back(name)
+		if saved.has("/".join(path)):
+			item.collapsed = saved["/".join(path)]
+	# restore children
+	var c = item.get_first_child()
+	while c:
+		_restore_collapsed_state(c, saved, path.duplicate())
+		c = c.get_next()
+
 func _clear():
 	clear()
 	database_items.clear()
 	popup_menu_create_table_like_tables.clear()
 	popup_menu_create_table_like_table_item.clear()
-	
+
 func refresh_databases():
 	GDSQL.RootConfig.reload()
 	mgr.databases = GDSQL.RootConfig.get_databases_info()
@@ -327,6 +356,9 @@ func _exit_tree():
 	mgr = null
 	
 func refresh() -> void:
+	# 保存刷新前的折叠状态
+	var saved_collapsed = {}
+	_save_collapsed_state(root, saved_collapsed, [])
 	_clear()
 	refresh_databases()
 	root = create_item()
@@ -364,7 +396,8 @@ func refresh() -> void:
 				"db_name": db_name,
 				"table_name": t
 			})
-			
+	_restore_collapsed_state(root, saved_collapsed, [])
+
 func _get_specific_extension_files(path: String, extension: String) -> Array[String]:
 	var ret: Array[String] = []
 	var dir = DirAccess.open(path)
