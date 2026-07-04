@@ -29,6 +29,7 @@ var _max_upgrade: String = ""
 
 
 func _init() -> void:
+	set_translation_domain("GDSQL")
 	set_meta("type", "updater")
 	title = tr("Check for Updates")
 	min_size = Vector2(780, 620)
@@ -85,7 +86,6 @@ func _init() -> void:
 
 ## Compare two semver strings. Returns -1, 0, or 1.
 func _ready() -> void:
-	set_translation_domain("GDSQL")
 	_http.request(GITHUB_API)
 
 
@@ -196,33 +196,33 @@ func _finalize_version_info(notes: String) -> void:
 		_status_label.text = tr("Your version (v%s) is ahead of the latest release (v%s).") % [_current_version, _latest_version]
 		_upgrade_btn.disabled = true
 		_upgrade_btn.text = tr("Up to date")
-		_notes_rt.text = tr("[b]Release notes:[/b]\n") + notes
+		_notes_rt.text = tr("[b]Release notes:[/b]") + "\n" + notes
 	elif cmp == 0:
 		_status_label.text = tr("You're up to date! (v%s)") % _current_version
 		_upgrade_btn.disabled = true
 		_upgrade_btn.text = tr("Up to date")
-		_notes_rt.text = tr("[b]Release notes:[/b]\n") + notes
+		_notes_rt.text = tr("[b]Release notes:[/b]") + "\n" + notes
 	elif _max_upgrade == "":
 		_status_label.text = tr("Current version v%s is not in any upgrade path.") % _current_version
-		_notes_rt.text = tr("[b]No upgrade path[/b]\n\nYour version (v%s) does not fall into any supported upgrade range.\n\nPlease check GitHub Releases for manual upgrade options.\n\n") % _current_version + tr("[b]Release notes:[/b]\n") + notes
+		_notes_rt.text = tr("[b]No upgrade path[/b]") + "\n\n" + tr("Your version (v%s) does not fall into any supported upgrade range. Please check GitHub Releases for manual upgrade options.") % _current_version + "\n\n" + tr("[b]Release notes:[/b]") + "\n" + notes
 		_upgrade_btn.disabled = true
 		_upgrade_btn.text = tr("No upgrade path")
 	elif GDSQL.GDSQLUtils.cmp_version(_latest_version, _max_upgrade) > 0:
 		if GDSQL.GDSQLUtils.cmp_version(_current_version, _max_upgrade) >= 0:
 			_status_label.text = tr("No compatible upgrade available for v%s.") % _current_version
-			_notes_rt.text = tr("[b]Breaking change detected[/b]\n\nLatest version v%s has breaking changes that are incompatible with your current version (v%s).\n\nYour version has reached the maximum upgrade path. Please check GitHub Releases for any newer compatible version.\n\n") % [_latest_version, _current_version] + tr("[b]Release notes:[/b]\n") + notes
+			_notes_rt.text = tr("[b]Breaking change detected[/b]") + "\n\n" + (tr("Latest version v%s has breaking changes that are incompatible with your current version (v%s).") % [_latest_version, _current_version]) + "\n\n" + tr("Your version has reached the maximum upgrade path. Please check GitHub Releases for any newer compatible version.") + "\n\n" + tr("[b]Release notes:[/b]") + "\n" + notes
 			_upgrade_btn.disabled = true
 			_upgrade_btn.text = tr("No upgrade path")
 		else:
 			_target_version = _max_upgrade
 			_status_label.text = tr("Latest v%s has breaking changes. Upgrading to compatible v%s instead.") % [_latest_version, _max_upgrade]
-			_notes_rt.text = tr("[b]Breaking change detected[/b]\n\nLatest version v%s changes the data format and is incompatible with your current version (v%s).\n\nAuto-upgrading to v%s instead. After that, you can manually upgrade further.\n\n") % [_latest_version, _current_version, _max_upgrade] + tr("[b]Release notes (v%s):[/b]\n") % _target_version + notes
+			_notes_rt.text = tr("[b]Breaking change detected[/b]") + "\n\n" + tr("Latest version v%s changes the data format and is incompatible with your current version (v%s). Auto-upgrading to v%s instead. After that, you can manually upgrade further.") % [_latest_version, _current_version, _max_upgrade] + "\n\n" + tr("[b]Release notes (v%s):[/b]") % _target_version + "\n" + notes
 			_upgrade_btn.disabled = false
 			_upgrade_btn.text = tr("Upgrade to v%s") % _max_upgrade
 	else:
 		_target_version = _latest_version
 		_status_label.text = tr("A new version is available: v%s") % _latest_version
-		_notes_rt.text = tr("[b]Release notes:[/b]\n") + notes
+		_notes_rt.text = tr("[b]Release notes:[/b]") + "\n" + notes
 		_upgrade_btn.disabled = false
 		_upgrade_btn.text = tr("Upgrade to v%s") % _latest_version
 
@@ -356,7 +356,7 @@ func _on_upgrade() -> void:
 		vb.add_theme_constant_override("separation", 15)
 		mc.add_child(vb)
 		
-		var warn_text = tr("The following files in addons/gdsql/ are not part of the plugin.\nThey may be your custom data:")
+		var warn_text = tr("The following files in addons/gdsql/ are not part of the plugin. They may be your custom data:")
 		var wl = Label.new()
 		wl.text = warn_text
 		vb.add_child(wl)
@@ -379,7 +379,7 @@ func _on_upgrade() -> void:
 		sc.add_child(il)
 		
 		var wl2 = Label.new()
-		wl2.text = tr("Do you want to proceed with the upgrade?\nForcing overwrite will erase existing files in the addons/gdsql/ directory.")
+		wl2.text = tr("Do you want to proceed with the upgrade? Forcing overwrite will erase existing files in the addons/gdsql/ directory.")
 		vb.add_child(wl2)
 		
 		var cp = Button.new()
