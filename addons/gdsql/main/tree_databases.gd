@@ -284,7 +284,7 @@ func _ready():
 		
 	popup_menu_database.set_item_submenu_node(2, popup_menu_copy_to)
 	popup_menu_database.set_item_submenu_node(3, popup_menu_send_to)
-	popup_menu_database.set_item_submenu_node(8, popup_menu_password)
+	popup_menu_database.set_item_submenu_node(11, popup_menu_password)
 	popup_menu_tables.set_item_submenu_node(1, popup_menu_create_table_like_tables)
 	popup_menu_table_item.set_item_submenu_node(3, popup_menu_copy_to_of_table)
 	popup_menu_table_item.set_item_submenu_node(7, popup_menu_send_to_of_table)
@@ -960,6 +960,20 @@ func _on_popup_menu_database_index_pressed(index: int) -> void:
 	match popup_menu_database.get_item_text(index):
 		"Set as Default Schema [Double Click]":
 			_on_item_activated(get_selected())
+		"Export Wizard":
+			var item := get_selected()
+			if item:
+				var db_name = item.get_meta("db_name")
+				var open_tab = func():
+					mgr.open_table_data_export_tab.emit(db_name, "")
+				deal_password_before_table_cmd(item, "", open_tab)
+		"Import Wizard":
+			var item := get_selected()
+			if item:
+				var db_name = item.get_meta("db_name")
+				var open_tab = func():
+					mgr.open_table_data_import_tab.emit(db_name, "")
+				deal_password_before_table_cmd(item, "", open_tab)
 		"Create Schema...":
 			mgr.open_add_schema_tab.emit()
 		"Alter Schema...":
@@ -1043,6 +1057,20 @@ func _on_popup_menu_tables_index_pressed(index: int) -> void:
 				mgr.open_add_table_tab.emit(item.get_meta("db_name"))
 		"Create Table Like...":
 			pass # 子menu实现，所以留空
+		"Export Wizard":
+			var item := get_selected()
+			if item:
+				var db_name = item.get_meta("db_name")
+				var open_tab = func():
+					mgr.open_table_data_export_tab.emit(db_name, "")
+				deal_password_before_table_cmd(item, "", open_tab)
+		"Import Wizard":
+			var item := get_selected()
+			if item:
+				var db_name = item.get_meta("db_name")
+				var open_tab = func():
+					mgr.open_table_data_import_tab.emit(db_name, "")
+				deal_password_before_table_cmd(item, "", open_tab)
 		"Truncate All Tables...":
 			var item := get_selected()
 			if item:
