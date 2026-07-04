@@ -213,10 +213,12 @@ func select(...varargs) -> GDSQL.BaseDao:
 	if not (__cmd == "" or __cmd == "select"):
 		return _assert_false("select", "already set command %s" % __cmd)
 		
-	# 最后一个参数必须是 bool（need_head）
-	if typeof(varargs[varargs.size() - 1]) != TYPE_BOOL:
-		return _assert_false("select", "last argument must be bool (need_head)")
-	var need_head: bool = varargs[varargs.size() - 1]
+	# 最后一个参数可选：如果是 bool，作为 need_head
+	var need_head: bool = true
+	var arg_count = varargs.size()
+	if varargs.size() > 0 and typeof(varargs[varargs.size() - 1]) == TYPE_BOOL:
+		need_head = varargs[varargs.size() - 1]
+		arg_count -= 1
 	
 	__cmd = "select"
 	__select.clear()
@@ -224,14 +226,14 @@ func select(...varargs) -> GDSQL.BaseDao:
 	__need_head = need_head
 	
 	# 只有一个字符串参数 → 旧方式，走完整的分词逻辑（支持逗号、函数等复杂表达式）
-	if varargs.size() == 2:
+	if arg_count == 1:
 		if typeof(varargs[0]) != TYPE_STRING:
 			return _assert_false("select", "argument must be String")
 		return _select_impl(varargs[0] as String)
 		
 	# 多个字符串参数 → 新方式，每个参数是一个字段，直接处理
 	var field_strs = []
-	for i in varargs.size() - 1:
+	for i in arg_count:
 		if typeof(varargs[i]) != TYPE_STRING:
 			return _assert_false("select", "argument %d must be String" % i)
 		_push_field(varargs[i] as String)
