@@ -1206,7 +1206,7 @@ func _position_visible_rows():
 
 			# Data row
 			var data_row = data_row_pool[i]
-			if data_row.get_meta("data_index", -1) != data_idx:
+			if data_row.get_meta("data_index", -1) != data_idx or data_row.get_meta("data") != datas_flat[data_idx]:
 				_assign_data_row_data(data_row, data_idx)
 			_apply_data_row_widths(data_row)
 			if row_height_mode == RowHeightMode.ADAPTIVE and not custom_row_heights.has(data_idx):
