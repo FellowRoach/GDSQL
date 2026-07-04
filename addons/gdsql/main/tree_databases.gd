@@ -615,7 +615,7 @@ func _on_popup_menu_table_item_index_pressed(index: int) -> void:
 			var item := get_selected()
 			if item:
 				mgr.open_table_inspector_tab.emit(item.get_meta("db_name"), item.get_meta("table_name"))
-		"Table Data Export Wizard":
+		"Export Wizard":
 			var item := get_selected()
 			if item:
 				var db_name = item.get_meta("db_name")
@@ -623,7 +623,7 @@ func _on_popup_menu_table_item_index_pressed(index: int) -> void:
 				var open_tab = func():
 					mgr.open_table_data_export_tab.emit(db_name, table_name)
 				deal_password_before_table_cmd(item, "", open_tab)
-		"Table Data Import Wizard":
+		"Import Wizard":
 			var item := get_selected()
 			if item:
 				var db_name = item.get_meta("db_name")

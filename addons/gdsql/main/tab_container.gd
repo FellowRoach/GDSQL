@@ -337,7 +337,7 @@ func add_tab_table_data_export(db_name, table_name) -> void:
 	add_child(table_data_export)
 	move_child(new_tab_button, get_child_count() - 1)
 	current_tab = get_child_count() - 2
-	set_tab_title(current_tab, "Table Data Export")
+	set_tab_title(current_tab, "Export Wizard")
 	table_data_export.select_table(db_name, table_name)
 	
 func add_tab_table_data_import(db_name, table_name) -> void:
@@ -345,7 +345,7 @@ func add_tab_table_data_import(db_name, table_name) -> void:
 	add_child(table_data_import)
 	move_child(new_tab_button, get_child_count() - 1)
 	current_tab = get_child_count() - 2
-	set_tab_title(current_tab, "Table Data Import")
+	set_tab_title(current_tab, "Import Wizard")
 	table_data_import.select_table(db_name, table_name)
 	
 func add_tab_select_data_export(columns: Array, datas: Array) -> void:
