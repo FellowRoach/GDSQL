@@ -522,6 +522,12 @@ static func markdown_to_bbcode(md: String) -> String:
 			for cell in cells:
 				var c = cell.strip_edges()
 				if not c.is_empty():
+					# Apply inline formatting inside table cells
+					c = _replace_pair(c, "***", "***", "[b][i]", "[/i][/b]")
+					c = _replace_pair(c, "**", "**", "[b]", "[/b]")
+					c = _replace_pair(c, "*", "*", "[i]", "[/i]")
+					c = _replace_pair(c, "`", "`", "[code]", "[/code]")
+					c = _replace_links(c)
 					row += "[cell border=gray]" + c + "[/cell]"
 			table_rows.append(row)
 			continue
