@@ -44,6 +44,89 @@ func _notification(what):
 			_custom_display_control.clear()
 
 
+func _get_property_list() -> Array[Dictionary]:
+	var properties: Array[Dictionary] = []
+	for key in _data:
+		var key_bak = key
+		var usage = PROPERTY_USAGE_DEFAULT if not _usage.has(key) else _usage[key]
+		if _duplicate_property.has(key):
+			key = _data[key]
+			usage = PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY
+
+		var info = {
+			"name": key if key == key_bak else key_bak,
+			"type": _hint[key]["type"] if (_hint.has(key) and _hint[key].has("type")) \
+			else (TYPE_NIL if _data[key] == null else typeof(_data[key])),
+			"usage": usage,
+			"hint": PROPERTY_HINT_NONE if not (_hint.has(key) and _hint[key].has("hint")) else _hint[key]["hint"],
+			"hint_string": "" if not (_hint.has(key) and _hint[key].has("hint_string")) else _hint[key]["hint_string"],
+		}
+
+		# 可能需要从数据库提供字典值
+		if info["hint"] == PROPERTY_HINT_ENUM or info["hint"] == PROPERTY_HINT_ENUM_SUGGESTION:
+			# 字符串的enum没有办法进行更多提示
+			if info.type == TYPE_STRING:
+				var arr = (info["hint_string"] as String).rsplit(":", true, 1)
+				if arr.size() == 2 and (arr[0] as String).is_absolute_path():
+					var conf = GDSQL.ConfManager.get_conf(arr[0], "")
+					if conf:
+						info["hint_string"] = ",".join(conf.get_all_section_value(arr[1]))
+					else:
+						push_error("Can not load file [%s]" % arr[0])
+			elif info.type == TYPE_INT:
+				var arr = (info["hint_string"] as String).rsplit(":", true, 2)
+				if arr.size() == 3 and (arr[0] as String).is_absolute_path():
+					var meta_key = info.name.to_snake_case() + "_enum_hint_string_dict"
+					if has_meta(meta_key):
+						info["hint_string"] = get_meta(meta_key)
+					else:
+						var conf = GDSQL.ConfManager.get_conf(arr[0], "")
+						if conf:
+							info["hint_string"] = ",".join(
+								conf.get_all_section_values([arr[1], arr[2]]).map(
+									func(v): return str(v[arr[2]]) + ":" + str(v[arr[1]])
+								),
+							)
+							set_meta(meta_key, info.hint_string)
+						else:
+							push_error("Can not load file [%s]" % arr[0])
+
+		properties.append(info)
+
+	return properties
+
+
+func _get(property: StringName) -> Variant:
+	if _duplicate_property.has(property):
+		property = _data[property]
+	if _data.has(property):
+		return _data[property]
+	return null
+
+
+## 设置属性的值。默认情况下如果值无变化，则不会触发value_changed信号，除非force为true。
+func _set(property: StringName, value: Variant, force: bool = false) -> bool:
+	if _duplicate_property.has(property):
+		property = _data[property]
+	if _data.has(property):
+		var old_value = _data[property]
+		if typeof(value) == typeof(old_value) and value == old_value and not force:
+			return true
+		if not _origin.has(property):
+			_origin[property] = old_value
+		_data[property] = value
+		if _update_callback and _update_callback.has(property):
+			_update_callback[property].call(value)
+
+		value_changed.emit(property, value, old_value)
+		# 连接属性也发出信号
+		for i in _duplicate_property:
+			if _data[i] == property:
+				value_changed.emit(i, value, old_value)
+		return true
+	return false
+
+
 func get_data() -> Dictionary:
 	return _data
 
@@ -146,74 +229,6 @@ func duplicate(deep: bool = false) -> GDSQL.DictionaryObject:
 	return dict_obj
 
 
-## 用于在检查器界面显示的时候是否只读
-func _is_read_only() -> bool:
-	return _read_only
-
-
-func _get(property: StringName) -> Variant:
-	if _duplicate_property.has(property):
-		property = _data[property]
-	if _data.has(property):
-		return _data[property]
-	return null
-
-
-## 设置属性的值。默认情况下如果值无变化，则不会触发value_changed信号，除非force为true。
-func _set(property: StringName, value: Variant, force: bool = false) -> bool:
-	if _duplicate_property.has(property):
-		property = _data[property]
-	if _data.has(property):
-		var old_value = _data[property]
-		if typeof(value) == typeof(old_value) and value == old_value and not force:
-			return true
-		if not _origin.has(property):
-			_origin[property] = old_value
-		_data[property] = value
-		if _update_callback and _update_callback.has(property):
-			_update_callback[property].call(value)
-
-		value_changed.emit(property, value, old_value)
-		# 连接属性也发出信号
-		for i in _duplicate_property:
-			if _data[i] == property:
-				value_changed.emit(i, value, old_value)
-		return true
-	return false
-
-
-func _get_by_index(index: int) -> Variant:
-	return _get(__get_index_prop(index))
-
-
-## 获取index位置的属性名称。对于连接属性，key也必须存在于_data中。
-func __get_index_prop(index) -> String:
-	var i = 0
-	for key in _data:
-		if _is_hidden_prop(key):
-			continue
-		if i == index:
-			return key
-		i += 1
-	return ""
-
-
-# 前提是index位置的属性是存在的
-func _set_by_index(index: int, value: Variant) -> bool:
-	return _set(__get_index_prop(index), value)
-
-
-# 把index属性设置为同类型变量的默认值
-func _set_default_by_index(index: int) -> bool:
-	var prop = __get_index_prop(index)
-	if _duplicate_property.has(prop):
-		prop = _data[prop]
-
-	var type = _hint[prop]["type"] if (_hint.has(prop) and _hint[prop].has("type")) \
-	else (TYPE_NIL if _data[prop] == null else typeof(_data[prop]))
-	return _set(prop, GDSQL.DataTypeDef.DEFAULT_VALUES[type])
-
-
 ## 设置属性为链接属性，链接属性的值指向到被链接的属性的值。
 ## 被链接属性的名称可以从_hint[链接属性]["link"]获取到。
 ## 请勿嵌套链接。
@@ -229,62 +244,6 @@ func mark_link_prop(prop: String, src_prop: String) -> void:
 	_duplicate_property.push_back(prop)
 
 
-func _is_hidden_prop(prop: String) -> bool:
-	return _usage.has(prop) and (_usage[prop] & PROPERTY_USAGE_CATEGORY or _usage[prop] & PROPERTY_USAGE_GROUP \
-				or _usage[prop] & PROPERTY_USAGE_SUBGROUP )
-
-
-func _get_property_list() -> Array[Dictionary]:
-	var properties: Array[Dictionary] = []
-	for key in _data:
-		var key_bak = key
-		var usage = PROPERTY_USAGE_DEFAULT if not _usage.has(key) else _usage[key]
-		if _duplicate_property.has(key):
-			key = _data[key]
-			usage = PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY
-
-		var info = {
-			"name": key if key == key_bak else key_bak,
-			"type": _hint[key]["type"] if (_hint.has(key) and _hint[key].has("type")) \
-			else (TYPE_NIL if _data[key] == null else typeof(_data[key])),
-			"usage": usage,
-			"hint": PROPERTY_HINT_NONE if not (_hint.has(key) and _hint[key].has("hint")) else _hint[key]["hint"],
-			"hint_string": "" if not (_hint.has(key) and _hint[key].has("hint_string")) else _hint[key]["hint_string"],
-		}
-
-		# 可能需要从数据库提供字典值
-		if info["hint"] == PROPERTY_HINT_ENUM or info["hint"] == PROPERTY_HINT_ENUM_SUGGESTION:
-			# 字符串的enum没有办法进行更多提示
-			if info.type == TYPE_STRING:
-				var arr = (info["hint_string"] as String).rsplit(":", true, 1)
-				if arr.size() == 2 and (arr[0] as String).is_absolute_path():
-					var conf = GDSQL.ConfManager.get_conf(arr[0], "")
-					if conf:
-						info["hint_string"] = ",".join(conf.get_all_section_value(arr[1]))
-					else:
-						push_error("Can not load file [%s]" % arr[0])
-			elif info.type == TYPE_INT:
-				var arr = (info["hint_string"] as String).rsplit(":", true, 2)
-				if arr.size() == 3 and (arr[0] as String).is_absolute_path():
-					var meta_key = info.name.to_snake_case() + "_enum_hint_string_dict"
-					if has_meta(meta_key):
-						info["hint_string"] = get_meta(meta_key)
-					else:
-						var conf = GDSQL.ConfManager.get_conf(arr[0], "")
-						if conf:
-							info["hint_string"] = ",".join(
-								conf.get_all_section_values([arr[1], arr[2]]).map(
-									func(v): return str(v[arr[2]]) + ":" + str(v[arr[1]])
-								),
-							)
-							set_meta(meta_key, info.hint_string)
-						else:
-							push_error("Can not load file [%s]" % arr[0])
-
-		properties.append(info)
-
-	return properties
-
 #由于检查器当前显示的属性不一定是本属性，可能导致revert的对象不是本属性，所以直接屏蔽该功能
 #func _property_can_revert(property: StringName) -> bool:
 #return _data.has(property)
@@ -295,11 +254,8 @@ func _get_property_list() -> Array[Dictionary]:
 #if _data.has(property):
 #return _data[property]
 #return null
-
 #func _to_string() -> String:
 #return var_to_str(_data)
-
-
 ## 设置一个属性的更新回调函数。当该属性值修改时，调用该函数
 func set_update_callback(property: String, callback: Callable) -> void:
 	_update_callback[property] = callback
@@ -395,3 +351,45 @@ func get_keys_line() -> String:
 
 func get_values_line() -> String:
 	return ", ".join(_data.values().map(func(v): return var_to_str(v)))
+
+
+## 用于在检查器界面显示的时候是否只读
+func _is_read_only() -> bool:
+	return _read_only
+
+
+func _get_by_index(index: int) -> Variant:
+	return _get(__get_index_prop(index))
+
+
+## 获取index位置的属性名称。对于连接属性，key也必须存在于_data中。
+func __get_index_prop(index) -> String:
+	var i = 0
+	for key in _data:
+		if _is_hidden_prop(key):
+			continue
+		if i == index:
+			return key
+		i += 1
+	return ""
+
+
+# 前提是index位置的属性是存在的
+func _set_by_index(index: int, value: Variant) -> bool:
+	return _set(__get_index_prop(index), value)
+
+
+# 把index属性设置为同类型变量的默认值
+func _set_default_by_index(index: int) -> bool:
+	var prop = __get_index_prop(index)
+	if _duplicate_property.has(prop):
+		prop = _data[prop]
+
+	var type = _hint[prop]["type"] if (_hint.has(prop) and _hint[prop].has("type")) \
+	else (TYPE_NIL if _data[prop] == null else typeof(_data[prop]))
+	return _set(prop, GDSQL.DataTypeDef.DEFAULT_VALUES[type])
+
+
+func _is_hidden_prop(prop: String) -> bool:
+	return _usage.has(prop) and (_usage[prop] & PROPERTY_USAGE_CATEGORY or _usage[prop] & PROPERTY_USAGE_GROUP \
+					or _usage[prop] & PROPERTY_USAGE_SUBGROUP)
