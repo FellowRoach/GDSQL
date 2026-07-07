@@ -1,0 +1,45 @@
+name: GDScript Format
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    branches: [main, master, develop]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  format:
+    name: Check GDScript formatting
+    runs-on: ubuntu-latest
+
+    # Keep this true at first if the project is not ready to block PRs.
+    # Remove this line later when formatting should become mandatory.
+    continue-on-error: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install GDQuest GDScript Formatter
+        run: |
+          set -euo pipefail
+
+          VERSION="0.20.1"
+          ASSET="gdscript-formatter-${VERSION}-linux-x86_64.zip"
+          URL="https://github.com/GDQuest/GDScript-formatter/releases/download/${VERSION}/${ASSET}"
+
+          curl -L "$URL" -o "$ASSET"
+          unzip "$ASSET"
+          chmod +x gdscript-formatter-${VERSION}-linux-x86_64
+          sudo mv gdscript-formatter-${VERSION}-linux-x86_64 /usr/local/bin/gdscript-formatter
+
+      - name: Check GDScript formatting
+        run: |
+          set -euo pipefail
+
+          find addons/gdsql test -type f -name "*.gd" -print0 | while IFS= read -r -d '' file; do
+            gdscript-formatter --check "$file"
+          done
