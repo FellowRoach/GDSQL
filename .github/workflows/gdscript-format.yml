@@ -37,9 +37,33 @@ jobs:
           sudo mv gdscript-formatter-${VERSION}-linux-x86_64 /usr/local/bin/gdscript-formatter
 
       - name: Check GDScript formatting
+        shell: bash
         run: |
           set -euo pipefail
 
-          find addons/gdsql -type f -name "*.gd" ! -ipath "*test*" -print0 | while IFS= read -r -d '' file; do
-            gdscript-formatter --check "$file"
+          mapfile -d '' FILES < <(find addons/gdsql -type f -name "*.gd" ! -ipath "*test*" -print0 | sort -z)
+
+          if [ "${#FILES[@]}" -eq 0 ]; then
+            echo "No GDScript files found."
+            exit 0
+          fi
+
+          UNFORMATTED=()
+
+          for file in "${FILES[@]}"; do
+            if ! gdscript-formatter --check "$file" >/dev/null 2>&1; then
+              UNFORMATTED+=("$file")
+            fi
           done
+
+          if [ "${#UNFORMATTED[@]}" -gt 0 ]; then
+            echo "::error title=GDScript formatting failed::${#UNFORMATTED[@]} file(s) need formatting."
+            echo ""
+            echo "The following files are not formatted:"
+            printf ' - %s\n' "${UNFORMATTED[@]}"
+            echo ""
+            echo "Run the GDQuest GDScript formatter locally, then commit the changes."
+            exit 1
+          fi
+
+          echo "All ${#FILES[@]} GDScript file(s) are formatted."
