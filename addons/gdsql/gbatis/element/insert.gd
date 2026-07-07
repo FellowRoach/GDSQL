@@ -32,8 +32,11 @@ var key_property = ""
 var key_column = ""
 var database_id = ""
 var sql = ""
-var method_return_info: Dictionary: set = set_method_return_info
-var param_obj_or_dict: set = set_param_obj_or_dict
+var method_return_info: Dictionary:
+	set = set_method_return_info
+var param_obj_or_dict:
+	set = set_param_obj_or_dict
+
 
 func _init(conf: Dictionary) -> void:
 	id = conf.get("id").strip_edges()
@@ -46,20 +49,25 @@ func _init(conf: Dictionary) -> void:
 	elif key_property.get_slice_count(",") != key_column.get_slice_count(","):
 		assert(false, "Split count not match of keyProperty and keyColumn.")
 	database_id = conf.get("databaseId", "").strip_edges()
-	
+
+
 func clean():
 	method_return_info.clear()
 	param_obj_or_dict = null
-	
+
+
 func set_sql(p_sql: String):
 	sql = p_sql
-	
+
+
 func set_method_return_info(info: Dictionary):
 	method_return_info = info
-	
+
+
 func set_param_obj_or_dict(param):
 	param_obj_or_dict = param
-	
+
+
 # INFO 缓存的逻辑在mapper_parser.gd
 func query():
 	var dao = GDSQL.SQLParser.parse_to_dao(sql)
@@ -78,12 +86,12 @@ func query():
 	if not query_result.ok():
 		assert(false, "Error occur. %s" % query_result.get_err())
 		return false
-		
+
 	if use_generated_keys == "true" and param_obj_or_dict:
 		var generated_keys = query_result.get_generated_keys()
 		var key_properties = [] if key_property == "" else key_property.split(",") as PackedStringArray
 		var key_columns = [] if key_column == "" else key_column.split(",") as PackedStringArray
-		
+
 		for p in key_properties:
 			if param_obj_or_dict is Object:
 				if not p in param_obj_or_dict:
@@ -93,7 +101,7 @@ func query():
 				if not param_obj_or_dict.has(p):
 					assert(false, "Invalid key %s in Dictionary." % p)
 					return null
-					
+
 		for k in generated_keys:
 			var v = generated_keys[k]
 			if key_properties.is_empty():
@@ -111,16 +119,19 @@ func query():
 						param_obj_or_dict.set(prop_or_key, v)
 					else:
 						param_obj_or_dict[prop_or_key] = v
-						
+
 	if method_return_info.type == TYPE_NIL:
 		return
-		
+
 	if method_return_info.type == TYPE_INT:
 		return query_result.get_affected_rows()
-		
+
 	if method_return_info.class_name == "QueryResult":
 		return query_result
-		
-	assert(false, "Method of <insert> cannot return %s." % \
-		GDSQL.DataTypeDef.DATA_TYPE_NAMES[method_return_info.type])
+
+	assert(
+		false,
+		"Method of <insert> cannot return %s." % \
+				GDSQL.DataTypeDef.DATA_TYPE_NAMES[method_return_info.type],
+	)
 	return null

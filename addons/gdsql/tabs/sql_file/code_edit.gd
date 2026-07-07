@@ -1,11 +1,123 @@
 @tool
 extends CodeEdit
 
+const SQL_KEYWORDS: Array[String] = [
+	"select",
+	"insert",
+	"update",
+	"delete",
+	"replace",
+	"from",
+	"where",
+	"set",
+	"into",
+	"values",
+	"join",
+	"left",
+	"right",
+	"inner",
+	"outer",
+	"cross",
+	"on",
+	"group",
+	"by",
+	"order",
+	"having",
+	"limit",
+	"offset",
+	"union",
+	"all",
+	"distinct",
+	"as",
+	"between",
+	"in",
+	"like",
+	"exists",
+	"case",
+	"when",
+	"then",
+	"else",
+	"end",
+	"create",
+	"drop",
+	"alter",
+	"table",
+	"database",
+	"index",
+	"primary",
+	"foreign",
+	"references",
+	"unique",
+	"default",
+	"autoincrement",
+	"not",
+	"null",
+	"if",
+	"cascade",
+	"restrict",
+	"add",
+	"column",
+	"rename",
+	"to",
+	"ignore",
+	"duplicate",
+	"key",
+	"begin",
+	"commit",
+	"rollback",
+	"transaction",
+	"savepoint",
+	"and",
+	"or",
+	"not",
+	"is",
+	"asc",
+	"desc",
+	"count",
+	"sum",
+	"avg",
+	"min",
+	"max",
+	"abs",
+	"round",
+	"ceil",
+	"floor",
+	"length",
+	"trim",
+	"upper",
+	"lower",
+	"substr",
+	"coalesce",
+	"ifnull",
+	"nullif",
+	"cast",
+	"typeof",
+	"int",
+	"integer",
+	"float",
+	"real",
+	"double",
+	"decimal",
+	"varchar",
+	"char",
+	"text",
+	"blob",
+	"boolean",
+	"bool",
+	"date",
+	"datetime",
+	"timestamp",
+	"true",
+	"false",
+]
+
 @export var button_run_edit: Button
 
 var in_run_edit = false
 var in_run_edit_shortcut_feedback = false
-
+var mgr: GDSQL.WorkbenchManagerClass:
+	get:
+		return GDSQL.WorkbenchManager
 # 自定义补全面板（非弹窗，不会抢焦点）
 var _completion_panel: PanelContainer
 var _completion_list: ItemList
@@ -15,37 +127,12 @@ var _completion_word_end: int = 0
 var _completion_inserting: bool = false
 var _completion_dot_mode: bool = false
 var _completion_selected_idx: int = 0
-
 # 补全图标
 var _icon_db: Texture2D
 var _icon_table: Texture2D
 var _icon_column: Texture2D
 var _icon_keyword: Texture2D
 
-const SQL_KEYWORDS: Array[String] = [
-	"select", "insert", "update", "delete", "replace",
-	"from", "where", "set", "into", "values",
-	"join", "left", "right", "inner", "outer", "cross", "on",
-	"group", "by", "order", "having", "limit", "offset",
-	"union", "all", "distinct", "as", "between", "in", "like",
-	"exists", "case", "when", "then", "else", "end",
-	"create", "drop", "alter", "table", "database", "index",
-	"primary", "foreign", "references", "unique", "default",
-	"autoincrement", "not", "null", "if", "cascade", "restrict",
-	"add", "column", "rename", "to", "ignore", "duplicate", "key",
-	"begin", "commit", "rollback", "transaction", "savepoint",
-	"and", "or", "not", "is", "asc", "desc",
-	"count", "sum", "avg", "min", "max", "abs", "round",
-	"ceil", "floor", "length", "trim", "upper", "lower",
-	"substr", "coalesce", "ifnull", "nullif", "cast", "typeof",
-	"int", "integer", "float", "real", "double", "decimal",
-	"varchar", "char", "text", "blob", "boolean", "bool",
-	"date", "datetime", "timestamp",
-	"true", "false",
-]
-
-var mgr: GDSQL.WorkbenchManagerClass:
-	get: return GDSQL.WorkbenchManager
 
 func _ready() -> void:
 	syntax_highlighter = _create_sql_highlighter()
@@ -76,6 +163,85 @@ func _ready() -> void:
 	_completion_panel.custom_minimum_size = Vector2(280, 0)
 
 	text_changed.connect(_on_text_changed)
+
+
+func _gui_input(event: InputEvent) -> void:
+	# 补全弹窗键盘导航
+	if _completion_panel.visible and event is InputEventKey and event.is_pressed():
+		var count = _completion_list.item_count
+		match event.keycode:
+			KEY_UP:
+				if _completion_selected_idx > 0:
+					_completion_selected_idx -= 1
+				else:
+					_completion_selected_idx = count - 1
+				_completion_list.select(_completion_selected_idx)
+				_completion_list.ensure_current_is_visible()
+				accept_event()
+				return
+			KEY_DOWN:
+				if _completion_selected_idx < count - 1:
+					_completion_selected_idx += 1
+				else:
+					_completion_selected_idx = 0
+				_completion_list.select(_completion_selected_idx)
+				_completion_list.ensure_current_is_visible()
+				accept_event()
+				return
+			KEY_TAB, KEY_ENTER, KEY_KP_ENTER:
+				_on_completion_selected(_completion_selected_idx)
+				accept_event()
+				return
+			KEY_ESCAPE:
+				_hide_popup()
+				accept_event()
+				return
+
+	# 点击补全面板外部时关闭
+	if _completion_panel.visible and event is InputEventMouseButton and event.is_pressed():
+		var mouse_pos = get_global_mouse_position()
+		var panel_rect = Rect2(_completion_panel.global_position, _completion_panel.size)
+		if not panel_rect.has_point(mouse_pos):
+			_hide_popup()
+
+	if in_run_edit_shortcut_feedback:
+		if event is InputEventKey:
+			accept_event()
+		return
+	if button_run_edit.shortcut.matches_event(event):
+		in_run_edit = true
+		if event.is_released():
+			in_run_edit = false
+			_button_run_edit_pressed()
+		accept_event()
+		return
+	elif in_run_edit:
+		in_run_edit = false
+		_button_run_edit_pressed()
+		accept_event()
+		return
+
+
+func _can_drop_data(_position, data):
+	# { "type": "files", "files": ["res://src/dao/t_hero.gdmappergraph"], "from": @Tree@6840:<Tree#603409380691> }
+	if data is Dictionary:
+		if data.has("type") and data.has("files") and data.get("type") == "files":
+			for i in data.get("files"):
+				if i is String:
+					if i.ends_with(".gdsqltext") or i.ends_with(".gdsqlgraph") or i.ends_with(".gdmappergraph"):
+						return true
+	return false
+
+
+func _drop_data(_position, data):
+	for i in data.get("files"):
+		if i is String:
+			if i.ends_with(".gdsqltext"):
+				GDSQL.WorkbenchManager.open_sql_text_file_tab.emit(i)
+			elif i.ends_with(".gdsqlgraph"):
+				GDSQL.WorkbenchManager.open_sql_graph_file_tab.emit(i)
+			elif i.ends_with(".gdmappergraph"):
+				GDSQL.WorkbenchManager.open_mapper_graph_file_tab.emit(i)
 
 
 ## 创建 SQL 语法高亮器
@@ -109,13 +275,45 @@ func _create_sql_highlighter() -> CodeHighlighter:
 
 	# DML 关键字
 	var dml_keywords = [
-		"select", "insert", "update", "delete", "replace",
-		"from", "where", "set", "into", "values",
-		"join", "left", "right", "inner", "outer", "cross", "on",
-		"group", "by", "order", "having", "limit", "offset",
-		"union", "all", "distinct", "as", "between", "in", "like",
-		"exists", "case", "when", "then", "else", "end",
-		"ignore", "duplicate", "key",
+		"select",
+		"insert",
+		"update",
+		"delete",
+		"replace",
+		"from",
+		"where",
+		"set",
+		"into",
+		"values",
+		"join",
+		"left",
+		"right",
+		"inner",
+		"outer",
+		"cross",
+		"on",
+		"group",
+		"by",
+		"order",
+		"having",
+		"limit",
+		"offset",
+		"union",
+		"all",
+		"distinct",
+		"as",
+		"between",
+		"in",
+		"like",
+		"exists",
+		"case",
+		"when",
+		"then",
+		"else",
+		"end",
+		"ignore",
+		"duplicate",
+		"key",
 	]
 	for kw in dml_keywords:
 		h.add_keyword_color(kw, keyword_color)
@@ -124,10 +322,27 @@ func _create_sql_highlighter() -> CodeHighlighter:
 
 	# DDL / 结构关键字
 	var ddl_keywords = [
-		"create", "drop", "alter", "table", "database", "index",
-		"primary", "foreign", "references", "unique", "default",
-		"autoincrement", "not", "null", "if", "cascade", "restrict",
-		"add", "column", "rename", "to",
+		"create",
+		"drop",
+		"alter",
+		"table",
+		"database",
+		"index",
+		"primary",
+		"foreign",
+		"references",
+		"unique",
+		"default",
+		"autoincrement",
+		"not",
+		"null",
+		"if",
+		"cascade",
+		"restrict",
+		"add",
+		"column",
+		"rename",
+		"to",
 	]
 	for kw in ddl_keywords:
 		h.add_keyword_color(kw, keyword_color)
@@ -136,7 +351,11 @@ func _create_sql_highlighter() -> CodeHighlighter:
 
 	# 事务关键字
 	var txn_keywords = [
-		"begin", "commit", "rollback", "transaction", "savepoint",
+		"begin",
+		"commit",
+		"rollback",
+		"transaction",
+		"savepoint",
 	]
 	for kw in txn_keywords:
 		h.add_keyword_color(kw, keyword_color)
@@ -145,9 +364,21 @@ func _create_sql_highlighter() -> CodeHighlighter:
 
 	# 数据类型
 	var data_types = [
-		"int", "integer", "float", "real", "double", "decimal",
-		"varchar", "char", "text", "blob", "boolean", "bool",
-		"date", "datetime", "timestamp",
+		"int",
+		"integer",
+		"float",
+		"real",
+		"double",
+		"decimal",
+		"varchar",
+		"char",
+		"text",
+		"blob",
+		"boolean",
+		"bool",
+		"date",
+		"datetime",
+		"timestamp",
 	]
 	for kw in data_types:
 		h.add_keyword_color(kw, type_color)
@@ -156,11 +387,27 @@ func _create_sql_highlighter() -> CodeHighlighter:
 
 	# 内置函数
 	var functions = [
-		"count", "sum", "avg", "min", "max",
-		"abs", "round", "ceil", "floor",
-		"length", "trim", "upper", "lower", "substr", "replace",
-		"coalesce", "ifnull", "nullif",
-		"cast", "typeof", "list",
+		"count",
+		"sum",
+		"avg",
+		"min",
+		"max",
+		"abs",
+		"round",
+		"ceil",
+		"floor",
+		"length",
+		"trim",
+		"upper",
+		"lower",
+		"substr",
+		"replace",
+		"coalesce",
+		"ifnull",
+		"nullif",
+		"cast",
+		"typeof",
+		"list",
 	]
 	for kw in functions:
 		h.add_keyword_color(kw, function_color)
@@ -185,7 +432,6 @@ func _create_sql_highlighter() -> CodeHighlighter:
 
 
 # ==================== 代码补全 ====================
-
 func _on_text_changed() -> void:
 	if _completion_inserting:
 		return
@@ -228,43 +474,43 @@ func _update_completion() -> void:
 
 		var all_candidates: Array[Dictionary] = []
 		for kw in SQL_KEYWORDS:
-			all_candidates.push_back({"text": kw, "display": kw, "type": "keyword"})
+			all_candidates.push_back({ "text": kw, "display": kw, "type": "keyword" })
 		if mgr and mgr.databases:
 			for db_name in mgr.databases:
 				var db_display = mgr.databases[db_name].get("display_name", db_name)
 				if db_display == "" or db_display == db_name:
 					db_display = db_name
-				all_candidates.push_back({"text": db_name, "display": db_display, "type": "database"})
+				all_candidates.push_back({ "text": db_name, "display": db_display, "type": "database" })
 			for db_name in mgr.databases:
-				for table_name in mgr.databases[db_name].get("tables", {}):
+				for table_name in mgr.databases[db_name].get("tables", { }):
 					var tbl_display = mgr.databases[db_name]["tables"][table_name].get("display_name", table_name)
 					if tbl_display == "":
 						tbl_display = table_name
-					all_candidates.push_back({"text": table_name, "display": tbl_display, "type": "table"})
+					all_candidates.push_back({ "text": table_name, "display": tbl_display, "type": "table" })
 			# 字段名推荐：有引用表时缩小范围，否则列出所有表的字段
 			var referenced_tables = _extract_referenced_tables(before)
-			var column_added: Dictionary = {}  # 去重
+			var column_added: Dictionary = { } # 去重
 			if referenced_tables.size() > 0:
 				# 仅从已引用表中取字段
 				for t_name in referenced_tables:
 					for db_name in mgr.databases:
-						var tables = mgr.databases[db_name].get("tables", {})
+						var tables = mgr.databases[db_name].get("tables", { })
 						var matched_table = _find_key_ci(tables, t_name)
 						if matched_table != "":
 							for column in tables[matched_table].get("columns", []):
 								var col_name = column["Column Name"]
 								if not column_added.has(col_name):
 									column_added[col_name] = true
-									all_candidates.push_back({"text": col_name, "display": col_name, "type": "column"})
+									all_candidates.push_back({ "text": col_name, "display": col_name, "type": "column" })
 			else:
 				# 未引用任何表，列出所有表的所有字段
 				for db_name in mgr.databases:
-					for table_name in mgr.databases[db_name].get("tables", {}):
+					for table_name in mgr.databases[db_name].get("tables", { }):
 						for column in mgr.databases[db_name]["tables"][table_name].get("columns", []):
 							var col_name = column["Column Name"]
 							if not column_added.has(col_name):
 								column_added[col_name] = true
-								all_candidates.push_back({"text": col_name, "display": col_name, "type": "column"})
+								all_candidates.push_back({ "text": col_name, "display": col_name, "type": "column" })
 		matches = _filter_and_sort(all_candidates, word)
 
 	if matches.is_empty():
@@ -285,10 +531,14 @@ func _show_popup() -> void:
 		var display_text = m.get("display", m["text"])
 		var icon: Texture2D = null
 		match m["type"]:
-			"keyword": icon = _icon_keyword
-			"database": icon = _icon_db
-			"table": icon = _icon_table
-			"column": icon = _icon_column
+			"keyword":
+				icon = _icon_keyword
+			"database":
+				icon = _icon_db
+			"table":
+				icon = _icon_table
+			"column":
+				icon = _icon_column
 		_completion_list.add_item(display_text, icon)
 
 	_completion_selected_idx = 0
@@ -327,6 +577,7 @@ func _show_popup() -> void:
 	_completion_panel.size = Vector2(max_width, list_h)
 	_completion_panel.position = Vector2(caret_draw_pos.x, caret_draw_pos.y + 4)
 	_completion_panel.visible = true
+
 
 func _hide_popup() -> void:
 	_completion_panel.visible = false
@@ -370,24 +621,24 @@ func _get_dot_completions(db_prefix: String, word_filter: String) -> Array[Dicti
 	# 大小写不敏感匹配数据库名
 	var matched_db = _find_key_ci(databases, db_prefix)
 	if matched_db != "":
-		var tables: Dictionary = databases[matched_db].get("tables", {})
+		var tables: Dictionary = databases[matched_db].get("tables", { })
 		var candidates: Array[Dictionary] = []
 		for t_name in tables:
 			var tbl_display = tables[t_name].get("display_name", t_name)
 			if tbl_display == "":
 				tbl_display = t_name
-			candidates.push_back({"text": t_name, "display": tbl_display, "type": "table"})
+			candidates.push_back({ "text": t_name, "display": tbl_display, "type": "table" })
 		return _filter_and_sort(candidates, word_filter) if word_filter != "" else candidates
 
 	# 大小写不敏感匹配表名，补全列名
 	for db_name in databases:
-		var tables: Dictionary = databases[db_name].get("tables", {})
+		var tables: Dictionary = databases[db_name].get("tables", { })
 		var matched_table = _find_key_ci(tables, db_prefix)
 		if matched_table != "":
 			var cols = tables[matched_table].get("columns", [])
 			var candidates: Array[Dictionary] = []
 			for column in cols:
-				candidates.push_back({"text": column["Column Name"], "display": column["Column Name"], "type": "column"})
+				candidates.push_back({ "text": column["Column Name"], "display": column["Column Name"], "type": "column" })
 			return _filter_and_sort(candidates, word_filter) if word_filter != "" else candidates
 
 	return []
@@ -396,7 +647,7 @@ func _get_dot_completions(db_prefix: String, word_filter: String) -> Array[Dicti
 ## 从SQL文本中提取 FROM / JOIN 后面的表名及别名映射
 ## 返回 {alias_lower: table_name}，无别名时 {table_name_lower: table_name}
 func _extract_table_aliases(sql_text: String) -> Dictionary:
-	var aliases: Dictionary = {}
+	var aliases: Dictionary = { }
 	var re = RegEx.new()
 	re.compile(r"(?i)(?:from|join)\s+([a-zA-Z_][a-zA-Z0-9_]*)(?:\.([a-zA-Z_][a-zA-Z0-9_]*))?(?:\s+(?:as\s+)?([a-zA-Z_][a-zA-Z0-9_]*))?")
 	for m in re.search_all(sql_text):
@@ -447,10 +698,11 @@ func _filter_and_sort(candidates: Array[Dictionary], prefix: String) -> Array[Di
 			var entry = c.duplicate()
 			entry["score"] = score
 			result.push_back(entry)
-	result.sort_custom(func(a, b):
-		if a["score"] != b["score"]:
-			return a["score"] > b["score"]
-		return a.get("display", a["text"]).to_lower() < b.get("display", b["text"]).to_lower()
+	result.sort_custom(
+		func(a, b):
+			if a["score"] != b["score"]:
+				return a["score"] > b["score"]
+			return a.get("display", a["text"]).to_lower() < b.get("display", b["text"]).to_lower()
 	)
 	return result
 
@@ -577,82 +829,7 @@ func _get_completion_color(type: String) -> Color:
 			return es.get_setting("text_editor/theme/highlighting/text_color")
 	return Color.WHITE
 
-func _can_drop_data(_position, data):
-	# { "type": "files", "files": ["res://src/dao/t_hero.gdmappergraph"], "from": @Tree@6840:<Tree#603409380691> }
-	if data is Dictionary:
-		if data.has("type") and data.has("files") and data.get("type") == "files":
-			for i in data.get("files"):
-				if i is String:
-					if i.ends_with(".gdsqltext") or i.ends_with(".gdsqlgraph") or i.ends_with(".gdmappergraph"):
-						return true
-	return false
-	
-func _drop_data(_position, data):
-	for i in data.get("files"):
-		if i is String:
-			if i.ends_with(".gdsqltext"):
-				GDSQL.WorkbenchManager.open_sql_text_file_tab.emit(i)
-			elif i.ends_with(".gdsqlgraph"):
-				GDSQL.WorkbenchManager.open_sql_graph_file_tab.emit(i)
-			elif i.ends_with(".gdmappergraph"):
-				GDSQL.WorkbenchManager.open_mapper_graph_file_tab.emit(i)
-				
-func _gui_input(event: InputEvent) -> void:
-	# 补全弹窗键盘导航
-	if _completion_panel.visible and event is InputEventKey and event.is_pressed():
-		var count = _completion_list.item_count
-		match event.keycode:
-			KEY_UP:
-				if _completion_selected_idx > 0:
-					_completion_selected_idx -= 1
-				else:
-					_completion_selected_idx = count - 1
-				_completion_list.select(_completion_selected_idx)
-				_completion_list.ensure_current_is_visible()
-				accept_event()
-				return
-			KEY_DOWN:
-				if _completion_selected_idx < count - 1:
-					_completion_selected_idx += 1
-				else:
-					_completion_selected_idx = 0
-				_completion_list.select(_completion_selected_idx)
-				_completion_list.ensure_current_is_visible()
-				accept_event()
-				return
-			KEY_TAB, KEY_ENTER, KEY_KP_ENTER:
-				_on_completion_selected(_completion_selected_idx)
-				accept_event()
-				return
-			KEY_ESCAPE:
-				_hide_popup()
-				accept_event()
-				return
 
-	# 点击补全面板外部时关闭
-	if _completion_panel.visible and event is InputEventMouseButton and event.is_pressed():
-		var mouse_pos = get_global_mouse_position()
-		var panel_rect = Rect2(_completion_panel.global_position, _completion_panel.size)
-		if not panel_rect.has_point(mouse_pos):
-			_hide_popup()
-
-	if in_run_edit_shortcut_feedback:
-		if event is InputEventKey:
-			accept_event()
-		return
-	if button_run_edit.shortcut.matches_event(event):
-		in_run_edit = true
-		if event.is_released():
-			in_run_edit = false
-			_button_run_edit_pressed()
-		accept_event()
-		return
-	elif in_run_edit:
-		in_run_edit = false
-		_button_run_edit_pressed()
-		accept_event()
-		return
-		
 func _button_run_edit_pressed():
 	button_run_edit.pressed.emit()
 	var normal_sb = button_run_edit.get_theme_stylebox("normal")

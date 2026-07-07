@@ -1,32 +1,26 @@
 @tool
 extends Control
 
-@onready var margin_container = $MarginContainer
-
 @export_enum("Singular:0", "Even:1") var left_mode: int = 0:
 	set(val):
 		left_mode = val
 		if left_border:
 			left_border.mode = val
-
 @export_enum("Singular:0", "Even:1") var right_mode: int = 0:
 	set(val):
 		right_mode = val
 		if right_border:
 			right_border.mode = val
-
 @export_enum("Singular:0", "Even:1") var top_mode: int = 0:
 	set(val):
 		top_mode = val
 		if top_border:
 			top_border.mode = val
-
 @export_enum("Singular:0", "Even:1") var bottom_mode: int = 0:
 	set(val):
 		bottom_mode = val
 		if bottom_border:
 			bottom_border.mode = val
-
 @export var width: float = 2.0:
 	set(val):
 		width = val
@@ -38,7 +32,6 @@ extends Control
 			top_border.width = val
 		if bottom_border:
 			bottom_border.width = val
-		
 @export var color: Color = Color.WHITE:
 	set(val):
 		color = val
@@ -50,7 +43,6 @@ extends Control
 			top_border.color = val
 		if bottom_border:
 			bottom_border.color = val
-		
 @export var show_left: bool = false:
 	set(val):
 		show_left = val
@@ -61,14 +53,14 @@ extends Control
 				left_border = border
 				border.width = width
 				border.color = color
-				if margin_container: margin_container.add_child(border)
+				if margin_container:
+					margin_container.add_child(border)
 			else:
 				border.show()
 		else:
 			if border:
 				border.hide()
 				printt("border hide", border)
-	
 @export var show_right: bool = false:
 	set(val):
 		show_right = val
@@ -79,13 +71,13 @@ extends Control
 				right_border = border
 				border.width = width
 				border.color = color
-				if margin_container: margin_container.add_child(border)
+				if margin_container:
+					margin_container.add_child(border)
 			else:
 				border.show()
 		else:
 			if border:
 				border.hide()
-		
 @export var show_top: bool = false:
 	set(val):
 		show_top = val
@@ -96,13 +88,13 @@ extends Control
 				top_border = border
 				border.width = width
 				border.color = color
-				if margin_container: margin_container.add_child(border)
+				if margin_container:
+					margin_container.add_child(border)
 			else:
 				border.show()
 		else:
 			if border:
 				border.hide()
-		
 @export var show_bottom: bool = false:
 	set(val):
 		show_bottom = val
@@ -113,28 +105,25 @@ extends Control
 				bottom_border = border
 				border.width = width
 				border.color = color
-				if margin_container: margin_container.add_child(border)
+				if margin_container:
+					margin_container.add_child(border)
 			else:
 				border.show()
 		else:
 			if border:
 				border.hide()
-		
 @export var expand_margin_left: int = 0:
 	set(val):
 		expand_margin_left = val
 		margin_container.add_theme_constant_override("margin_left", val)
-		
 @export var expand_margin_right: int = 0:
 	set(val):
 		expand_margin_right = val
 		margin_container.add_theme_constant_override("margin_right", val)
-		
 @export var expand_margin_top: int = 0:
 	set(val):
 		expand_margin_top = val
 		margin_container.add_theme_constant_override("margin_top", val)
-		
 @export var expand_margin_bottom: int = 0:
 	set(val):
 		expand_margin_bottom = val
@@ -144,6 +133,9 @@ var left_border
 var right_border
 var top_border
 var bottom_border
+
+@onready var margin_container = $MarginContainer
+
 
 func _ready():
 	if left_border and not left_border.get_parent():

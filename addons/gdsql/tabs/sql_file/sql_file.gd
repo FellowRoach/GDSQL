@@ -1085,7 +1085,7 @@ func gen_table_node(columns: Array, table_datas: Array, is_union_all: bool, join
 							return v["Column Name"] == j["col_name"]
 						).front()
 						if (col_def["Default(Expression)"] as String).strip_edges().is_empty():
-							new_data[j["prop"]] = GDSQL.DataTypeDef.DEFUALT_VALUES[col_def["Data Type"]]
+							new_data[j["prop"]] = GDSQL.DataTypeDef.DEFAULT_VALUES[col_def["Data Type"]]
 						else:
 							new_data[j["prop"]] = GDSQL.GDSQLUtils.evaluate_command(null, col_def["Default(Expression)"])
 							

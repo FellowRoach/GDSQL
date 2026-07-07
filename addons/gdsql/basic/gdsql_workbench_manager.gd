@@ -19,16 +19,30 @@ signal sys_confirm_alter_schema(id: String)
 ## 打开新建数据表标签页的信号
 signal open_add_table_tab(db_name: String)
 ## 用户确认新建表的信号
-signal user_confirm_add_table(sechema: String, table_name: String, comments: String, 
-	password: String, valid_if_not_exist: bool, columns: Array, id: String)
+signal user_confirm_add_table(
+		sechema: String,
+		table_name: String,
+		comments: String,
+		password: String,
+		valid_if_not_exist: bool,
+		columns: Array,
+		id: String,
+)
 ## 系统确认新建数据表的信号
 signal sys_confirm_add_table(id: String)
 
 ## 打开修改数据表标签页的信号
 signal open_alter_table_tab(db_name: String, table_name: String)
 ## 用户确认修改数据表的信号
-signal user_confirm_alter_table(sechema: String, old_table_name: String, new_table_name: String, 
-	comments: String, valid_if_not_exist: bool, columns: Array, id: String)
+signal user_confirm_alter_table(
+		sechema: String,
+		old_table_name: String,
+		new_table_name: String,
+		comments: String,
+		valid_if_not_exist: bool,
+		columns: Array,
+		id: String,
+)
 ## 系统确认修改数据表的信号
 signal sys_confirm_alter_table(id: String)
 
@@ -90,32 +104,32 @@ var main_panel: Control
 
 ## 数据库配置
 #databases = {
-	#"db1": {
-		#"data_path": conf.get_value(db_name, "data_path"),
-		#"encrypted": conf.get_value(db_name, "encrypted"),
-		#"tables": {
-			#"table1": {
-				#"comment": "",
-				#"encrypted": "3423df23523fvsdgdfg",
-				#"valid_if_not_exist": false,
-				#"columns": [ # 可能为空
-					#{
-						#"AI": false,
-						#"Column Name": "col1",
-						#"Comment": "",
-						#"Data Type": 4,
-						#"Default(Expression)": "",
-						#"Hint": 0,
-						#"Hint String": "",
-						#"NN": true,
-						#"PK": false,
-						#"UQ": false
-					#}
-				#]
-			#}
-		#},
-		#"persistent": conf == _config_file, # 是否是持久化的
-	#}
+#"db1": {
+#"data_path": conf.get_value(db_name, "data_path"),
+#"encrypted": conf.get_value(db_name, "encrypted"),
+#"tables": {
+#"table1": {
+#"comment": "",
+#"encrypted": "3423df23523fvsdgdfg",
+#"valid_if_not_exist": false,
+#"columns": [ # 可能为空
+#{
+#"AI": false,
+#"Column Name": "col1",
+#"Comment": "",
+#"Data Type": 4,
+#"Default(Expression)": "",
+#"Hint": 0,
+#"Hint String": "",
+#"NN": true,
+#"PK": false,
+#"UQ": false
+#}
+#]
+#}
+#},
+#"persistent": conf == _config_file, # 是否是持久化的
+#}
 #}
 var databases: Dictionary
 
@@ -126,7 +140,7 @@ func _notification(what):
 	if what == NOTIFICATION_EXIT_TREE:
 		main_panel = null
 		databases.clear()
-		
+
 		var root = EditorInterface.get_base_control().get_tree().get_root()
 		var dialog_root = root.find_child("GDSQLDialogRoot", false, false)
 		if dialog_root:
@@ -137,18 +151,18 @@ func _notification(what):
 				_clear_custom_dialog(dialog)
 			dialog_root.queue_free()
 			root.create_tween().tween_callback(dummy.queue_free).set_delay(2)
-			
+
 func _init() -> void:
 	if TranslationServer.has_domain("GDSQL"):
 		set_translation_domain("GDSQL")
-		
+
 ## 返回某个节点是否运行在插件模式中。（脚本的@tool会让它运行在编辑器编辑界面中，而不是插件中，
 ## 可能导致信号多次绑定、额外数据被写入tscn中等问题）
 func run_in_plugin(node: Node) -> bool:
 	if main_panel == null:
 		return false
 	return node == main_panel or main_panel.is_ancestor_of(node)
-	
+
 func _add_dialog(dialog: Window):
 	var root = EditorInterface.get_base_control().get_tree().get_root()
 	var dialog_root = root.find_child("GDSQLDialogRoot", false, false)
@@ -156,7 +170,7 @@ func _add_dialog(dialog: Window):
 		dialog_root = Node.new()
 		dialog_root.name = "GDSQLDialogRoot"
 		root.add_child(dialog_root, true)
-		
+
 	# 把新的对话框加到最深一层
 	var p = dialog_root
 	while p.get_child_count() > 0:
@@ -168,9 +182,9 @@ func _add_dialog(dialog: Window):
 				break
 			else:
 				# 能到这里说明上一个对话框正在关闭，把独占关闭一下，免得引擎报错，例如：
-				# scene/main/window.cpp:886 - Attempting to make child window exclusive, 
-				# but the parent window already has another exclusive child. This window: 
-				# /root/GDSQLDialogRoot/@ConfirmationDialog@23258, parent window: /root, 
+				# scene/main/window.cpp:886 - Attempting to make child window exclusive,
+				# but the parent window already has another exclusive child. This window:
+				# /root/GDSQLDialogRoot/@ConfirmationDialog@23258, parent window: /root,
 				# current exclusive child window: /root/GDSQLDialogRoot/@ConfirmationDialog@23219
 				#printt("xxxxxxxxxxxxxx", p.get_child_count())
 				#await root.create_tween().tween_interval(0.1).finished
@@ -179,26 +193,33 @@ func _add_dialog(dialog: Window):
 				i.exclusive = false
 		break
 	p.add_child(dialog)
-	
-func create_confirmation_dialog(msg: String, confirmed_callback: Callable = Callable(), 
-canceled_callback: Callable = Callable()) -> ConfirmationDialog:
+
+func create_confirmation_dialog(
+		msg: String,
+		confirmed_callback: Callable = Callable(),
+		canceled_callback: Callable = Callable(),
+) -> ConfirmationDialog:
 	var dialog := ConfirmationDialog.new()
 	dialog.set_translation_domain("GDSQL")
 	dialog.dialog_text = msg
 	_add_dialog(dialog)
 	dialog.popup_centered()
-	dialog.confirmed.connect(func():
-		dialog.queue_free()
-		if confirmed_callback.is_valid():
-			confirmed_callback.call()
-	, CONNECT_DEFERRED)
-	dialog.canceled.connect(func():
-		dialog.queue_free()
-		if canceled_callback.is_valid():
-			canceled_callback.call()
-	, CONNECT_DEFERRED)
+	dialog.confirmed.connect(
+		func():
+			dialog.queue_free()
+			if confirmed_callback.is_valid():
+				confirmed_callback.call(),
+		CONNECT_DEFERRED,
+	)
+	dialog.canceled.connect(
+		func():
+			dialog.queue_free()
+			if canceled_callback.is_valid():
+				canceled_callback.call(),
+		CONNECT_DEFERRED,
+	)
 	return dialog
-	
+
 func create_accept_dialog(msg) -> void:
 	if msg is Array:
 		msg = " ".join(msg)
@@ -207,13 +228,17 @@ func create_accept_dialog(msg) -> void:
 	dialog.dialog_text = msg
 	_add_dialog(dialog)
 	dialog.popup_centered()
-	dialog.confirmed.connect(func():
-		dialog.queue_free()
-	, CONNECT_DEFERRED)
-	dialog.close_requested.connect(func():
-		dialog.queue_free()
-	, CONNECT_DEFERRED)
-	
+	dialog.confirmed.connect(
+		func():
+			dialog.queue_free(),
+		CONNECT_DEFERRED,
+	)
+	dialog.close_requested.connect(
+		func():
+			dialog.queue_free(),
+		CONNECT_DEFERRED,
+	)
+
 func _clear_custom_dialog(dialog: Window):
 	if dialog.visible:
 		dialog.hide()
@@ -222,7 +247,7 @@ func _clear_custom_dialog(dialog: Window):
 		if dialog.get_parent():
 			dialog.get_parent().remove_child(dialog)
 		dialog.queue_free()
-		
+
 ## 创建并弹出自定义对话框。
 ## 【datas】: 构建自定义对话框的数据，类似graph_node.gd，例如：
 ## [
@@ -240,49 +265,59 @@ func _clear_custom_dialog(dialog: Window):
 ## 放入defered_callback中。需接收2个参数：
 ## 参数1：bool，true表示用户点击的是“确定”，false表示用户点击的是“取消”或“关闭”
 ## 参数2：请勿指定数据类型，其值等于confirmed_callback_before_close或canceled_callback_before_close返回数组的第二个元素。
-func create_custom_dialog(datas: Array[Array],
-confirmed_callback_before_close: Callable = Callable(), 
-canceled_callback_before_close: Callable = Callable(),
-defered_callback: Callable = Callable(),
-ratio = 0.0, # Support Vector2
-vertical_scroll: bool = false) -> ConfirmationDialog:
+func create_custom_dialog(
+		datas: Array[Array],
+		confirmed_callback_before_close: Callable = Callable(),
+		canceled_callback_before_close: Callable = Callable(),
+		defered_callback: Callable = Callable(),
+		ratio = 0.0, # Support Vector2
+		vertical_scroll: bool = false,
+) -> ConfirmationDialog:
 	var dialog := ConfirmationDialog.new()
 	dialog.set_translation_domain("GDSQL")
 	dialog.dialog_hide_on_ok = false
 	# 确定
-	dialog.confirmed.connect(func():
-		var close = true
-		var ret
-		if confirmed_callback_before_close.is_valid():
-			ret = await confirmed_callback_before_close.call()
-			assert(ret is Array and ret.size() == 2 and ret[0] is bool, 
-				"Return value of confirmed_callback_before_close must be a 2-elements-array(first element must be a bool)!")
-			if ret[0] == true:
-				close = false
-				
-		if close:
-			_clear_custom_dialog(dialog)
-			if defered_callback.is_valid():
-				defered_callback.call(true, ret[1] if ret is Array else null)
-	, CONNECT_DEFERRED)
+	dialog.confirmed.connect(
+		func():
+			var close = true
+			var ret
+			if confirmed_callback_before_close.is_valid():
+				ret = await confirmed_callback_before_close.call()
+				assert(
+					ret is Array and ret.size() == 2 and ret[0] is bool,
+					"Return value of confirmed_callback_before_close must be a 2-elements-array(first element must be a bool)!",
+				)
+				if ret[0] == true:
+					close = false
+
+			if close:
+				_clear_custom_dialog(dialog)
+				if defered_callback.is_valid():
+					defered_callback.call(true, ret[1] if ret is Array else null),
+		CONNECT_DEFERRED,
+	)
 	# 取消、关闭（关闭也会触发canceled）
-	dialog.canceled.connect(func():
-		var close = true
-		var ret
-		if canceled_callback_before_close.is_valid():
-			ret = await canceled_callback_before_close.call()
-			assert(ret is Array and ret.size() == 2 and ret[0] is bool, 
-				"Return value of canceled_callback_before_close must be a 2-elements-array(first element must be a bool)!")
-			if ret[0] == true:
-				close = false
-				
-		if close:
-			_clear_custom_dialog(dialog)
-			if defered_callback.is_valid():
-				defered_callback.call(false, ret[1] if ret is Array else null)
-	, CONNECT_DEFERRED)
+	dialog.canceled.connect(
+		func():
+			var close = true
+			var ret
+			if canceled_callback_before_close.is_valid():
+				ret = await canceled_callback_before_close.call()
+				assert(
+					ret is Array and ret.size() == 2 and ret[0] is bool,
+					"Return value of canceled_callback_before_close must be a 2-elements-array(first element must be a bool)!",
+				)
+				if ret[0] == true:
+					close = false
+
+			if close:
+				_clear_custom_dialog(dialog)
+				if defered_callback.is_valid():
+					defered_callback.call(false, ret[1] if ret is Array else null),
+		CONNECT_DEFERRED,
+	)
 	_add_dialog(dialog)
-	
+
 	var vbox_container = VBoxContainer.new()
 	var sc: ScrollContainer
 	if vertical_scroll:
@@ -299,7 +334,7 @@ vertical_scroll: bool = false) -> ConfirmationDialog:
 		vbox_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		vbox_container.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 		dialog.add_child(vbox_container)
-		
+
 	for arr in datas:
 		var hb = HBoxContainer.new()
 		#var has_content = false
@@ -335,7 +370,7 @@ vertical_scroll: bool = false) -> ConfirmationDialog:
 					inspector.size_flags_vertical = Control.SIZE_EXPAND_FILL
 					inspector.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 					hb.add_child(inspector)
-					
+
 					# 允许用户使用垂直方式排列属性（默认横向）
 					var p_container
 					if data.get_meta("align", "horizontal") == "vertical":
@@ -346,13 +381,21 @@ vertical_scroll: bool = false) -> ConfirmationDialog:
 					p_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
 					hb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 					inspector.add_child(p_container)
-					
-					var plist = data._get_property_list().filter(func(v):
-						return not (v["usage"] & PROPERTY_USAGE_CATEGORY or v["usage"] & PROPERTY_USAGE_GROUP \
-							or v["usage"] & PROPERTY_USAGE_SUBGROUP))
+
+					var plist = data._get_property_list().filter(
+						func(v):
+							return not (v["usage"] & PROPERTY_USAGE_CATEGORY or v["usage"] & PROPERTY_USAGE_GROUP \
+										or v["usage"] & PROPERTY_USAGE_SUBGROUP )
+					)
 					for prop in plist:
 						var editor = EditorInspector.instantiate_property_editor(
-							data, prop.type, prop.name, prop.hint, prop.hint_string, prop.usage)
+							data,
+							prop.type,
+							prop.name,
+							prop.hint,
+							prop.hint_string,
+							prop.usage,
+						)
 						p_container.add_child(editor)
 						editor.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 						#editor.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -361,8 +404,8 @@ vertical_scroll: bool = false) -> ConfirmationDialog:
 						editor.add_theme_stylebox_override("bg_selected", StyleBoxEmpty.new())
 						editor.set_object_and_property(data, prop.name)
 						if prop.name.begins_with("_") and \
-						not editor.name.contains("EditorPropertyMultilineText") \
-						and not editor.name.contains("EditorPropertyArray"):
+								not editor.name.contains("EditorPropertyMultilineText") \
+								and not editor.name.contains("EditorPropertyArray"):
 							editor.draw_label = false
 						else:
 							editor.label = prop.name
@@ -370,7 +413,7 @@ vertical_scroll: bool = false) -> ConfirmationDialog:
 						editor.selected.connect(_prop_selected.bind(editor, p_container))
 						editor.update_property()
 						editor.resized.connect(dialog.reset_size)
-						
+
 						# 1.可以让检查器中的修改反映到GraphNode中
 						# 2.间接实现了EditorPropertyArray、EditorPropertyDictionary等元素操作比如交换位置、增删改等
 						# NOTICE 如果在lambda中直接使用editor_property时，会在redraw的时候报错，因为editor_property被替换成新的控件了
@@ -388,7 +431,7 @@ vertical_scroll: bool = false) -> ConfirmationDialog:
 										var bound_ep = (i.callable as Callable).get_bound_arguments()[0]
 										if not bound_ep or not is_instance_valid(bound_ep):
 											data.value_changed.disconnect(i.callable)
-											
+
 						callable_ref.push_back(callable.bind(editor))
 						data.value_changed.connect(callable_ref[0])
 				elif data is Control:
@@ -400,9 +443,9 @@ vertical_scroll: bool = false) -> ConfirmationDialog:
 		#if hb.get_child_count() == 0 or not has_content:
 		hb.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 		#else:
-			#hb.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		#hb.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		vbox_container.add_child(hb)
-		
+
 	if ((ratio is float or ratio is int) and is_zero_approx(ratio)) or (ratio is Vector2 and Vector2.ZERO.is_equal_approx(ratio)):
 		dialog.popup_centered()
 	else:
@@ -414,13 +457,13 @@ vertical_scroll: bool = false) -> ConfirmationDialog:
 			var screen_idx = DisplayServer.window_get_current_screen(parent_win.get_window_id())
 			parent_rect.position = Vector2(DisplayServer.screen_get_position(screen_idx))
 			parent_rect.size = Vector2(DisplayServer.screen_get_size(screen_idx))
-			
+
 			var max_w: float
 			if ratio.x > 0:
 				max_w = parent_rect.size.x * ratio.x
 			else:
 				max_w = dialog.max_size.x
-				
+
 			var max_h: float
 			if ratio.y > 0:
 				max_h = parent_rect.size.y * ratio.y
@@ -434,12 +477,12 @@ vertical_scroll: bool = false) -> ConfirmationDialog:
 					sc.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 				dialog.max_size = Vector2(16384, 16384)
 			dialog.popup_centered()
-			
+
 	# 自动聚焦到第一个输入组件上
 	var editable_control = _find_editable_control(vbox_container)
 	if editable_control:
 		editable_control.grab_focus()
-		
+
 	# 注册回车键的输入组件
 	var last_line_edit = _find_last_line_edit(vbox_container)
 	if last_line_edit:
@@ -447,15 +490,17 @@ vertical_scroll: bool = false) -> ConfirmationDialog:
 		# 避免第一次弹出时就聚焦到最后一个输入组件上
 		dialog.focus_exited.connect(
 			func():
-				dialog.focus_entered.connect(func():
-					last_line_edit.grab_focus()
-					last_line_edit.edit()
-					last_line_edit.select_all()
-				)
-		, ConnectFlags.CONNECT_ONE_SHOT)
-		
+				dialog.focus_entered.connect(
+					func():
+						last_line_edit.grab_focus()
+						last_line_edit.edit()
+						last_line_edit.select_all()
+				),
+			ConnectFlags.CONNECT_ONE_SHOT,
+		)
+
 	return dialog
-	
+
 func get_parent_visible_window(window: Window) -> Window:
 	if not is_instance_valid(window):
 		return null
@@ -470,12 +515,12 @@ func get_parent_visible_window(window: Window) -> Window:
 			break
 		vp = vp.get_parent().get_viewport()
 	return parent_window
-	
+
 func get_parent_viewport(window: Window):
 	if window.get_parent():
 		return window.get_parent().get_viewport()
 	return null
-	
+
 ## 创建并弹出自定义对话框。
 ## 【datas】: 构建自定义对话框的数据，类似graph_node.gd，例如：
 ## [
@@ -493,37 +538,43 @@ func get_parent_viewport(window: Window):
 ## 放入defered_callback中。需接收2个参数：
 ## 参数1：bool，true表示用户点击的是“确定”，false表示用户点击的是“取消”或“关闭”
 ## 参数2：请勿指定数据类型，其值等于confirmed_callback_before_close或canceled_callback_before_close返回数组的第二个元素。
-func create_custom_popup_panel(datas: Array[Array],
-position: Vector2,
-canceled_callback_before_close: Callable = Callable(),
-defered_callback: Callable = Callable(),
-min_size: Vector2i = Vector2i.ZERO) -> PopupPanel:
+func create_custom_popup_panel(
+		datas: Array[Array],
+		position: Vector2,
+		canceled_callback_before_close: Callable = Callable(),
+		defered_callback: Callable = Callable(),
+		min_size: Vector2i = Vector2i.ZERO,
+) -> PopupPanel:
 	#var dialog := ConfirmationDialog.new()
 	var dialog := PopupPanel.new()
 	dialog.set_translation_domain("GDSQL")
 	#dialog.dialog_hide_on_ok = false
-	dialog.popup_hide.connect(func():
-		var close = true
-		var ret
-		if canceled_callback_before_close.is_valid():
-			ret = await canceled_callback_before_close.call()
-			assert(ret is Array and ret.size() == 2 and ret[0] is bool, 
-				"Return value of canceled_callback_before_close must be a 2-elements-array(first element must be a bool)!")
-			if ret[0] == true:
-				close = false
-				
-		if close:
-			_clear_custom_dialog(dialog)
-			if defered_callback.is_valid():
-				defered_callback.call(false, ret[1] if ret is Array else null)
-	, CONNECT_DEFERRED)
+	dialog.popup_hide.connect(
+		func():
+			var close = true
+			var ret
+			if canceled_callback_before_close.is_valid():
+				ret = await canceled_callback_before_close.call()
+				assert(
+					ret is Array and ret.size() == 2 and ret[0] is bool,
+					"Return value of canceled_callback_before_close must be a 2-elements-array(first element must be a bool)!",
+				)
+				if ret[0] == true:
+					close = false
+
+			if close:
+				_clear_custom_dialog(dialog)
+				if defered_callback.is_valid():
+					defered_callback.call(false, ret[1] if ret is Array else null),
+		CONNECT_DEFERRED,
+	)
 	_add_dialog(dialog)
-	
+
 	var vbox_container = VBoxContainer.new()
 	vbox_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vbox_container.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	dialog.add_child(vbox_container)
-	
+
 	for arr in datas:
 		var hb = HBoxContainer.new()
 		#var has_content = false
@@ -561,24 +612,32 @@ min_size: Vector2i = Vector2i.ZERO) -> PopupPanel:
 					inspector.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 					inspector.size_flags_vertical = Control.SIZE_EXPAND_FILL
 					hb.add_child(inspector)
-					
+
 					var v_box = VBoxContainer.new()
 					v_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 					v_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 					inspector.add_child(v_box)
-					
-					var plist = data._get_property_list().filter(func(v):
-						return not (v["usage"] & PROPERTY_USAGE_CATEGORY or v["usage"] & PROPERTY_USAGE_GROUP \
-							or v["usage"] & PROPERTY_USAGE_SUBGROUP))
-							
+
+					var plist = data._get_property_list().filter(
+						func(v):
+							return not (v["usage"] & PROPERTY_USAGE_CATEGORY or v["usage"] & PROPERTY_USAGE_GROUP \
+										or v["usage"] & PROPERTY_USAGE_SUBGROUP )
+					)
+
 					if plist.size() < 5:
 						inspector.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 						inspector.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-						
+
 					var count = plist.size()
 					for prop in plist:
 						var editor = EditorInspector.instantiate_property_editor(
-							data, prop.type, prop.name, prop.hint, prop.hint_string, prop.usage)
+							data,
+							prop.type,
+							prop.name,
+							prop.hint,
+							prop.hint_string,
+							prop.usage,
+						)
 						v_box.add_child(editor)
 						editor.focus_behavior_recursive = Control.FOCUS_BEHAVIOR_ENABLED
 						editor.focus_mode = Control.FOCUS_NONE
@@ -594,7 +653,7 @@ min_size: Vector2i = Vector2i.ZERO) -> PopupPanel:
 						editor.selected.connect(_prop_selected.bind(editor, v_box))
 						editor.update_property()
 						editor.resized.connect(dialog.reset_size)
-						
+
 						# 1.可以让检查器中的修改反映到GraphNode中
 						# 2.间接实现了EditorPropertyArray、EditorPropertyDictionary等元素操作比如交换位置、增删改等
 						# NOTICE 如果在lambda中直接使用editor_property时，会在redraw的时候报错，因为editor_property被替换成新的控件了
@@ -612,7 +671,7 @@ min_size: Vector2i = Vector2i.ZERO) -> PopupPanel:
 										var bound_ep = (i.callable as Callable).get_bound_arguments()[0]
 										if not bound_ep or not is_instance_valid(bound_ep):
 											data.value_changed.disconnect(i.callable)
-											
+
 						callable_ref.push_back(callable.bind(editor))
 						data.value_changed.connect(callable_ref[0])
 				elif data is Control:
@@ -625,31 +684,37 @@ min_size: Vector2i = Vector2i.ZERO) -> PopupPanel:
 		#if hb.get_child_count() == 0 or not has_content:
 		#hb.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 		#else:
-			#hb.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		#hb.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		vbox_container.add_child(hb)
-		
+
 	# 自动聚焦到第一个输入组件上
 	var editable_control = _find_editable_control(vbox_container)
 	if editable_control:
 		editable_control.grab_focus()
-		
+
 	# 注册回车键的输入组件
 	#var last_line_edit = _find_last_line_edit(vbox_container)
 	#if last_line_edit:
-		#dialog.register_text_enter(last_line_edit)
-		
+	#dialog.register_text_enter(last_line_edit)
+
 	dialog.position = position
 	dialog.min_size = min_size
 	dialog.popup()
 	return dialog
-	
+
 @warning_ignore("unused_parameter")
-func _prop_change(property: StringName, value: Variant, field: StringName, 
-changing: bool, dictionary_object: GDSQL.DictionaryObject, editor: EditorProperty):
+func _prop_change(
+		property: StringName,
+		value: Variant,
+		field: StringName,
+		changing: bool,
+		dictionary_object: GDSQL.DictionaryObject,
+		editor: EditorProperty,
+):
 	dictionary_object.set(property, value)
 	if typeof(value) > TYPE_ARRAY:
 		editor.update_property()
-		
+
 @warning_ignore("unused_parameter")
 func _prop_selected(path: String, focusable_idx: int, editor: EditorProperty, editor_container: Control):
 	for i in editor_container.get_children():
@@ -657,7 +722,7 @@ func _prop_selected(path: String, focusable_idx: int, editor: EditorProperty, ed
 			continue
 		if i.is_selected():
 			i.deselect()
-			
+
 ## 弹出用户提供的对话框或window
 ## 【confirmed_callback_before_close】：点击确定后执行的函数，必须返回一个长度为2的数组，第一个元素是布尔值，
 ## true表示保留对话框，false表示关闭对话框。第二个元素用于用户传递一些数据。
@@ -667,100 +732,112 @@ func _prop_selected(path: String, focusable_idx: int, editor: EditorProperty, ed
 ## 放入defered_callback中。需接收2个参数：
 ## 参数1：bool，true表示用户点击的是“确定”，false表示用户点击的是“取消”或“关闭”
 ## 参数2：请勿指定数据类型，其值等于confirmed_callback_before_close或canceled_callback_before_close返回数组的第二个元素。
-func popup_user_dialog(dialog: Window, 
-confirmed_callback_before_close: Callable = Callable(), 
-canceled_callback_before_close: Callable = Callable(),
-defered_callback: Callable = Callable(),
-ratio: float = 0.0):
+func popup_user_dialog(
+		dialog: Window,
+		confirmed_callback_before_close: Callable = Callable(),
+		canceled_callback_before_close: Callable = Callable(),
+		defered_callback: Callable = Callable(),
+		ratio: float = 0.0,
+):
 	# 确定
 	if dialog.has_signal("confirmed"):
-		dialog.confirmed.connect(func():
-			var close = true
-			var ret
-			if confirmed_callback_before_close.is_valid():
-				ret = await confirmed_callback_before_close.call()
-				assert(ret is Array and ret.size() == 2 and ret[0] is bool, 
-					"Return value of confirmed_callback_before_close must be a 2-elements-array(first element must be a bool)!")
-				if ret[0] == true:
-					close = false
-					
-			if close:
-				_clear_custom_dialog(dialog)
-				if defered_callback.is_valid():
-					defered_callback.call(true, ret[1] if ret is Array else null)
-		, CONNECT_DEFERRED)
+		dialog.confirmed.connect(
+			func():
+				var close = true
+				var ret
+				if confirmed_callback_before_close.is_valid():
+					ret = await confirmed_callback_before_close.call()
+					assert(
+						ret is Array and ret.size() == 2 and ret[0] is bool,
+						"Return value of confirmed_callback_before_close must be a 2-elements-array(first element must be a bool)!",
+					)
+					if ret[0] == true:
+						close = false
+
+				if close:
+					_clear_custom_dialog(dialog)
+					if defered_callback.is_valid():
+						defered_callback.call(true, ret[1] if ret is Array else null),
+			CONNECT_DEFERRED,
+		)
 	# 取消、关闭（关闭也会触发canceled）
 	if dialog.has_signal("canceled"):
-		dialog.canceled.connect(func():
-			var close = true
-			var ret
-			if canceled_callback_before_close.is_valid():
-				ret = await canceled_callback_before_close.call()
-				assert(ret is Array and ret.size() == 2 and ret[0] is bool, 
-					"Return value of canceled_callback_before_close must be a 2-elements-array(first element must be a bool)!")
-				if ret[0] == true:
-					close = false
-					
-			if close:
-				_clear_custom_dialog(dialog)
-				if defered_callback.is_valid():
-					defered_callback.call(false, ret[1] if ret is Array else null)
-		, CONNECT_DEFERRED)
+		dialog.canceled.connect(
+			func():
+				var close = true
+				var ret
+				if canceled_callback_before_close.is_valid():
+					ret = await canceled_callback_before_close.call()
+					assert(
+						ret is Array and ret.size() == 2 and ret[0] is bool,
+						"Return value of canceled_callback_before_close must be a 2-elements-array(first element must be a bool)!",
+					)
+					if ret[0] == true:
+						close = false
+
+				if close:
+					_clear_custom_dialog(dialog)
+					if defered_callback.is_valid():
+						defered_callback.call(false, ret[1] if ret is Array else null),
+			CONNECT_DEFERRED,
+		)
 	_add_dialog(dialog)
 	if ratio == 0:
 		dialog.popup_centered()
 	else:
 		dialog.popup_centered_ratio(ratio)
-		
+
 func _find_editable_control(control: Node) -> Control:
 	if control is LineEdit:
 		control.select_all_on_focus = true
 		control.select_all()
 		return control
-		
+
 	if control is TextEdit:
 		control.select_all()
 		return control
-		
+
 	if control.name.contains("EditorSpinSlider"):
-		control.focus_entered.connect(func():
-			await control.get_tree().create_timer(0.1).timeout
-			var popup = (control.find_parent("@PopupPanel*") as PopupPanel)
-			if popup == null:
-				return
-			var e = InputEventMouseButton.new()
-			e.button_index = MOUSE_BUTTON_LEFT
-			e.button_mask = MOUSE_BUTTON_MASK_LEFT
-			e.pressed = true
-			e.position = control.global_position + control.size/2
-			popup.push_input(e)
-			await control.get_tree().create_timer(0.1).timeout
-			e = InputEventMouseButton.new()
-			e.button_index = MOUSE_BUTTON_LEFT
-			e.button_mask = MOUSE_BUTTON_MASK_LEFT
-			e.pressed = false
-			e.position = control.global_position + control.size/2
-			popup.push_input(e)
-		, CONNECT_ONE_SHOT)
+		control.focus_entered.connect(
+			func():
+				await control.get_tree().create_timer(0.1).timeout
+				var popup = (control.find_parent("@PopupPanel*") as PopupPanel)
+				if popup == null:
+					return
+				var e = InputEventMouseButton.new()
+				e.button_index = MOUSE_BUTTON_LEFT
+				e.button_mask = MOUSE_BUTTON_MASK_LEFT
+				e.pressed = true
+				e.position = control.global_position + control.size / 2
+				popup.push_input(e)
+				await control.get_tree().create_timer(0.1).timeout
+				e = InputEventMouseButton.new()
+				e.button_index = MOUSE_BUTTON_LEFT
+				e.button_mask = MOUSE_BUTTON_MASK_LEFT
+				e.pressed = false
+				e.position = control.global_position + control.size / 2
+				popup.push_input(e),
+			CONNECT_ONE_SHOT,
+		)
 		return control
-		
+
 	for i in control.get_children(true):
 		var c = _find_editable_control(i)
 		if c:
 			return c
 	return null
-	
+
 func _find_last_line_edit(control: Node) -> Control:
 	var ret = null
 	if control is LineEdit:
 		ret = control
-		
+
 	for i in control.get_children(true):
 		var c = _find_last_line_edit(i)
 		if c:
 			ret = c
 	return ret
-	
+
 func need_request_password(db_name: String, table_name: String, try_password: String) -> bool:
 	var result = []
 	need_user_enter_password.emit(db_name, table_name, try_password, result)
@@ -769,17 +846,21 @@ func need_request_password(db_name: String, table_name: String, try_password: St
 		_request_password.push_back(db_name)
 		_request_password.push_back(table_name)
 	return result[0]
-	
+
 func request_curr_password(result: Array):
-	request_user_enter_password.emit(_request_password[0], _request_password[1], "", func():
-		_request_password.clear()
-		result[0] = true
-	, func():
-		result[0] = false
+	request_user_enter_password.emit(
+		_request_password[0],
+		_request_password[1],
+		"",
+		func():
+			_request_password.clear()
+			result[0] = true,
+		func():
+			result[0] = false
 	)
-	
+
 func has_password_request() -> bool:
 	return not _request_password.is_empty()
-	
+
 func get_password_request_table():
 	return _request_password

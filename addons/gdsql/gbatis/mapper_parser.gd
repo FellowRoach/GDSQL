@@ -1,22 +1,11 @@
 @tool
+extends RefCounted
 ## 一个解析mapper xml的工具。解析规则参考:
 ## @see https://mybatis.org/mybatis-3/sqlmap-xml.html
 ## @see http://mybatis.org/dtd/mybatis-3-mapper.dtd
-extends RefCounted
 
-#@export_enum("NONE", "PARTIAL", "FULL")
-@export_enum("NONE", "PARTIAL")
-## 全局自动映射等级。
-## NONE - 禁用自动映射。仅对手动映射的属性进行映射。
-## PARTIAL -对除在内部定义了嵌套结果映射（也就是连接的属性）以外的属性进行映射。
-##          也就是对复杂属性以外的属性进行映射。复杂属性是指属性指向了一个对象（非Resource）。
-## FULL - auto-maps everything. ❌ not support 鉴于实际情况中非常不实用，就不支持了。
-var auto_mapping_level: String = "PARTIAL"
-
-## 如果mapper中的函数没有定义返回值类型，但是，GBatis该如何返回数据。
-## - ALWAYS_ARRAY: 总是返回一个数组
-@export_enum("ALWAYS_ARRAY", "ARRAY_WHEN_NECESSARY")
-var return_type_undefined_behavior: String = "ALWAYS_ARRAY"
+## NOTICE which is also used in GDSQL.GBatisCache
+const BIND = "__bind__"
 
 ## 方法请求返回值的信息.
 ## - name 是该属性的名称，类型为 String；
@@ -26,23 +15,10 @@ var return_type_undefined_behavior: String = "ALWAYS_ARRAY"
 ## - hint_string 取决于 hint（见 PropertyHint）；
 ## - usage 是 PropertyUsageFlags 的组合
 #@export var method_return_info: Dictionary
-
 ## 数据缓存。用方法名-参数，序列化后作为key，用返回值序列化作为value。
 static var _cache_manager: Dictionary
-
-## NOTICE which is also used in GDSQL.GBatisCache
-const BIND = "__bind__"
-
 static var re_placeholder: RegEx = RegEx.new()
-#static var re_split: RegEx = RegEx.new()
 
-static func _static_init() -> void:
-	# deal #{ roleId } ${   rrrr} #   { user . roleId } ${list[0} ${bea.abc[ 33 ]} ${map[a]}
-	#re_placeholder.compile(r'(?is)(#\s*\{\s*|\$\s*\{\s*)([a-zA-Z_][a-zA-Z0-9_]*\s*\.?\s*[a-zA-Z0-9_]*\s*)\s*(\}\s*|\s*\})')
-	#re_placeholder.compile(r'(?is)(#\s*\{\s*|\$\s*\{\s*)([a-zA-Z_][a-zA-Z0-9_]*(\s*[\.\s]*[a-zA-Z0-9_]*|\s*[\[\s]*[0-9]*[\s]*\])*)\s*(\}\s*|\s*\})')
-	re_placeholder.compile(r'(?is)(#\s*\{\s*|\$\s*\{\s*)([a-zA-Z_][a-zA-Z0-9_]*((\s*[\.\s]*[a-zA-Z0-9_]*|\s*[\[\s]*[a-zA-Z0-9_]*[\s]*\])*)*)\s*(\}\s*|\s*\})')
-	#re_split.compile(r'(?is)[^\.\[\]]+')
-	
 @export var config: GXML:
 	set(val):
 		var validator = GDSQL.GBatisMapperValidator.new()
@@ -54,16 +30,39 @@ static func _static_init() -> void:
 					if i is GDSQL.GXMLItem and i.name == "cache":
 						_cache_manager[config.resource_path] = GDSQL.GBatisCache.new(i.attrs)
 						break
-						
+
+#@export_enum("NONE", "PARTIAL", "FULL")
+@export_enum("NONE", "PARTIAL")
+## 全局自动映射等级。
+## NONE - 禁用自动映射。仅对手动映射的属性进行映射。
+## PARTIAL -对除在内部定义了嵌套结果映射（也就是连接的属性）以外的属性进行映射。
+##          也就是对复杂属性以外的属性进行映射。复杂属性是指属性指向了一个对象（非Resource）。
+## FULL - auto-maps everything. ❌ not support 鉴于实际情况中非常不实用，就不支持了。
+var auto_mapping_level: String = "PARTIAL"
+## 如果mapper中的函数没有定义返回值类型，但是，GBatis该如何返回数据。
+## - ALWAYS_ARRAY: 总是返回一个数组
+@export_enum("ALWAYS_ARRAY", "ARRAY_WHEN_NECESSARY")
+var return_type_undefined_behavior: String = "ALWAYS_ARRAY"
 ## gbatis_mapper 对象的 method_list转化成字典而来。
 var method_map: Dictionary
+
+
+#static var re_split: RegEx = RegEx.new()
+static func _static_init() -> void:
+	# deal #{ roleId } ${   rrrr} #   { user . roleId } ${list[0} ${bea.abc[ 33 ]} ${map[a]}
+	#re_placeholder.compile(r'(?is)(#\s*\{\s*|\$\s*\{\s*)([a-zA-Z_][a-zA-Z0-9_]*\s*\.?\s*[a-zA-Z0-9_]*\s*)\s*(\}\s*|\s*\})')
+	#re_placeholder.compile(r'(?is)(#\s*\{\s*|\$\s*\{\s*)([a-zA-Z_][a-zA-Z0-9_]*(\s*[\.\s]*[a-zA-Z0-9_]*|\s*[\[\s]*[0-9]*[\s]*\])*)\s*(\}\s*|\s*\})')
+	re_placeholder.compile(r'(?is)(#\s*\{\s*|\$\s*\{\s*)([a-zA-Z_][a-zA-Z0-9_]*((\s*[\.\s]*[a-zA-Z0-9_]*|\s*[\[\s]*[a-zA-Z0-9_]*[\s]*\])*)*)\s*(\}\s*|\s*\})')
+	#re_split.compile(r'(?is)[^\.\[\]]+')
+
 
 ## query前必须传入gbatis_mapper对象的方法列表。
 func set_method_list(method_list: Array):
 	method_map.clear()
 	for i in method_list:
 		method_map[i.name] = i
-		
+
+
 ## TODO 等官方支持可变参数数量函数时，可以进行优化
 ## https://github.com/godotengine/godot/pull/82808
 ## btw: Ability to print and log script backtraces
@@ -72,12 +71,12 @@ func query(method_id: String, param: Dictionary):
 	if config == null:
 		assert(false, "config is empty!")
 		return null
-		
+
 	if method_map.is_empty():
 		assert(false, "Call set_method_list() first!")
 		return null
-		
-	param[BIND] = {}
+
+	param[BIND] = { }
 	var item = _get_item(method_id)
 	if not item:
 		assert(false, "not found this method: %s" % method_id)
@@ -85,12 +84,12 @@ func query(method_id: String, param: Dictionary):
 	match item.name:
 		"select":
 			var element = _deal_select(item, param, 0)
-			var cache : GDSQL.GBatisCache = null
+			var cache: GDSQL.GBatisCache = null
 			if _cache_manager.has(config.resource_path):
 				cache = _cache_manager[config.resource_path]
 				if element.flush_cache == "true":
 					cache.clear_cache()
-					
+
 			var ret = null
 			if cache and element.use_cache == "true":
 				var cache_ret = cache.get_cache(method_id, param)
@@ -106,18 +105,19 @@ func query(method_id: String, param: Dictionary):
 			return ret
 		"update", "insert", "replace", "delete":
 			var element = _deal_element(item, param, 0)
-			
+
 			if element.flush_cache == "true" and _cache_manager.has(config.resource_path):
 				var cache = _cache_manager[config.resource_path] as GDSQL.GBatisCache
 				cache.clear_cache()
-				
+
 			var ret = element.query()
 			element.clean()
 			return ret
 		_:
 			assert(false, "method must be one of select, insert, replace, update and delete.")
 			return null
-			
+
+
 ## ALERT WARNING 目前只知道可以获取resultMap，其他类型的未经测试
 func get_element(id: String):
 	if config == null:
@@ -127,31 +127,34 @@ func get_element(id: String):
 	if not item:
 		assert(false, "Not found element of id: %s." % id)
 		return null
-	var element = _deal_element(item, {}, 0) # ALERT 目前调用get_element的地方并不需要替换占位符
+	var element = _deal_element(item, { }, 0) # ALERT 目前调用get_element的地方并不需要替换占位符
 	return element
-	
+
+
 ## 调用namespace中的方法
-func call_method_in_namespace(method: String, args: Array =[]):
+func call_method_in_namespace(method: String, args: Array = []):
 	if config == null:
 		assert(false, "config is empty!")
 		return null
-		
+
 	assert(method_map.has(method), "Not found method: %s." % method)
 	var margs = method_map[method].args
-	var params = {}
+	var params = { }
 	for i in margs.size():
 		if margs[i].name == "__bind__":
 			assert(false, "Please change your param's name. `__bind__` is a reserved keyword.")
 			return null
 		params[margs[i].name] = args[i]
-		
+
 	var ret = query(method, params)
 	return ret
-	
+
+
 func _get_method_return_info(method_name) -> Dictionary:
 	assert(method_map.has(method_name), "Err! Not found method: %s." % method_name)
 	return method_map[method_name].return.duplicate()
-	
+
+
 ## 适用于某些item获取其全部sql内容或部分sql内容。适用范围请搜索该方法的调用者，比如<select>的_deal_selct()。
 func _item_to_string(item: GDSQL.GXMLItem, param: Dictionary, depth: int, valid_sub_items: Array, binded_param: Array):
 	var ret = ""
@@ -165,13 +168,15 @@ func _item_to_string(item: GDSQL.GXMLItem, param: Dictionary, depth: int, valid_
 		else:
 			ret = _combine_pcdata(ret, i, param, depth)
 	return ret
-	
+
+
 func _get_item(id: String) -> GDSQL.GXMLItem:
 	for i in config.root_item.content:
 		if i is GDSQL.GXMLItem and (i as GDSQL.GXMLItem).attrs.get("id", "") == id:
 			return i
 	return null
-	
+
+
 func _deal_element(item: GDSQL.GXMLItem, param: Dictionary, depth: int):
 	if not item:
 		return ""
@@ -244,7 +249,8 @@ func _deal_element(item: GDSQL.GXMLItem, param: Dictionary, depth: int):
 			return _deal_if(item, param, depth)
 		_:
 			return ""
-			
+
+
 #<!ELEMENT cache-ref EMPTY>
 #<!ATTLIST cache-ref
 #namespace CDATA #REQUIRED
@@ -252,7 +258,8 @@ func _deal_element(item: GDSQL.GXMLItem, param: Dictionary, depth: int):
 @warning_ignore("unused_parameter")
 func _deal_cache_ref(item: GDSQL.GXMLItem, param: Dictionary, depth: int):
 	return ""
-	
+
+
 #<!ELEMENT cache (property*)>
 #<!ATTLIST cache
 #type CDATA #IMPLIED ------------- ❌ not support
@@ -275,7 +282,8 @@ func _deal_cache_ref(item: GDSQL.GXMLItem, param: Dictionary, depth: int):
 @warning_ignore("unused_parameter")
 func _deal_cache(item: GDSQL.GXMLItem, param: Dictionary, depth: int) -> GDSQL.GBatisCache:
 	return GDSQL.GBatisCache.new(item.attrs)
-	
+
+
 #<!ELEMENT parameterMap (parameter+)?>
 #<!ATTLIST parameterMap
 #id CDATA #REQUIRED
@@ -285,7 +293,8 @@ func _deal_cache(item: GDSQL.GXMLItem, param: Dictionary, depth: int) -> GDSQL.G
 @warning_ignore("unused_parameter")
 func _deal_parameter_map(item: GDSQL.GXMLItem, param: Dictionary, depth: int):
 	return ""
-	
+
+
 #<!ELEMENT parameter EMPTY>
 #<!ATTLIST parameter
 #property CDATA #REQUIRED
@@ -300,7 +309,8 @@ func _deal_parameter_map(item: GDSQL.GXMLItem, param: Dictionary, depth: int):
 @warning_ignore("unused_parameter")
 func _deal_parameter(item: GDSQL.GXMLItem, param: Dictionary, depth: int):
 	return ""
-	
+
+
 #<!ELEMENT resultMap (constructor?,id*,result*,association*,collection*, discriminator?)>
 #<!ATTLIST resultMap
 #id CDATA #REQUIRED
@@ -329,16 +339,23 @@ func _deal_result_map(item: GDSQL.GXMLItem, param: Dictionary, depth: int) -> GD
 	ret.set_mapper_parser_ref(weakref(self))
 	for i in item.content:
 		if i is GDSQL.GXMLItem:
-			if not ["constructor", "id", "result", "association", "collection", 
-			"discriminator"].has(i.name):
+			if not [
+				"constructor",
+				"id",
+				"result",
+				"association",
+				"collection",
+				"discriminator",
+			].has(i.name):
 				assert(false, "Invalid element %s in resultMap." % i.name)
 				return null
-			ret.push_element(_deal_element(i, param, depth+1))
+			ret.push_element(_deal_element(i, param, depth + 1))
 	ret.end_push_element()
 	#assert(not element_cache.has(ret.id), "Duplicate element id: %s." % ret.id)
 	#element_cache[ret.id] = ret
 	return ret
-	
+
+
 #<!ELEMENT id EMPTY>
 #<!ATTLIST id
 #property CDATA #REQUIRED -------- changed from #IMPLED to #REQUIRED
@@ -351,8 +368,8 @@ func _deal_result_map(item: GDSQL.GXMLItem, param: Dictionary, depth: int) -> GD
 @warning_ignore("unused_parameter")
 func _deal_id(item: GDSQL.GXMLItem, param: Dictionary, depth: int) -> GDSQL.GBatisId:
 	return GDSQL.GBatisId.new(item.attrs)
-	
-	
+
+
 #<!ELEMENT uq EMPTY>
 #<!ATTLIST uq
 #property CDATA #REQUIRED -------- changed from #IMPLED to #REQUIRED
@@ -365,7 +382,8 @@ func _deal_id(item: GDSQL.GXMLItem, param: Dictionary, depth: int) -> GDSQL.GBat
 @warning_ignore("unused_parameter")
 func _deal_uq(item: GDSQL.GXMLItem, param: Dictionary, depth: int) -> GDSQL.GBatisUQ:
 	return GDSQL.GBatisUQ.new(item.attrs)
-	
+
+
 #<!ELEMENT result EMPTY>
 #<!ATTLIST result
 #property CDATA #REQUIRED -------- changed from #IMPLED to #REQUIRED
@@ -378,7 +396,8 @@ func _deal_uq(item: GDSQL.GXMLItem, param: Dictionary, depth: int) -> GDSQL.GBat
 @warning_ignore("unused_parameter")
 func _deal_result(item: GDSQL.GXMLItem, param: Dictionary, depth: int) -> GDSQL.GBatisResult:
 	return GDSQL.GBatisResult.new(item.attrs)
-	
+
+
 #<!ELEMENT idArg EMPTY>
 #<!ATTLIST idArg
 #javaType CDATA #IMPLIED
@@ -394,7 +413,8 @@ func _deal_result(item: GDSQL.GXMLItem, param: Dictionary, depth: int) -> GDSQL.
 @warning_ignore("unused_parameter")
 func _deal_id_arg(item: GDSQL.GXMLItem, param: Dictionary, depth: int):
 	return ""
-	
+
+
 #<!ELEMENT arg EMPTY>
 #<!ATTLIST arg
 #javaType CDATA #IMPLIED
@@ -411,7 +431,8 @@ func _deal_id_arg(item: GDSQL.GXMLItem, param: Dictionary, depth: int):
 func _deal_arg(item: GDSQL.GXMLItem, param: Dictionary, depth: int):
 	var ret = ""
 	return ret
-	
+
+
 #<!ELEMENT collection (constructor?,id*,result*,association*,collection*, discriminator?)>
 #<!ATTLIST collection
 #===============================================================================
@@ -481,13 +502,20 @@ func _deal_collection(item: GDSQL.GXMLItem, param: Dictionary, depth: int) -> GD
 	ret.set_mapper_parser_ref(weakref(self))
 	for i in item.content:
 		if i is GDSQL.GXMLItem:
-			if not ["constructor", "id", "result", "association", "collection", 
-			"discriminator"].has(i.name):
+			if not [
+				"constructor",
+				"id",
+				"result",
+				"association",
+				"collection",
+				"discriminator",
+			].has(i.name):
 				assert(false, "Invalid element %s in collection." % i.name)
 				return null
-			ret.push_element(_deal_element(i, param, depth+1))
+			ret.push_element(_deal_element(i, param, depth + 1))
 	return ret
-	
+
+
 #<!ELEMENT association (constructor?,id*,result*,association*,collection*, discriminator?)>
 #<!ATTLIST association
 #===============================================================================
@@ -557,13 +585,20 @@ func _deal_association(item: GDSQL.GXMLItem, param: Dictionary, depth: int) -> G
 	ret.set_mapper_parser_ref(weakref(self))
 	for i in item.content:
 		if i is GDSQL.GXMLItem:
-			if not ["constructor", "id", "result", "association", "collection", 
-			"discriminator"].has(i.name):
+			if not [
+				"constructor",
+				"id",
+				"result",
+				"association",
+				"collection",
+				"discriminator",
+			].has(i.name):
 				assert(false, "Invalid element %s in association." % i.name)
 				return null
-			ret.push_element(_deal_element(i, param, depth+1))
+			ret.push_element(_deal_element(i, param, depth + 1))
 	return ret
-	
+
+
 #<!ELEMENT discriminator (case+)>
 #<!ATTLIST discriminator
 #column CDATA #REQUIRED
@@ -580,13 +615,14 @@ func _deal_discriminator(item: GDSQL.GXMLItem, param: Dictionary, depth: int) ->
 			if i.name != "case":
 				assert(i, "Invalid element %s in discriminator." % i.name)
 				return null
-			var case_ret = _deal_case(i, param, depth+1)
+			var case_ret = _deal_case(i, param, depth + 1)
 			if case_values.has(case_ret.value):
 				assert(false, "Duplicate value of child element <case>.")
 				return null
 			ret.push_element(case_ret)
 	return ret
-	
+
+
 #<!ELEMENT case (constructor?,id*,result*,association*,collection*, discriminator?)>
 #<!ATTLIST case
 #value CDATA #REQUIRED
@@ -599,24 +635,31 @@ func _deal_case(item: GDSQL.GXMLItem, param: Dictionary, depth: int) -> GDSQL.GB
 	if not (result_map_id.is_empty() or result_type.is_empty()):
 		assert(false, "In <case>, cannot set resultMap and resultType at the same time.")
 		return null
-		
+
 	var value = _get_value(item.attrs.get("value").strip_edges(), param, depth)
 	var conf = {
 		"value": value,
 		"id": result_map_id,
-		"type": result_type
+		"type": result_type,
 	}
 	var ret = GDSQL.GBatisCase.new(conf)
 	ret.set_mapper_parser_ref(weakref(self))
 	for i in item.content:
 		if i is GDSQL.GXMLItem:
-			if not ["constructor", "id", "result", "association", "collection", 
-			"discriminator"].has(i.name):
+			if not [
+				"constructor",
+				"id",
+				"result",
+				"association",
+				"collection",
+				"discriminator",
+			].has(i.name):
 				assert(false, "Invalid element %s in case." % i.name)
 				return
-			ret.push_element(_deal_element(i, param, depth+1))
+			ret.push_element(_deal_element(i, param, depth + 1))
 	return ret
-	
+
+
 #<!ELEMENT property EMPTY>
 #<!ATTLIST property
 #name CDATA #REQUIRED
@@ -626,7 +669,8 @@ func _deal_case(item: GDSQL.GXMLItem, param: Dictionary, depth: int) -> GDSQL.GB
 @warning_ignore("unused_parameter")
 func _deal_property(item: GDSQL.GXMLItem, param: Dictionary, depth: int):
 	return ""
-	
+
+
 #<!ELEMENT typeAlias EMPTY>
 #<!ATTLIST typeAlias
 #alias CDATA #REQUIRED
@@ -636,7 +680,8 @@ func _deal_property(item: GDSQL.GXMLItem, param: Dictionary, depth: int):
 @warning_ignore("unused_parameter")
 func _deal_type_alias(item: GDSQL.GXMLItem, param: Dictionary, depth: int):
 	return ""
-	
+
+
 #<!ELEMENT select (#PCDATA | include | trim | where | set | foreach | choose 
 #| if | bind)*>
 #<!ATTLIST select
@@ -664,7 +709,7 @@ func _deal_select(item: GDSQL.GXMLItem, param: Dictionary, depth: int) -> GDSQL.
 	var binded_param = []
 	var sql = _item_to_string(item, param, depth, valid_sub_items, binded_param)
 	_clear_binded_param(depth + 1, binded_param, param)
-	
+
 	var ret = GDSQL.GBatisSelect.new(item.attrs)
 	ret.set_mapper_parser_ref(weakref(self))
 	ret.set_sql(sql)
@@ -672,7 +717,8 @@ func _deal_select(item: GDSQL.GXMLItem, param: Dictionary, depth: int) -> GDSQL.
 	#assert(not element_cache.has(ret.id), "Duplicate element id: %s." % ret.id)
 	#element_cache[ret.id] = ret
 	return ret
-	
+
+
 #<!ELEMENT insert (#PCDATA | selectKey | include | trim | where | set | foreach 
 #| choose | if | bind)*>
 #<!ATTLIST insert
@@ -702,7 +748,7 @@ func _deal_insert(item: GDSQL.GXMLItem, param: Dictionary, depth: int) -> GDSQL.
 	var binded_param = []
 	var sql = _item_to_string(item, param, depth, valid_sub_items, binded_param)
 	_clear_binded_param(depth + 1, binded_param, param)
-	
+
 	var ret = GDSQL.GBatisInsert.new(item.attrs)
 	ret.set_sql(sql)
 	ret.set_method_return_info(_get_method_return_info(item.attrs.get("id", "")))
@@ -715,7 +761,8 @@ func _deal_insert(item: GDSQL.GXMLItem, param: Dictionary, depth: int) -> GDSQL.
 	#assert(not element_cache.has(ret.id), "Duplicate element id: %s." % ret.id)
 	#element_cache[ret.id] = ret
 	return ret
-	
+
+
 # NOTICE GBatis新增特性。mybatis原本不支持replace.
 #<!ELEMENT replace (#PCDATA | selectKey | include | trim | where | set | foreach 
 #| choose | if | bind)*>
@@ -746,7 +793,7 @@ func _deal_replace(item: GDSQL.GXMLItem, param: Dictionary, depth: int) -> GDSQL
 	var binded_param = []
 	var sql = _item_to_string(item, param, depth, valid_sub_items, binded_param)
 	_clear_binded_param(depth + 1, binded_param, param)
-	
+
 	var ret = GDSQL.GBatisReplace.new(item.attrs)
 	ret.set_sql(sql)
 	ret.set_method_return_info(_get_method_return_info(item.attrs.get("id", "")))
@@ -759,7 +806,8 @@ func _deal_replace(item: GDSQL.GXMLItem, param: Dictionary, depth: int) -> GDSQL
 	#assert(not element_cache.has(ret.id), "Duplicate element id: %s." % ret.id)
 	#element_cache[ret.id] = ret
 	return ret
-	
+
+
 #<!ELEMENT selectKey (#PCDATA | include | trim | where | set | foreach | choose | if | bind)*>
 #<!ATTLIST selectKey
 #resultType CDATA #IMPLIED
@@ -772,7 +820,8 @@ func _deal_replace(item: GDSQL.GXMLItem, param: Dictionary, depth: int) -> GDSQL
 @warning_ignore("unused_parameter")
 func _deal_select_key(item: GDSQL.GXMLItem, param: Dictionary, depth: int):
 	return ""
-	
+
+
 #<!ELEMENT update 
 #(#PCDATA | selectKey | include | trim | where | set | foreach | choose | if | bind)*>
 #<!ATTLIST update
@@ -793,14 +842,15 @@ func _deal_update(item: GDSQL.GXMLItem, param: Dictionary, depth: int) -> GDSQL.
 	var binded_param = []
 	var sql = _item_to_string(item, param, depth, valid_sub_items, binded_param)
 	_clear_binded_param(depth + 1, binded_param, param)
-	
+
 	var ret = GDSQL.GBatisUpdate.new(item.attrs)
 	ret.set_sql(sql)
 	ret.set_method_return_info(_get_method_return_info(item.attrs.get("id", "")))
 	#assert(not element_cache.has(ret.id), "Duplicate element id: %s." % ret.id)
 	#element_cache[ret.id] = ret
 	return ret
-	
+
+
 #<!ELEMENT delete (#PCDATA | include | trim | where | set | foreach | choose | if | bind)*>
 #<!ATTLIST delete
 #id CDATA #REQUIRED
@@ -817,32 +867,34 @@ func _deal_delete(item: GDSQL.GXMLItem, param: Dictionary, depth: int) -> GDSQL.
 	var binded_param = []
 	var sql = _item_to_string(item, param, depth, valid_sub_items, binded_param)
 	_clear_binded_param(depth + 1, binded_param, param)
-	
+
 	var ret = GDSQL.GBatisDelete.new(item.attrs)
 	ret.set_sql(sql)
 	ret.set_method_return_info(_get_method_return_info(item.attrs.get("id", "")))
 	#assert(not element_cache.has(ret.id), "Duplicate element id: %s." % ret.id)
 	#element_cache[ret.id] = ret
 	return ret
-	
+
+
 #<!ELEMENT include (property+)?>
 #<!ATTLIST include
 #refid CDATA #REQUIRED
 #>
 func _deal_include(item: GDSQL.GXMLItem, param: Dictionary, depth: int):
 	var ref_item = _get_item(item.attrs.get("refid").strip_edges())
-	var ret = _deal_element(ref_item, param, depth+1)
+	var ret = _deal_element(ref_item, param, depth + 1)
 	if not (typeof(ret) == TYPE_STRING or (typeof(ret) == TYPE_ARRAY and ret.size() == 2)):
 		assert(false, "Error occur.")
 		return null
 	if ret is Array:
 		return ret[1]
 	return ret
-	
+
+
 #<!ELEMENT bind EMPTY>
 #<!ATTLIST bind
- #name CDATA #REQUIRED
- #value CDATA #REQUIRED
+#name CDATA #REQUIRED
+#value CDATA #REQUIRED
 #>
 func _deal_bind(item: GDSQL.GXMLItem, param: Dictionary, depth: int):
 	var a_name = item.attrs.get("name").strip_edges() as String
@@ -853,14 +905,15 @@ func _deal_bind(item: GDSQL.GXMLItem, param: Dictionary, depth: int):
 		if param[BIND][d].has(a_name):
 			assert(false, "Already bind this parameter: %s." % a_name)
 			return null
-			
+
 	if not param[BIND].has(depth):
-		param[BIND][depth] = {}
-		
+		param[BIND][depth] = { }
+
 	var a_value = _get_value(item.attrs.get("value").strip_edges(), param, depth)
 	param[BIND][depth][a_name] = a_value
 	return ""
-	
+
+
 #<!ELEMENT sql (#PCDATA | include | trim | where | set | foreach | choose | if | bind)*>
 #<!ATTLIST sql
 #id CDATA #REQUIRED
@@ -872,11 +925,12 @@ func _deal_sql(item: GDSQL.GXMLItem, param: Dictionary, depth: int):
 	var binded_param = []
 	var ret = _item_to_string(item, param, depth, valid_sub_items, binded_param)
 	_clear_binded_param(depth + 1, binded_param, param)
-	
+
 	#assert(not element_cache.has(ret.id), "Duplicate element id: %s." % ret.id)
 	#element_cache[ret.id] = ret
 	return ret
-	
+
+
 #<!ELEMENT trim (#PCDATA | include | trim | where | set | foreach | choose | if | bind)*>
 #<!ATTLIST trim
 #prefix CDATA #IMPLIED 表示在trim包裹的SQL语句前面添加的指定内容。
@@ -888,12 +942,12 @@ func _deal_trim(item: GDSQL.GXMLItem, param: Dictionary, depth: int):
 	var valid_sub_items = ["include", "trim", "where", "set", "foreach", "choose", "if", "bind"]
 	var binded_param = []
 	var ret = _item_to_string(item, param, depth, valid_sub_items, binded_param)
-	
+
 	var prefix = item.attrs.get("prefix", "") as String
 	var prefixOverrides = item.attrs.get("prefixOverrides", "") as String
 	var suffix = item.attrs.get("suffix", "") as String
 	var suffixOverrides = item.attrs.get("suffixOverrides", "") as String
-	
+
 	if not prefix.is_empty():
 		ret = prefix + ret
 	if not prefixOverrides.is_empty() and ret.begins_with(prefixOverrides):
@@ -904,13 +958,14 @@ func _deal_trim(item: GDSQL.GXMLItem, param: Dictionary, depth: int):
 		ret = ret.substr(0, ret.length() - suffixOverrides.length())
 	_clear_binded_param(depth + 1, binded_param, param)
 	return ret
-	
+
+
 #<!ELEMENT where (#PCDATA | include | trim | where | set | foreach | choose | if | bind)*>
 func _deal_where(item: GDSQL.GXMLItem, param: Dictionary, depth: int):
 	var valid_sub_items = ["include", "trim", "where", "set", "foreach", "choose", "if", "bind"]
 	var binded_param = []
 	var ret = _item_to_string(item, param, depth, valid_sub_items, binded_param)
-	
+
 	if ret.countn("and", 0, 3) > 0:
 		ret = ret.substr(3)
 	elif ret.countn("or", 0, 2) > 0:
@@ -918,19 +973,21 @@ func _deal_where(item: GDSQL.GXMLItem, param: Dictionary, depth: int):
 	ret = _combine("where", ret)
 	_clear_binded_param(depth + 1, binded_param, param)
 	return ret
-	
+
+
 #<!ELEMENT set (#PCDATA | include | trim | where | set | foreach | choose | if | bind)*>
 func _deal_set(item: GDSQL.GXMLItem, param: Dictionary, depth: int):
 	var valid_sub_items = ["include", "trim", "where", "set", "foreach", "choose", "if", "bind"]
 	var binded_param = []
 	var ret = _item_to_string(item, param, depth, valid_sub_items, binded_param)
-	
+
 	if ret.ends_with(","):
 		ret = ret.substr(0, ret.length() - 1)
 	ret = _combine("set", ret)
 	_clear_binded_param(depth + 1, binded_param, param)
 	return ret
-	
+
+
 #<!ELEMENT foreach (#PCDATA | include | trim | where | set | foreach | choose | if | bind)*>
 #<!ATTLIST foreach
 #collection CDATA #REQUIRED 指定要遍历的集合或数组的变量名称
@@ -951,7 +1008,7 @@ func _deal_foreach(item: GDSQL.GXMLItem, param: Dictionary, depth: int):
 		assert(false, "collection must be an Array or a Dictionary.")
 		return null
 	var is_array = typeof(collection) == TYPE_ARRAY
-	
+
 	var e_item = item.attrs.get("item", "").strip_edges() as String
 	if param.has(e_item):
 		assert(false, "Please change your bind param name %s which is occupied by method's param." % e_item)
@@ -959,7 +1016,7 @@ func _deal_foreach(item: GDSQL.GXMLItem, param: Dictionary, depth: int):
 	for d in param[BIND]:
 		if param[BIND][d].has(e_item):
 			assert(false, "Already bind this parameter: %s." % e_item)
-			
+
 	var e_index = item.attrs.get("index", "").strip_edges() as String
 	if param.has(e_index):
 		assert(false, "Please change your bind param name %s which is occupied by method's param." % e_index)
@@ -968,46 +1025,55 @@ func _deal_foreach(item: GDSQL.GXMLItem, param: Dictionary, depth: int):
 		if param[BIND][d].has(e_index):
 			assert(false, "Already bind this parameter: %s." % e_index)
 			return null
-			
+
 	var e_open = item.attrs.get("open", "") as String
 	var e_close = item.attrs.get("close", "") as String
 	var e_separator = item.attrs.get("separator", "") as String
-	
+
 	for i in item.content:
 		ret = _combine(ret, e_open)
 		var index = -1
 		for e in collection:
 			index += 1
 			# 模拟bind的行为，相当于临时bind
-			if not param[BIND].has(depth+1):
-				param[BIND][depth+1] = {}
+			if not param[BIND].has(depth + 1):
+				param[BIND][depth + 1] = { }
 			if not e_item.is_empty():
-				param[BIND][depth+1][e_item] = e if is_array else collection[e]
+				param[BIND][depth + 1][e_item] = e if is_array else collection[e]
 			if not e_index.is_empty():
-				param[BIND][depth+1][e_index] = index if is_array else e
-				
+				param[BIND][depth + 1][e_index] = index if is_array else e
+
 			if i is GDSQL.GXMLItem:
-				if not ["include", "trim", "where", "set", "foreach", "choose", 
-				"if", "bind"].has(i.name):
+				if not [
+					"include",
+					"trim",
+					"where",
+					"set",
+					"foreach",
+					"choose",
+					"if",
+					"bind",
+				].has(i.name):
 					assert(false, "Invalid element %s in foreach." % i.name)
 					return null
 				_record_binded_param(i, binded_param)
-				ret = _combine(ret, _deal_element(i, param, depth+1))
+				ret = _combine(ret, _deal_element(i, param, depth + 1))
 			else:
 				ret = _combine_pcdata(ret, i, param, depth)
-				
+
 			# 去掉临时的bind
 			if not e_item.is_empty():
-				param[BIND][depth+1].erase(e_item)
+				param[BIND][depth + 1].erase(e_item)
 			if not e_index.is_empty():
-				param[BIND][depth+1].erase(e_index)
-				
+				param[BIND][depth + 1].erase(e_index)
+
 			if index < collection.size() - 1:
 				ret = _combine(ret, e_separator)
 		ret = _combine(ret, e_close)
-	_clear_binded_param(depth+1, binded_param, param)
+	_clear_binded_param(depth + 1, binded_param, param)
 	return ret
-	
+
+
 #<!ELEMENT choose (when* , otherwise?)>
 func _deal_choose(item: GDSQL.GXMLItem, param: Dictionary, depth: int):
 	var ret = ""
@@ -1023,12 +1089,13 @@ func _deal_choose(item: GDSQL.GXMLItem, param: Dictionary, depth: int):
 				return null
 			if i.name == "otherwise":
 				otherwise_flag = true
-			var info = _deal_element(i, param, depth+1)
+			var info = _deal_element(i, param, depth + 1)
 			if info and info[0]:
 				ret = _combine(ret, info[1])
 				break
 	return ret
-	
+
+
 #<!ELEMENT when (#PCDATA | include | trim | where | set | foreach | choose | if | bind)*>
 #<!ATTLIST when
 #test CDATA #REQUIRED
@@ -1037,22 +1104,31 @@ func _deal_when(item: GDSQL.GXMLItem, param: Dictionary, depth: int):
 	var test = _get_value(item.attrs.get("test"), param, depth)
 	if not test:
 		return [false, ""]
-		
+
 	var ret = ""
 	var binded_param = []
 	for i in item.content:
 		if i is GDSQL.GXMLItem:
-			if not ["include", "trim", "where", "set", "foreach", "choose", 
-			"if", "bind"].has(i.name):
+			if not [
+				"include",
+				"trim",
+				"where",
+				"set",
+				"foreach",
+				"choose",
+				"if",
+				"bind",
+			].has(i.name):
 				assert(false, "Invalid element %s in when." % i.name)
 				return null
 			_record_binded_param(i, binded_param)
-			ret = _combine(ret, _deal_element(i, param, depth+1))
+			ret = _combine(ret, _deal_element(i, param, depth + 1))
 		else:
 			ret = _combine_pcdata(ret, i, param, depth)
-	_clear_binded_param(depth+1, binded_param, param)
+	_clear_binded_param(depth + 1, binded_param, param)
 	return [true, ret]
-	
+
+
 #<!ELEMENT otherwise (#PCDATA | include | trim | where | set | foreach | choose | if | bind)*>
 func _deal_otherwise(item: GDSQL.GXMLItem, param: Dictionary, depth: int):
 	var valid_sub_items = ["include", "trim", "where", "set", "foreach", "choose", "if", "bind"]
@@ -1060,7 +1136,8 @@ func _deal_otherwise(item: GDSQL.GXMLItem, param: Dictionary, depth: int):
 	var ret = _item_to_string(item, param, depth, valid_sub_items, binded_param)
 	_clear_binded_param(depth + 1, binded_param, param)
 	return ret
-	
+
+
 #<!ELEMENT if (#PCDATA | include | trim | where | set | foreach | choose | if | bind)*>
 #<!ATTLIST if
 #test CDATA #REQUIRED
@@ -1069,13 +1146,14 @@ func _deal_if(item: GDSQL.GXMLItem, param: Dictionary, depth: int):
 	var test = _get_value(item.attrs.get("test"), param, depth)
 	if not test:
 		return ""
-		
+
 	var valid_sub_items = ["include", "trim", "where", "set", "foreach", "choose", "if", "bind"]
 	var binded_param = []
 	var ret = _item_to_string(item, param, depth, valid_sub_items, binded_param)
 	_clear_binded_param(depth + 1, binded_param, param)
 	return ret
-	
+
+
 func _combine(s1: String, s2: String) -> String:
 	s2 = _cast_null(s2).strip_edges()
 	if s1.is_empty():
@@ -1083,7 +1161,8 @@ func _combine(s1: String, s2: String) -> String:
 	if s2.is_empty():
 		return s1
 	return s1 + " " + s2
-	
+
+
 ## 拼接，但是会将s2中的占位符替换成真实数据. depth表示s2的深度
 func _combine_pcdata(s1: String, s2: String, param: Dictionary, depth: int) -> String:
 	s2 = _cast_null(s2).strip_edges()
@@ -1091,10 +1170,12 @@ func _combine_pcdata(s1: String, s2: String, param: Dictionary, depth: int) -> S
 		return s1
 	s2 = _replace_param(s2, param, depth)
 	return s1 + " " + s2
-	
+
+
 func _cast_null(value) -> String:
 	return "" if typeof(value) == TYPE_NIL else value
-	
+
+
 ## 替换占位符
 func _replace_param(s: String, param: Dictionary, depth: int) -> String:
 	# 支持的格式： #{ roleId } ${   rrrr} #   { user . roleId } ${list[0} ${bea.abc[ 33 ]}  ${map[a]}
@@ -1105,71 +1186,71 @@ func _replace_param(s: String, param: Dictionary, depth: int) -> String:
 	#bbb [$ {bea[ 0 ].abc[ 33 ][5].ee[8][mm]} ]
 	#aaa 1:[${  ]	2:[test .rrrr]	3:[]	4:[]
 	#bbb [${  test .rrrr}
-				#]
+	#]
 	#aaa 1:[#   
-				#{]	2:[loginName   ]	3:[]	4:[]
+	#{]	2:[loginName   ]	3:[]	4:[]
 	#bbb [#   
-				#{loginName   }]
+	#{loginName   }]
 	var matches = re_placeholder.search_all(s) # 4个匹配项（其中第3、4个始终为空字符串）
 	if matches.is_empty():
 		return s
-	var unique_matches = {}
+	var unique_matches = { }
 	for i in matches:
 		var k = i.get_string(0).strip_edges()
 		if not unique_matches.has(k):
 			unique_matches[k] = i
-			
+
 	for k: String in unique_matches:
 		var prop = (unique_matches[k] as RegExMatch).get_string(2).strip_edges()
 		#var value = null # 被替换的值
 		#if prop.contains(".") or prop.contains("["):
-			#assert(not prop.ends_with("."), "Error near: %s" % prop)
-			#assert(not prop.ends_with("[]"), "Error near: %s" % prop)
-			#assert(prop.count("[") == prop.count("]"), "`[` and `]` not match. Near: %s" % prop)
-			#prop = prop.replace("\t", "").replace(" ", "")
-			#assert(not prop.contains(".["), "Error near: %s" % prop)
-			#
-			#var splits_matches = re_split.search_all(prop)
-			#var splits = []
-			#for i in splits_matches:
-				#var key = i.get_string().strip_edges()
-				#if not key.is_empty():
-					#splits.push_back(key)
-			#var param_name = splits[0]
-			#assert(param.has(param_name), "Not found param: %s." % param_name)
-			#value = param[param_name]
-			#var index = 0
-			#while splits.size() > index:
-				#index += 1
-				#var key = splits[index] as String
-				#if value is Dictionary:
-					#if value.has(key):
-						#value = value.get(key)
-					#elif str(key.to_float()) == key and value.has(key.to_float()):
-						#value = value.get(key.to_float())
-					#elif str(key.to_int()) == key and value.has(key.to_int()):
-						#value = value.get(key.to_int())
-					#else:
-						#assert(false, "Invalid index: %s of %s" % [prop, param_name])
-				#elif value is Object:
-					#assert(key.is_valid_identifier(), "Invalid index: %s of %s" % [prop, param_name])
-					#value = value.get(key)
-				#elif value is Array:
-					#assert(str(key.to_int()) == key, "Invalid index: %s of %s" % [prop, param_name])
-					#value = value[key]
-				#else:
-					#assert(false, "Invalid index: %s of %s" % [prop, param_name])
+		#assert(not prop.ends_with("."), "Error near: %s" % prop)
+		#assert(not prop.ends_with("[]"), "Error near: %s" % prop)
+		#assert(prop.count("[") == prop.count("]"), "`[` and `]` not match. Near: %s" % prop)
+		#prop = prop.replace("\t", "").replace(" ", "")
+		#assert(not prop.contains(".["), "Error near: %s" % prop)
+		#
+		#var splits_matches = re_split.search_all(prop)
+		#var splits = []
+		#for i in splits_matches:
+		#var key = i.get_string().strip_edges()
+		#if not key.is_empty():
+		#splits.push_back(key)
+		#var param_name = splits[0]
+		#assert(param.has(param_name), "Not found param: %s." % param_name)
+		#value = param[param_name]
+		#var index = 0
+		#while splits.size() > index:
+		#index += 1
+		#var key = splits[index] as String
+		#if value is Dictionary:
+		#if value.has(key):
+		#value = value.get(key)
+		#elif str(key.to_float()) == key and value.has(key.to_float()):
+		#value = value.get(key.to_float())
+		#elif str(key.to_int()) == key and value.has(key.to_int()):
+		#value = value.get(key.to_int())
 		#else:
-			#if param.get(BIND).has(prop):
-				#value = param.get(BIND).get(prop)
-			#else:
-				#assert(param.size() == 2, "Please specify the owner of property: %s" % prop)
-				#for key in param:
-					#if key != BIND:
-						#assert(param.get(key).has(prop), "Invalid index: %s of %s" % [prop, key])
-						#value = param[key][prop]
-						#break
-						
+		#assert(false, "Invalid index: %s of %s" % [prop, param_name])
+		#elif value is Object:
+		#assert(key.is_valid_identifier(), "Invalid index: %s of %s" % [prop, param_name])
+		#value = value.get(key)
+		#elif value is Array:
+		#assert(str(key.to_int()) == key, "Invalid index: %s of %s" % [prop, param_name])
+		#value = value[key]
+		#else:
+		#assert(false, "Invalid index: %s of %s" % [prop, param_name])
+		#else:
+		#if param.get(BIND).has(prop):
+		#value = param.get(BIND).get(prop)
+		#else:
+		#assert(param.size() == 2, "Please specify the owner of property: %s" % prop)
+		#for key in param:
+		#if key != BIND:
+		#assert(param.get(key).has(prop), "Invalid index: %s of %s" % [prop, key])
+		#value = param[key][prop]
+		#break
+
 		# 上面的实现方法比较复杂，有更简单的，如下
 		var names = []
 		var values = []
@@ -1200,23 +1281,26 @@ func _replace_param(s: String, param: Dictionary, depth: int) -> String:
 			value = GDSQL.GDSQLUtils.evaluate_command(obj_maybe, prop, names, values)
 		else:
 			value = GDSQL.GDSQLUtils.evaluate_command(null, prop, names, values)
-			
+
 		if k.begins_with("$"):
 			s = s.replace(k, str(value))
 		else:
 			s = s.replace(k, var_to_str(value))
 	return s
-	
+
+
 func _record_binded_param(item: GDSQL.GXMLItem, record_arr: Array):
 	if item.name == "bind":
 		record_arr.push_back(item.attrs.get("name").strip_edges())
-		
+
+
 func _clear_binded_param(depth: int, record_arr: Array, param: Dictionary):
 	if param[BIND].has(depth):
 		for i in record_arr:
 			param[BIND][depth].erase(i)
 	record_arr.clear()
-	
+
+
 func _get_value(value_string: String, param: Dictionary, depth: int):
 	var names = []
 	var values = []
@@ -1242,7 +1326,7 @@ func _get_value(value_string: String, param: Dictionary, depth: int):
 			else:
 				names.push_back(i)
 				values.push_back(param[i])
-				
+
 	if obj_maybe:
 		return GDSQL.GDSQLUtils.evaluate_command(obj_maybe, value_string, names, values)
 	return GDSQL.GDSQLUtils.evaluate_command(null, value_string, names, values)

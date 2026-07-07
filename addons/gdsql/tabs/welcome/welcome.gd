@@ -1,6 +1,14 @@
 @tool
 extends PanelContainer
 
+var _version: String
+var _updater: AcceptDialog
+var _auto_check_http: HTTPRequest
+var _TIPS: Array[String] = load("res://addons/gdsql/tabs/welcome/tips.gd").TIPS
+var _shuffled_indices: Array[int] = []
+var _current_shuffle_pos: int = 0
+var _rng: RandomNumberGenerator
+
 @onready var center_container: CenterContainer = %CenterContainer
 @onready var content: VBoxContainer = %Content
 @onready var random_tip_label: RichTextLabel = %RandomTipLabel
@@ -10,15 +18,6 @@ extends PanelContainer
 @onready var prev_tip_button: Button = %PrevTipButton
 @onready var next_tip_button: Button = %NextTipButton
 
-var _version: String
-var _updater: AcceptDialog
-var _auto_check_http: HTTPRequest
-
-var _TIPS: Array[String] = load("res://addons/gdsql/tabs/welcome/tips.gd").TIPS
-
-var _shuffled_indices: Array[int] = []
-var _current_shuffle_pos: int = 0
-var _rng: RandomNumberGenerator
 
 func _ready() -> void:
 	var plugin_cfg := ConfigFile.new()
@@ -49,15 +48,18 @@ func _reshuffle_tips() -> void:
 		_shuffled_indices[j] = temp
 	_current_shuffle_pos = 0
 
+
 func _show_current_tip() -> void:
 	if _shuffled_indices.is_empty():
 		_reshuffle_tips()
 	random_tip_label.text = _TIPS[_shuffled_indices[_current_shuffle_pos]]
 
+
 func _show_random_tip() -> void:
 	# 随机按钮：重新洗牌，从头开始
 	_reshuffle_tips()
 	_show_current_tip()
+
 
 func _advance_tip() -> void:
 	_current_shuffle_pos += 1
@@ -149,11 +151,11 @@ func _on_auto_check_completed(result: int, _code: int, _headers: PackedStringArr
 		notes = ""
 	var max_upgrade = GDSQL.GDSQLUtils.parse_max_upgrade(notes, current)
 	if max_upgrade == "":
-		return  # current version not in any upgrade range
+		return # current version not in any upgrade range
 
 	# Check if already at the range ceiling with breaking change beyond
 	if GDSQL.GDSQLUtils.cmp_version(latest, max_upgrade) > 0 and GDSQL.GDSQLUtils.cmp_version(current, max_upgrade) >= 0:
-		return  # at max of range and can't go further
+		return # at max of range and can't go further
 
 	version.icon = preload("res://addons/gdsql/img/upgrade.svg")
 	version.icon_alignment = HORIZONTAL_ALIGNMENT_RIGHT

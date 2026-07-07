@@ -6,8 +6,8 @@ var _PASSWORD = "" ## 数据表密码
 
 var __request_password: Array ## 【外部请勿使用】query过程中是否请求密码（只存在于编辑器模式下）
 var __db_path = "" ## 【外部请勿使用】数据库路径
-var __db_name: String = ""  ## 【外部请勿使用】数据库名称
-var __cmd: String = "" ## 【外部请勿使用】命令
+var __db_name: String = ""  ## 【外部请勿使用】数据库名称F
+var __cmd: String = "" ## 【外部请勿使用】命令F
 var __select_str = "" ## 【外部请勿使用】select字符串
 var __select: Array[String] = [] ## 【外部请勿使用】select哪些字段
 var __field_as_index: Dictionary = {} ## 【外部请勿使用】字段别名的位置索引
@@ -1068,7 +1068,7 @@ func ___select(fill_primary_key: String = ""):
 		if not a_left_join.check_table_exit():
 			__err.append(a_left_join.get_err())
 			return null
-		var err = a_left_join.handle_defualt_password()
+		var err = a_left_join.handle_default_password()
 		if err != OK:
 			__err.append_array(a_left_join.get_err())
 			return null
@@ -1627,7 +1627,7 @@ func ___select(fill_primary_key: String = ""):
 #		__union_all.__need_head = false
 		# 为了让union表数据包含order by的列，需要先设置一下
 		__union_all.__order_by = __order_by.duplicate()
-		var err = __union_all._handle_defualt_password()
+		var err = __union_all._handle_default_password()
 		if err != OK:
 			return null
 		if __union_all.need_user_enter_password():
@@ -2014,7 +2014,7 @@ func __get_table_column_defination(db_name: String, table_name: String, table_al
 func need_user_enter_password() -> bool:
 	return not __request_password.is_empty()
 	
-func _handle_defualt_password():
+func _handle_default_password():
 	__request_password.clear()
 	# 在编辑器模式，要求用户输入密码
 	if mgr and Engine.is_editor_hint():
@@ -2059,7 +2059,7 @@ func query() -> GDSQL.QueryResult:
 	if __parent_union:
 		return __parent_union.get_ref().query()
 		
-	var err = _handle_defualt_password()
+	var err = _handle_default_password()
 	if err != OK:
 		return null
 	if need_user_enter_password():

@@ -43,7 +43,6 @@ static var DATA_TYPES = [
 	TYPE_PACKED_VECTOR4_ARRAY,
 	TYPE_MAX,
 ]
-
 static var DATA_TYPE_NAMES = [
 	"TYPE_NIL",
 	"TYPE_BOOL",
@@ -86,7 +85,6 @@ static var DATA_TYPE_NAMES = [
 	"TYPE_PACKED_VECTOR4_ARRAY",
 	"TYPE_MAX",
 ]
-
 static var DATA_TYPE_COMMON_NAMES = {
 	"Nil": TYPE_NIL,
 	"bool": TYPE_BOOL,
@@ -128,7 +126,6 @@ static var DATA_TYPE_COMMON_NAMES = {
 	"PackedColorArray": TYPE_PACKED_COLOR_ARRAY,
 	"PackedVector4Array": TYPE_PACKED_VECTOR4_ARRAY,
 }
-
 static var DATA_TYPE_NAME_INDEXES = [
 	"TYPE_NIL:0",
 	"TYPE_BOOL:1",
@@ -171,8 +168,7 @@ static var DATA_TYPE_NAME_INDEXES = [
 	"TYPE_PACKED_VECTOR4_ARRAY:38",
 	"TYPE_MAX:39",
 ]
-
-static var DEFUALT_VALUES = [
+static var DEFAULT_VALUES = [
 	null,
 	bool(),
 	int(),
@@ -197,7 +193,7 @@ static var DEFUALT_VALUES = [
 	StringName(),
 	NodePath(),
 	RID(),
-	null,# Object
+	null, # Object
 	Callable(),
 	Signal(),
 	Dictionary(),
@@ -212,10 +208,9 @@ static var DEFUALT_VALUES = [
 	PackedVector3Array(),
 	PackedColorArray(),
 	PackedVector4Array(),
-	null
+	null,
 ]
-
-static var DEFUALT_VALUES_EXP = [
+static var DEFAULT_VALUES_EXP = [
 	'null',
 	'bool()',
 	'int()',
@@ -240,7 +235,7 @@ static var DEFUALT_VALUES_EXP = [
 	'StringName()',
 	'NodePath()',
 	'RID()',
-	'null',# Object
+	'null', # Object
 	'Callable()',
 	'Signal()',
 	'Dictionary()',
@@ -255,9 +250,8 @@ static var DEFUALT_VALUES_EXP = [
 	'PackedVector3Array()',
 	'PackedColorArray()',
 	'PackedVector4Array()',
-	'null'
+	'null',
 ]
-
 static var PROPERTY_HINTS = [
 	PROPERTY_HINT_NONE,
 	PROPERTY_HINT_RANGE,
@@ -306,7 +300,6 @@ static var PROPERTY_HINTS = [
 	PROPERTY_HINT_FILE_PATH,
 	PROPERTY_HINT_MAX,
 ]
-
 static var PROPERTY_HINT_NAMES = [
 	"PROPERTY_HINT_NONE",
 	"PROPERTY_HINT_RANGE",
@@ -355,7 +348,6 @@ static var PROPERTY_HINT_NAMES = [
 	"PROPERTY_HINT_FILE_PATH",
 	"PROPERTY_HINT_MAX",
 ]
-
 static var PROPERTY_HINT_INDEXES = [
 	"PROPERTY_HINT_NONE:0",
 	"PROPERTY_HINT_RANGE:1",

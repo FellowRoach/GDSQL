@@ -1215,7 +1215,7 @@ func gen_table_node(columns: Array, table_datas: Array, is_union_all: bool, join
 							return v["Column Name"] == j["col_name"]
 						).front()
 						if (col_def["Default(Expression)"] as String).strip_edges().is_empty():
-							new_data[j["prop"]] = GDSQL.DataTypeDef.DEFUALT_VALUES[col_def["Data Type"]]
+							new_data[j["prop"]] = GDSQL.DataTypeDef.DEFAULT_VALUES[col_def["Data Type"]]
 						else:
 							new_data[j["prop"]] = GDSQL.GDSQLUtils.evaluate_command(null, col_def["Default(Expression)"])
 							
@@ -1377,7 +1377,7 @@ func gen_insert_node() -> GraphNode:
 					var data = {}
 					var hints = {}
 					for col in mgr.databases[GDSQL.RootConfig.validate_name(schema_dict_obj._get("Schema"))]["tables"][GDSQL.RootConfig.validate_name(new_val)]["columns"]:
-						data[col["Column Name"]] = GDSQL.DataTypeDef.DEFUALT_VALUES[col["Data Type"]]
+						data[col["Column Name"]] = GDSQL.DataTypeDef.DEFAULT_VALUES[col["Data Type"]]
 						hints[col["Column Name"]] = {"hint": col["Hint"], "hint_string": col["Hint String"], "type": col["Data Type"]}
 					fields_dict_obj.reset_data(data, hints)
 				else:
@@ -1520,7 +1520,7 @@ func gen_update_node() -> GraphNode:
 					var data = {}
 					var hints = {}
 					for col in mgr.databases[GDSQL.RootConfig.validate_name(schema_dict_obj._get("Schema"))]["tables"][GDSQL.RootConfig.validate_name(new_val)]["columns"]:
-						data[col["Column Name"]] = GDSQL.DataTypeDef.DEFUALT_VALUES[col["Data Type"]]
+						data[col["Column Name"]] = GDSQL.DataTypeDef.DEFAULT_VALUES[col["Data Type"]]
 						hints[col["Column Name"]] = {"hint": col["Hint"], "hint_string": col["Hint String"], "type": col["Data Type"]}
 					fields_dict_obj.reset_data(data, hints)
 					fields_dict_obj.set_meta("align", "vertical") # 垂直显示各属性

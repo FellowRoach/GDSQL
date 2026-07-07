@@ -20,22 +20,28 @@ var id = ""
 var flush_cache = "true"
 var database_id = ""
 var sql = ""
-var method_return_info: Dictionary: set = set_method_return_info
+var method_return_info: Dictionary:
+	set = set_method_return_info
+
 
 func _init(conf: Dictionary) -> void:
 	id = conf.get("id").strip_edges()
 	flush_cache = conf.get("flushCache", "true").strip_edges()
 	database_id = conf.get("databaseId", "").strip_edges()
-	
+
+
 func clean():
 	method_return_info.clear()
-	
+
+
 func set_sql(p_sql: String):
 	sql = p_sql
-	
+
+
 func set_method_return_info(info: Dictionary):
 	method_return_info = info
-	
+
+
 # INFO 缓存的逻辑在mapper_parser.gd
 func query():
 	var dao = GDSQL.SQLParser.parse_to_dao(sql)
@@ -54,16 +60,19 @@ func query():
 	if not query_result.ok():
 		assert(false, "Error occur. %s" % query_result.get_err())
 		return null
-		
+
 	if method_return_info.type == TYPE_NIL:
 		return
-		
+
 	if method_return_info.type == TYPE_INT:
 		return query_result.get_affected_rows()
-		
+
 	if method_return_info.class_name == "QueryResult":
 		return query_result
-		
-	assert(false, "Method of <update> cannot return %s." % \
-		GDSQL.DataTypeDef.DATA_TYPE_NAMES[method_return_info.type])
+
+	assert(
+		false,
+		"Method of <update> cannot return %s." % \
+				GDSQL.DataTypeDef.DATA_TYPE_NAMES[method_return_info.type],
+	)
 	return null

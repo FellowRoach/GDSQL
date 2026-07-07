@@ -1,10 +1,11 @@
 @tool
 extends Tree
 
+
 func _make_custom_tooltip(for_text: String) -> Object:
 	if for_text == "":
 		return null
-		
+
 	var rich_text_label = RichTextLabel.new()
 	rich_text_label.set_theme_type_variation(&"TooltipLabel")
 	rich_text_label.bbcode_enabled = true

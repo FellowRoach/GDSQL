@@ -1,17 +1,17 @@
 @tool
 extends ScrollContainer
-
 ## License attribution page — shows all third-party icons and their licenses.
 
 const LICENSE_FILE = "res://addons/gdsql/license.txt"
 
 var _font_variation: FontVariation
 
+
 func _ready() -> void:
 	set_meta("type", "license")
 	_font_variation = FontVariation.new()
 	_font_variation.set_spacing(TextServer.SPACING_TOP, 7)
-	
+
 	var vbox = VBoxContainer.new()
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vbox.add_theme_constant_override("separation", 4)
@@ -49,11 +49,17 @@ func _ready() -> void:
 	f.close()
 
 
+func add_margin(vbox: VBoxContainer, size: int) -> void:
+	var c = Control.new()
+	c.custom_minimum_size = Vector2(0, size)
+	vbox.add_child(c)
+
+
 func _parse_line(line: String) -> Dictionary:
 	# Format: path,icon_url,attribution_text,license,modification_notes
 	var parts = line.split(",", false, 5)
 	if parts.size() < 3:
-		return {}
+		return { }
 
 	var path_part = parts[0].strip_edges()
 	var icon_url = parts[1].strip_edges()
@@ -125,7 +131,7 @@ func _make_item(item: Dictionary) -> Control:
 	var top = HBoxContainer.new()
 	top.add_theme_constant_override("separation", 8)
 	top.alignment = BoxContainer.ALIGNMENT_CENTER
-	
+
 	var tex = ResourceLoader.load(item["path"], "Texture2D", ResourceLoader.CACHE_MODE_REUSE)
 	if tex:
 		var texture_rect = TextureRect.new()
@@ -189,9 +195,3 @@ func _make_item(item: Dictionary) -> Control:
 		vbox.add_child(mod_label)
 
 	return margin
-
-
-func add_margin(vbox: VBoxContainer, size: int) -> void:
-	var c = Control.new()
-	c.custom_minimum_size = Vector2(0, size)
-	vbox.add_child(c)
