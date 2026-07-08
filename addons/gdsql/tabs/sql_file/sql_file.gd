@@ -49,7 +49,7 @@ func run_sql() -> void:
 	_on_button_run_all_pressed()
 
 
-#region 每列的属性名称要重新定义
+## 每列的属性名称要重新定义
 func gen_table_node(columns: Array, table_datas: Array, is_union_all: bool, join_conds: Array) -> MarginContainer:
 	var single_table_query = join_conds.is_empty() # 是否为单表查询
 	var hint = { } # 每列的hint
@@ -699,7 +699,6 @@ func gen_table_node(columns: Array, table_datas: Array, is_union_all: bool, join
 		table.support_delete_row = true
 
 	return margin_container
-#endregion
 
 
 func extract_table_data_call(v, columns):
@@ -869,8 +868,7 @@ func _on_button_run_all_pressed() -> void:
 			ret = GDSQL.QueryResult.new()
 			ret._has_head = true
 			ret._data = [
-				["err", "affected_rows", "warnings", "last_insert_id", "generated_keys", "cost_time"]
-				.map(gen_dict),
+				["err", "affected_rows", "warnings", "last_insert_id", "generated_keys", "cost_time"].map(gen_dict),
 				[
 					query_ret.get_err(),
 					query_ret.get_affected_rows(),
@@ -991,8 +989,7 @@ func _on_button_run_edit_pressed() -> void:
 		ret = GDSQL.QueryResult.new()
 		ret._has_head = true
 		ret._data = [
-			["err", "affected_rows", "warnings", "last_insert_id", "generated_keys", "cost_time"]
-			.map(gen_dict),
+			["err", "affected_rows", "warnings", "last_insert_id", "generated_keys", "cost_time"].map(gen_dict),
 			[
 				query_ret.get_err(),
 				query_ret.get_affected_rows(),

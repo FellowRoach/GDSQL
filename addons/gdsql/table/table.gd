@@ -322,7 +322,7 @@ func reset_header():
 	clear_rows()
 
 
-#region 增量操作
+## 增量操作
 func append_data(a_data):
 	datas.push_back(a_data)
 	if is_node_ready():
@@ -383,7 +383,6 @@ func move_data(from: int, to: int):
 				for i in range(from, to + 1, 1):
 					var line_btn = v_box_container.get_child(i).get_child(0).get_child(1, true).get_child(0)
 					line_btn.text = str(i + 1)
-#endregion
 
 
 func add_row(a_data):

@@ -593,7 +593,7 @@ func add_table_node(columns: Array, table_datas: Array, is_union_all: bool, join
 
 
 ## 生成一个【表格】节点
-#region 每列的属性名称要重新定义
+## 每列的属性名称要重新定义
 func gen_table_node(columns: Array, table_datas: Array, is_union_all: bool, join_conds: Array, v_scroll_h: int = 0, old_graph_node: GraphNode = null) -> GraphNode:
 	var single_table_query = join_conds.is_empty() # 是否为单表查询
 	var hint = { } # 每列的hint
@@ -1279,7 +1279,6 @@ func gen_table_node(columns: Array, table_datas: Array, is_union_all: bool, join
 		table.set_deferred("v_scroll_height", v_scroll_h)
 
 	return graph_node
-#endregion
 
 
 ## 检查是否存在某主键的Callable
@@ -3207,15 +3206,12 @@ func on_link_node_query(node: GraphNode):
 												var dao = GDSQL.BaseDao.new()
 												dao.auto_commit(false)
 												(
-														dao.use_db(data.get_meta("link_db", ""))
-														.set_password(data.get_meta("link_password", ""))
-														.insert_into(data.get_meta("link_table", ""))
-														.values(
-															{
-																link_prop_dict_obj._get("Left"): detail_panel.get_meta("left_id"),
-																link_prop_dict_obj._get("Right"): detail_panel.get_meta("right_id"),
-															},
-														)
+													dao.use_db(data.get_meta("link_db", "")).set_password(data.get_meta("link_password", "")).insert_into(data.get_meta("link_table", "")).values(
+														{
+															link_prop_dict_obj._get("Left"): detail_panel.get_meta("left_id"),
+															link_prop_dict_obj._get("Right"): detail_panel.get_meta("right_id"),
+														},
+													)
 												)
 												daos.push_back(dao)
 											elif change_status == "delete":
@@ -3226,17 +3222,14 @@ func on_link_node_query(node: GraphNode):
 												var dao = GDSQL.BaseDao.new()
 												dao.auto_commit(false)
 												(
-														dao.use_db(data.get_meta("link_db", ""))
-														.set_password(data.get_meta("link_password", ""))
-														.delete_from(data.get_meta("link_table", ""))
-														.where(
-															"%s == %s and %s == %s" % [
-																link_prop_dict_obj._get("Left"),
-																wrap_value.call(detail_panel.get_meta("left_id")),
-																link_prop_dict_obj._get("Right"),
-																wrap_value.call(detail_panel.get_meta("right_id")),
-															],
-														)
+													dao.use_db(data.get_meta("link_db", "")).set_password(data.get_meta("link_password", "")).delete_from(data.get_meta("link_table", "")).where(
+														"%s == %s and %s == %s" % [
+															link_prop_dict_obj._get("Left"),
+															wrap_value.call(detail_panel.get_meta("left_id")),
+															link_prop_dict_obj._get("Right"),
+															wrap_value.call(detail_panel.get_meta("right_id")),
+														],
+													)
 												)
 												daos.push_back(dao)
 										# 弹对话框

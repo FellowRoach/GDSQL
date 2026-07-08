@@ -1,7 +1,6 @@
 @tool
 extends Tree
 
-
 func _make_custom_tooltip(for_text: String) -> Object:
 	if for_text == "":
 		return null
