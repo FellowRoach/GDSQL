@@ -49,7 +49,7 @@ jobs:
             		-type f \
             		-name "*.gd" \
             		! -ipath "*test*" \
-            		! \( -name "expression.gd" -o -name "base_dao.gd" \) \
+            		! \( -name "expression.gd" \) \
             		-print0 | sort -z
           )
 

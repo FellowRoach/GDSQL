@@ -2274,9 +2274,15 @@ const op_names = {
 }
 
 
+
+
+
 static func _static_init() -> void:
 	EXPRESSION_CACHE = ExpressionLRULink.new()
 	EXPRESSION_CACHE.capacity = 1024
+
+
+
 
 
 func _init() -> void:
@@ -2288,12 +2294,21 @@ func get_operator_name(p_op):
 	return op_names[p_op]
 
 
+
+
+
 func get_lack_input_names() -> Array:
 	return lack_input_names
 
 
+
+
+
 func clear_lack_input_names():
 	lack_input_names.clear()
+
+
+
 
 
 func _set_error(p_err):
@@ -2303,6 +2318,9 @@ func _set_error(p_err):
 	error_str = p_err + ' in ' + expression
 	error_set = true
 	assert(false, error_str)
+
+
+
 
 
 func alloc_node(type: String) -> ExpressionENode:
@@ -2345,6 +2363,9 @@ func alloc_node(type: String) -> ExpressionENode:
 	return node
 
 
+
+
+
 func GET_CHAR():
 	if str_ofs >= max_str_ofs or str_ofs >= expression.length():
 		str_ofs += 1 # 外部有些地方 -=1， 在遇到EOF的时候会导致回退
@@ -2354,29 +2375,50 @@ func GET_CHAR():
 	return ret
 
 
+
+
+
 func ERR_FAIL_V(m_retval):
 	push_error("Method/function failed. Returning: %s" % m_retval)
 	return m_retval
+
+
+
 
 
 static func is_digit(c: String) -> bool:
 	return c >= '0' and c <= '9'
 
 
+
+
+
 static func is_hex_digit(c: String):
 	return (is_digit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))
+
+
+
 
 
 static func is_unicode_identifier_start(c: String) -> bool:
 	return BSEARCH_CHAR_RANGE(xid_start, c)
 
 
+
+
+
 static func is_binary_digit(c: String) -> bool:
 	return (c == '0' || c == '1')
 
 
+
+
+
 static func is_unicode_identifier_continue(c: String) -> bool:
 	return BSEARCH_CHAR_RANGE(xid_continue, c)
+
+
+
 
 
 static func BSEARCH_CHAR_RANGE(m_array, c: String):
@@ -2398,8 +2440,14 @@ static func BSEARCH_CHAR_RANGE(m_array, c: String):
 	return false
 
 
+
+
+
 static func has_utility_function(p_name) -> bool:
 	return utility_function_table.has(p_name)
+
+
+
 
 
 func is_utility_function_vararg(p_name) -> bool:
@@ -2411,10 +2459,16 @@ func is_utility_function_vararg(p_name) -> bool:
 	(utility_function_table[p_name].size() == 4 and utility_function_table[p_name][3])
 
 
+
+
+
 func get_utility_function_argument_count(p_name) -> int:
 	if not utility_function_table.has(p_name):
 		return 0
 	return utility_function_table[p_name][0]
+
+
+
 
 
 func _get_token(r_token: ExpressionToken) -> Error:
@@ -2962,6 +3016,9 @@ func _get_token(r_token: ExpressionToken) -> Error:
 
 
 func _parse_expression() -> ExpressionENode:
+
+
+
 
 
 	var expression_nodes = []

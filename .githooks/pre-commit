@@ -20,7 +20,7 @@ while IFS= read -r -d '' file; do
 	[ -f "$file" ] || continue
 
 	case "$file" in
-		*test*|*expression.gd|*base_dao.gd)
+		*test*|*expression.gd)
 			continue
 			;;
 	esac
