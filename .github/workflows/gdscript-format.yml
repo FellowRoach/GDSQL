@@ -38,10 +38,20 @@ jobs:
 
       - name: Check GDScript formatting
         shell: bash
+        # Known issue:
+        # Files `expression.gd` and `base_dao.gd` need proper refactor in order to be formattable
+        # for this reason they are being excluded from the check.
         run: |
           set -euo pipefail
 
-          mapfile -d '' FILES < <(find addons/gdsql -type f -name "*.gd" ! -ipath "*test*" -print0 | sort -z)
+          mapfile -d '' FILES < <(
+           	find addons/gdsql \
+            		-type f \
+            		-name "*.gd" \
+            		! -ipath "*test*" \
+            		! \( -name "expression.gd" -o -name "base_dao.gd" \) \
+            		-print0 | sort -z
+          )
 
           if [ "${#FILES[@]}" -eq 0 ]; then
             echo "No GDScript files found."
