@@ -24,8 +24,9 @@ jobs:
       - uses: godot-gdunit-labs/gdUnit4-action@v1
         with:
           godot-version: ${{ matrix.godot-version }}
-          godot-status: beta3
+          godot-status: stable
           version: installed
+          publish-report: false
           paths: |
             res://test/core
             res://test/admin
