@@ -1,3 +1,7 @@
+@tool
+@icon("res://addons/gdsql/gbatis/img/xml.svg")
+class_name GXML
+extends Resource
 ## GXML can parse xml file or xml-formatted String or buffer to a Dictionary.
 ## Usage: 
 ##     var gxml = load("res://1.xml")
@@ -14,18 +18,12 @@
 ##             <a>...</a>
 ##             <b>...</b>
 ##         </abc>
-@tool
-@icon("res://addons/gdsql/gbatis/img/xml.svg")
-extends Resource
-class_name GXML
-
-var root_item: GDSQL.GXMLItem
 
 ## Some features that to_dict() uses. You can combine these flags.
 enum TO_DICT_FLAG {
 	## default. No Features.
 	## 不使用特征。
-	NONE = 0, 
+	NONE = 0,
 	## Ignore plain blank text(' ', '\t', '\n', '\n\r') and their combinations in "content" array.
 	## "content"将忽略纯空白字符及其组合。
 	IGNORE_PLAIN_BLANK_TEXT = 1,
@@ -36,6 +34,14 @@ enum TO_DICT_FLAG {
 	NORMAL = 3,
 }
 
+var root_item: GDSQL.GXMLItem
+
+
+func _validate_property(property: Dictionary) -> void:
+	if property.name == "root_item":
+		property.usage = PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY
+
+
 ## return Dictionary: {
 ##	"name": String,
 ##	"attrs": Dictionary{ property_name: value},
@@ -44,7 +50,3 @@ enum TO_DICT_FLAG {
 func to_dict(flags: TO_DICT_FLAG = TO_DICT_FLAG.NORMAL) -> Dictionary:
 	assert(root_item, "use load() to load a xml file.")
 	return root_item.to_dict(flags)
-	
-func _validate_property(property: Dictionary) -> void:
-	if property.name == "root_item":
-		property.usage = PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY

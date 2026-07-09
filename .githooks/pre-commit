@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+FORMATTER="${GDSCRIPT_FORMATTER:-gdscript-formatter}"
+
+if ! command -v "$FORMATTER" >/dev/null 2>&1; then
+	echo "Error: gdscript-formatter was not found in PATH."
+	echo ""
+	echo "Install GDQuest GDScript Formatter and make sure the command works:"
+	echo "  gdscript-formatter path/to/file.gd"
+	echo ""
+	echo "You can also set a custom path:"
+	echo "  GDSCRIPT_FORMATTER=/path/to/gdscript-formatter git commit"
+	exit 1
+fi
+
+FILES=()
+
+while IFS= read -r -d '' file; do
+	[ -f "$file" ] || continue
+
+	case "$file" in
+		*test*|*expression.gd)
+			continue
+			;;
+	esac
+
+	FILES+=("$file")
+done < <(git diff --cached --name-only -z --diff-filter=ACMR -- "*.gd")
+
+if [ "${#FILES[@]}" -eq 0 ]; then
+	exit 0
+fi
+
+echo "Formatting staged GDScript files..."
+
+for file in "${FILES[@]}"; do
+	echo "  $file"
+
+	# Keep pre-commit conservative: format only, no reorder-code.
+	"$FORMATTER" --safe "$file"
+
+	git add "$file"
+done
+
+echo "GDScript formatting complete."
+exit 0

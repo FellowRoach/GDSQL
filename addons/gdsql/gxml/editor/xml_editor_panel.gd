@@ -1,6 +1,76 @@
 @tool
 extends PanelContainer
 
+enum FILE_MANU_OPTION {
+	NEW = 0,
+	OPEN = 1,
+	OPEN_RECENT = 2,
+	SAVE = 4,
+	SAVE_AS = 5,
+	SAVE_ALL = 6,
+	CLOSE = 8,
+	CLOSE_ALL = 9,
+	CLOSE_OTHER_TABS = 10,
+}
+enum RMB_MENU_OPTION {
+	SAVE = 0,
+	SAVE_AS = 1,
+	CLOSE = 3,
+	CLOSE_ALL = 4,
+	CLOSE_OTHER_TABS = 5,
+	SOFT_RELOAD_TOOL_SCRIPT = 7,
+	SHOW_IN_FILE_SYSTEM = 9,
+}
+enum SEARCH_MENU_OPTION {
+	FIND = 0,
+	FIND_NEXT = 1,
+	FIND_PREVIOUS = 2,
+	REPLACE = 3,
+	FIND_IN_FILES = 5,
+	REPLACE_IN_FILES = 6,
+	CONTEXTUAL_HELP = 8,
+}
+
+const config_path = "user://gdsql/xml_editor.cfg"
+const SHORTCUT_NEW = preload("res://addons/gdsql/gxml/editor/shortcut/shortcut_new.tres")
+const SHORTCUT_OPEN = preload("res://addons/gdsql/gxml/editor/shortcut/shortcut_open.tres")
+const SHORTCUT_SAVE = preload("res://addons/gdsql/gxml/editor/shortcut/shortcut_save.tres")
+const SHORTCUT_SAVEAS = preload("res://addons/gdsql/gxml/editor/shortcut/shortcut_saveas.tres")
+const SHORTCUT_SAVEALL = preload("res://addons/gdsql/gxml/editor/shortcut/shortcut_saveall.tres")
+const SHORTCUT_CLOSE = preload("res://addons/gdsql/gxml/editor/shortcut/shortcut_close.tres")
+const SHORTCUT_CONTEXTUALHELP = preload("res://addons/gdsql/gxml/editor/shortcut/shortcut_contextualhelp.tres")
+const SHORTCUT_FIND = preload("res://addons/gdsql/gxml/editor/shortcut/shortcut_find.tres")
+const SHORTCUT_FINDINFILES = preload("res://addons/gdsql/gxml/editor/shortcut/shortcut_findinfiles.tres")
+const SHORTCUT_FINDNEXT = preload("res://addons/gdsql/gxml/editor/shortcut/shortcut_findnext.tres")
+const SHORTCUT_FINDPREVIOUS = preload("res://addons/gdsql/gxml/editor/shortcut/shortcut_findprevious.tres")
+const SHORTCUT_REPLACE = preload("res://addons/gdsql/gxml/editor/shortcut/shortcut_replace.tres")
+const SHORTCUT_REPLACEINFILES = preload("res://addons/gdsql/gxml/editor/shortcut/shortcut_replaceinfiles.tres")
+const NEW_MAPPER_CONTENT = """
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="TestSkillMapper">
+	<cache/>
+	
+</mapper> 
+"""
+
+var editor_file_new_dialog = EditorFileDialog.new()
+var editor_file_open_dialog = EditorFileDialog.new()
+var editor_file_saveas_dialog = EditorFileDialog.new()
+var confirm_save_dialog = ConfirmationDialog.new()
+var file_not_exist_dialog = AcceptDialog.new()
+var search_help_dialog = preload("res://addons/gdsql/gxml/editor/search_herlp.tscn").instantiate()
+var disk_changed: ConfirmationDialog
+var disk_changed_list: Tree
+var history = []
+var closing_item: TreeItem # 正在关闭的tab
+var sub_menu: PopupMenu
+var zoom_factor: float = 1.0
+var config: ConfigFile
+var _file_modified_times: Dictionary # {path: FileAccess.get_modified_time(path)}
+
 @onready var file_menu: PopupMenu = $VBoxContainer/HBoxContainer/MenuBar/File
 @onready var search_menu: PopupMenu = $VBoxContainer/HBoxContainer/MenuBar/Search
 @onready var filter_file: LineEdit = $VBoxContainer/HSplitContainer/VSplitContainer/VBoxContainer/FilterFile
@@ -16,103 +86,26 @@ extends PanelContainer
 @onready var pin_to_top_button: Button = $VBoxContainer/HBoxContainer/HBoxContainer/PinToTopButton
 @onready var debug_menu: PopupMenu = $VBoxContainer/HBoxContainer/MenuBar/Debug
 
-var editor_file_new_dialog = EditorFileDialog.new()
-var editor_file_open_dialog = EditorFileDialog.new()
-var editor_file_saveas_dialog = EditorFileDialog.new()
-var confirm_save_dialog = ConfirmationDialog.new()
-var file_not_exist_dialog = AcceptDialog.new()
-var search_help_dialog = preload("res://addons/gdsql/gxml/editor/search_herlp.tscn").instantiate()
-
-var disk_changed: ConfirmationDialog
-var disk_changed_list: Tree
-
-var history = []
-var closing_item: TreeItem # 正在关闭的tab
-var sub_menu: PopupMenu
-var zoom_factor: float = 1.0
-var _file_modified_times: Dictionary # {path: FileAccess.get_modified_time(path)}
-
-const config_path = "user://gdsql/xml_editor.cfg"
-var config: ConfigFile
-
-enum FILE_MANU_OPTION {
-	NEW = 0,
-	OPEN = 1,
-	OPEN_RECENT = 2,
-	SAVE = 4,
-	SAVE_AS = 5,
-	SAVE_ALL = 6,
-	CLOSE = 8,
-	CLOSE_ALL = 9,
-	CLOSE_OTHER_TABS = 10
-}
-
-enum RMB_MENU_OPTION {
-	SAVE = 0,
-	SAVE_AS = 1,
-	CLOSE = 3,
-	CLOSE_ALL = 4,
-	CLOSE_OTHER_TABS = 5,
-	SOFT_RELOAD_TOOL_SCRIPT = 7,
-	SHOW_IN_FILE_SYSTEM = 9,
-}
-
-enum SEARCH_MENU_OPTION {
-	FIND = 0,
-	FIND_NEXT = 1,
-	FIND_PREVIOUS = 2,
-	REPLACE = 3,
-	FIND_IN_FILES = 5,
-	REPLACE_IN_FILES = 6,
-	CONTEXTUAL_HELP = 8,
-}
-
-const SHORTCUT_NEW = preload("res://addons/gdsql/gxml/editor/shortcut/shortcut_new.tres")
-const SHORTCUT_OPEN = preload("res://addons/gdsql/gxml/editor/shortcut/shortcut_open.tres")
-const SHORTCUT_SAVE = preload("res://addons/gdsql/gxml/editor/shortcut/shortcut_save.tres")
-const SHORTCUT_SAVEAS = preload("res://addons/gdsql/gxml/editor/shortcut/shortcut_saveas.tres")
-const SHORTCUT_SAVEALL = preload("res://addons/gdsql/gxml/editor/shortcut/shortcut_saveall.tres")
-const SHORTCUT_CLOSE = preload("res://addons/gdsql/gxml/editor/shortcut/shortcut_close.tres")
-const SHORTCUT_CONTEXTUALHELP = preload("res://addons/gdsql/gxml/editor/shortcut/shortcut_contextualhelp.tres")
-const SHORTCUT_FIND = preload("res://addons/gdsql/gxml/editor/shortcut/shortcut_find.tres")
-const SHORTCUT_FINDINFILES = preload("res://addons/gdsql/gxml/editor/shortcut/shortcut_findinfiles.tres")
-const SHORTCUT_FINDNEXT = preload("res://addons/gdsql/gxml/editor/shortcut/shortcut_findnext.tres")
-const SHORTCUT_FINDPREVIOUS = preload("res://addons/gdsql/gxml/editor/shortcut/shortcut_findprevious.tres")
-const SHORTCUT_REPLACE = preload("res://addons/gdsql/gxml/editor/shortcut/shortcut_replace.tres")
-const SHORTCUT_REPLACEINFILES = preload("res://addons/gdsql/gxml/editor/shortcut/shortcut_replaceinfiles.tres")
-
-const NEW_MAPPER_CONTENT = """
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper
-PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="TestSkillMapper">
-	<cache/>
-	
-</mapper> 
-"""
-
-
 
 func _ready() -> void:
 	add_theme_stylebox_override(&"panel", get_theme_stylebox(&"PanelForeground", &"EditorStyles"))
 	file_tree.add_theme_stylebox_override(&"panel", get_theme_stylebox(&"panel", &"ItemList"))
 	file_tree.create_item()
 	file_tree.hide_root = true
-	
+
 	item_tree.add_theme_stylebox_override(&"panel", get_theme_stylebox(&"panel", &"ItemList"))
 	item_tree.create_item()
 	item_tree.hide_root = true
 	item_tree.set_column_expand(1, true)
 	item_tree.set_column_expand_ratio(1, 2)
-	
+
 	file_menu.set_item_shortcut(FILE_MANU_OPTION.NEW, SHORTCUT_NEW)
 	file_menu.set_item_shortcut(FILE_MANU_OPTION.OPEN, SHORTCUT_OPEN)
 	file_menu.set_item_shortcut(FILE_MANU_OPTION.SAVE, SHORTCUT_SAVE)
 	file_menu.set_item_shortcut(FILE_MANU_OPTION.SAVE_AS, SHORTCUT_SAVEAS)
 	file_menu.set_item_shortcut(FILE_MANU_OPTION.SAVE_ALL, SHORTCUT_SAVEALL)
 	file_menu.set_item_shortcut(FILE_MANU_OPTION.CLOSE, SHORTCUT_CLOSE)
-	
+
 	search_menu.set_item_shortcut(SEARCH_MENU_OPTION.FIND, SHORTCUT_FIND)
 	search_menu.set_item_shortcut(SEARCH_MENU_OPTION.FIND_NEXT, SHORTCUT_FINDNEXT)
 	search_menu.set_item_shortcut(SEARCH_MENU_OPTION.FIND_PREVIOUS, SHORTCUT_FINDPREVIOUS)
@@ -120,40 +113,40 @@ func _ready() -> void:
 	search_menu.set_item_shortcut(SEARCH_MENU_OPTION.FIND_IN_FILES, SHORTCUT_FINDINFILES)
 	search_menu.set_item_shortcut(SEARCH_MENU_OPTION.REPLACE_IN_FILES, SHORTCUT_REPLACEINFILES)
 	search_menu.set_item_shortcut(SEARCH_MENU_OPTION.CONTEXTUAL_HELP, SHORTCUT_CONTEXTUALHELP)
-	
+
 	rmb_menu.set_item_shortcut(RMB_MENU_OPTION.SAVE, SHORTCUT_SAVE)
 	rmb_menu.set_item_shortcut(RMB_MENU_OPTION.SAVE_AS, SHORTCUT_SAVEAS)
 	rmb_menu.set_item_shortcut(RMB_MENU_OPTION.CLOSE, SHORTCUT_CLOSE)
-	
+
 	_deal_popup_menu_hide_behind_window_bug()
-	
+
 	xml_editor_container.add_theme_stylebox_override(&"panel", get_theme_stylebox(&"ScriptEditor", &"EditorStyles"))
-	
+
 	config = ConfigFile.new()
 	if not DirAccess.dir_exists_absolute("user://gdsql"):
 		DirAccess.make_dir_absolute("user://gdsql")
 	config.load(config_path)
-	
+
 	sub_menu = PopupMenu.new()
 	sub_menu.index_pressed.connect(_on_sub_menu_index_pressed)
 	refresh_sub_menu()
 	file_menu.set_item_submenu_node(file_menu.get_item_index(FILE_MANU_OPTION.OPEN_RECENT), sub_menu)
-	
+
 	filter_file.right_icon = get_theme_icon("Search", "EditorIcons")
 	filter_name.right_icon = get_theme_icon("Search", "EditorIcons")
 	sort_button.texture_normal = get_theme_icon("Sort", "EditorIcons")
 	sort_button.texture_pressed = get_theme_icon("YSort", "EditorIcons")
 	pin_to_top_button.icon = get_theme_icon("Pin", "EditorIcons")
-	
+
 	_init_file_new_dialog()
 	_init_file_open_dialog()
 	_init_confirm_save_dialog()
 	_init_file_not_exist_dialog()
 	_init_file_saveas_dialog()
 	_init_search_help_dialog()
-	
+
 	bind_file_system_events()
-	
+
 	var unclosed_files = config.get_value("history", "unclosed", [])
 	config.set_value("history", "unclosed", [])
 	for path in unclosed_files:
@@ -161,9 +154,10 @@ func _ready() -> void:
 			open_file(path)
 		else:
 			print_rich("[color=yellow]XML Editor: File not exist, '%s'[/color]" % path)
-	
+
 	_init_disk_changed_dialog()
-			
+
+
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_THEME_CHANGED:
 		if file_tree:
@@ -174,7 +168,8 @@ func _notification(what: int) -> void:
 			xml_editor_container.add_theme_stylebox_override(&"panel", get_theme_stylebox(&"ScriptEditor", &"EditorStyles"))
 	elif what == NOTIFICATION_APPLICATION_FOCUS_IN or what == NOTIFICATION_VISIBILITY_CHANGED:
 		_check_disk_changed()
-		
+
+
 func refresh_sub_menu():
 	var recent_files = config.get_value("history", "primary", [])
 	sub_menu.clear()
@@ -183,8 +178,9 @@ func refresh_sub_menu():
 	sub_menu.add_separator()
 	sub_menu.add_item(tr("Clear Recent Files"))
 	if recent_files.is_empty():
-		sub_menu.set_item_disabled(sub_menu.get_child_count()-1, true)
-		
+		sub_menu.set_item_disabled(sub_menu.get_child_count() - 1, true)
+
+
 func remove_from_recent_history(path: String):
 	path = GDSQL.GDSQLUtils.localize_path(path)
 	var recent_files = config.get_value("history", "primary", []) as Array
@@ -192,11 +188,13 @@ func remove_from_recent_history(path: String):
 		recent_files.erase(path)
 		config.set_value("history", "primary", recent_files)
 		config.save(config_path)
-		
+
+
 func clear_recent_history():
 	config.set_value("history", "primary", [])
 	config.save(config_path)
-	
+
+
 func add_to_recent_history(path: String):
 	path = GDSQL.GDSQLUtils.localize_path(path)
 	var recent_files = config.get_value("history", "primary", []) as Array
@@ -205,7 +203,8 @@ func add_to_recent_history(path: String):
 	recent_files.push_front(path)
 	config.set_value("history", "primary", recent_files)
 	config.save(config_path)
-	
+
+
 func remove_from_unclosed_files(path: String):
 	path = GDSQL.GDSQLUtils.localize_path(path)
 	var unclosed_files = config.get_value("history", "unclosed", []) as Array
@@ -213,12 +212,14 @@ func remove_from_unclosed_files(path: String):
 	config.set_value("history", "unclosed", unclosed_files)
 	config.save(config_path)
 	refresh_sub_menu()
-	
+
+
 func clear_unclosed_files():
 	config.set_value("history", "unclosed", [])
 	config.save(config_path)
 	refresh_sub_menu()
-	
+
+
 func add_to_unclosed_files(path: String):
 	path = GDSQL.GDSQLUtils.localize_path(path)
 	var unclosed_files = config.get_value("history", "unclosed", []) as Array
@@ -226,22 +227,24 @@ func add_to_unclosed_files(path: String):
 	config.set_value("history", "unclosed", unclosed_files)
 	config.save(config_path)
 	refresh_sub_menu()
-	
+
+
 func modify_item_name(item: TreeItem):
 	var path = item.get_meta("path")
-	var arr_name = {}
+	var arr_name = { }
 	for i: TreeItem in file_tree.get_root().get_children():
 		arr_name[i.get_text(0)] = i
-		
+
 	var a_name = path.get_file()
 	if arr_name.has(a_name):
 		arr_name[a_name].set_text(0, arr_name[a_name].get_meta("path"))
 		a_name = path
 	item.set_text(0, a_name)
-	
+
+
 func open_file(path: String, p_line: int = 0, p_begin: int = -1, p_end: int = -1):
 	path = GDSQL.GDSQLUtils.globalize_path(path)
-	var arr_name = {}
+	var arr_name = { }
 	for i: TreeItem in file_tree.get_root().get_children():
 		arr_name[i.get_text(0)] = i
 		if i.get_meta("path") == path:
@@ -252,7 +255,7 @@ func open_file(path: String, p_line: int = 0, p_begin: int = -1, p_end: int = -1
 			elif p_line != -1:
 				a_xml_editor.call_deferred("goto_line", p_line, 0)
 			return
-			
+
 	var file_tree_item = file_tree.create_item(file_tree.get_root())
 	var a_name = path.get_file()
 	if arr_name.has(a_name):
@@ -261,7 +264,7 @@ func open_file(path: String, p_line: int = 0, p_begin: int = -1, p_end: int = -1
 	file_tree_item.set_text(0, a_name)
 	file_tree_item.set_icon_max_width(0, get_theme_icon("TextFile", "EditorIcons").get_width())
 	file_tree_item.set_icon(0, load("res://addons/gdsql/gbatis/img/xml.svg"))
-	
+
 	# new 
 	var file = FileAccess.open(path, FileAccess.READ)
 	if not file:
@@ -276,12 +279,12 @@ func open_file(path: String, p_line: int = 0, p_begin: int = -1, p_end: int = -1
 	xml_editor.toggle_scripts_pressed.connect(toggle_left_window)
 	xml_editor.zoomed.connect(_update_zoom)
 	xml_editor.call_deferred("set_zoom_factor", zoom_factor)
-	
+
 	if p_begin != -1 and p_end != -1:
 		xml_editor.call_deferred("goto_line_selection", p_line, p_begin, p_end)
 	elif p_line != -1:
 		xml_editor.call_deferred("goto_line", p_line, 0)
-		
+
 	file_tree_item.set_meta("path", path)
 	file_tree_item.set_meta("editor", xml_editor)
 	file_tree_item.select(0)
@@ -289,12 +292,14 @@ func open_file(path: String, p_line: int = 0, p_begin: int = -1, p_end: int = -1
 		file_tree_item.visible = file_tree_item.get_text(0).contains(filter_file.text)
 	remove_from_recent_history(path)
 	add_to_unclosed_files(path)
-	
+
+
 func toggle_left_window():
 	left_window.visible = not left_window.visible
 	for item: TreeItem in history:
 		item.get_meta("editor").scripts_panel_toggled = not left_window.visible
-		
+
+
 func refresh_xml_item_tree():
 	item_tree.clear()
 	var root = item_tree.create_item()
@@ -307,7 +312,8 @@ func refresh_xml_item_tree():
 		return
 	for i in gxml.root_item.content:
 		parse_gxml_item(i, root, item_tree)
-		
+
+
 func parse_gxml_item(item: GDSQL.GXMLItem, parent_tree_item: TreeItem, tree: Tree):
 	var tree_item = tree.create_item(parent_tree_item)
 	tree_item.set_meta("line", item.line)
@@ -315,14 +321,31 @@ func parse_gxml_item(item: GDSQL.GXMLItem, parent_tree_item: TreeItem, tree: Tre
 	for i in item.attrs:
 		if i == "id":
 			id = item.attrs[i]
-			
+
 	tree_item.set_text(0, item.name)
 	if id != "":
 		tree_item.set_text(1, id)
-		
+
 	if filter_name.text != "":
 		tree_item.visible = item.name.contains(filter_name.text) or id.contains(filter_name.text)
-		
+
+
+func bind_file_system_events():
+	var dock = EditorInterface.get_file_system_dock()
+	dock.file_removed.connect(_on_file_removed)
+	dock.files_moved.connect(_on_file_moved)
+	dock.folder_removed.connect(_on_folder_removed)
+	dock.folder_moved.connect(_on_folder_moved)
+
+
+func unbind_file_system_events():
+	var dock = EditorInterface.get_file_system_dock()
+	dock.file_removed.disconnect(_on_file_removed)
+	dock.files_moved.disconnect(_on_file_moved)
+	dock.folder_removed.disconnect(_on_folder_removed)
+	dock.folder_moved.disconnect(_on_folder_moved)
+
+
 func _on_text_changed():
 	var item = file_tree.get_selected()
 	if not item:
@@ -330,7 +353,8 @@ func _on_text_changed():
 	if not item.get_text(0).ends_with("(*)"):
 		item.set_text(0, item.get_text(0) + "(*)")
 		curr_file.text = item.get_text(0)
-		
+
+
 func _on_file_menu_id_pressed(id: int) -> void:
 	_recover_on_top()
 	match id:
@@ -350,7 +374,8 @@ func _on_file_menu_id_pressed(id: int) -> void:
 			await _close_all()
 		FILE_MANU_OPTION.CLOSE_OTHER_TABS:
 			await _close_other_tabs()
-			
+
+
 func _on_rmb_menu_index_pressed(index: int) -> void:
 	_recover_on_top()
 	var item = rmb_menu.get_meta("item")
@@ -373,7 +398,8 @@ func _on_rmb_menu_index_pressed(index: int) -> void:
 				EditorInterface.get_file_system_dock().navigate_to_path(item.get_meta("path"))
 			else:
 				OS.shell_show_in_file_manager(item.get_meta("path"), true)
-				
+
+
 func _on_sub_menu_index_pressed(index: int) -> void:
 	_recover_on_top()
 	var text = sub_menu.get_item_text(index)
@@ -381,24 +407,26 @@ func _on_sub_menu_index_pressed(index: int) -> void:
 		clear_recent_history()
 		refresh_sub_menu()
 		return
-	
+
 	var path = text
 	if not GDSQL.GDSQLUtils.file_exists(path):
 		remove_from_recent_history(path)
 		file_not_exist_dialog.popup_centered()
 		return
-		
+
 	open_file(path)
-	
+
+
 func _save():
 	if not history.is_empty():
 		_save_file(history.back())
-		
+
+
 func _save_file(item: TreeItem):
-	if not item.get_meta("editor") or not item.get_meta("editor").text_editor or\
-	not item.get_text(0).ends_with("(*)"):
+	if not item.get_meta("editor") or not item.get_meta("editor").text_editor or \
+			not item.get_text(0).ends_with("(*)"):
 		return
-		
+
 	var path = item.get_meta("path")
 	var content = item.get_meta("editor").text_editor.text
 	var file = FileAccess.open(path, FileAccess.WRITE)
@@ -412,11 +440,13 @@ func _save_file(item: TreeItem):
 	var res = load(item.get_meta("path"))
 	if EditorInterface.get_inspector().get_edited_object() == res:
 		res.notify_property_list_changed()
-		
+
+
 func _save_all():
 	for item in file_tree.get_root().get_children():
 		_save_file(item)
-		
+
+
 func _close():
 	if history.is_empty():
 		return
@@ -428,7 +458,8 @@ func _close():
 	_close_tab(false)
 	if history.is_empty():
 		curr_file.text = ""
-		
+
+
 func _close_all():
 	var items = []
 	for i in history:
@@ -443,10 +474,11 @@ func _close_all():
 			await get_tree().create_timer(0.1).timeout
 		else:
 			_close_tab(false)
-			
+
 	if history.is_empty():
 		curr_file.text = ""
-		
+
+
 func _close_other_tabs():
 	if history.is_empty():
 		return
@@ -462,108 +494,128 @@ func _close_other_tabs():
 				await confirm_save_dialog.visibility_changed
 		else:
 			_close_tab(false)
-			
+
+
 func _init_file_new_dialog():
 	editor_file_new_dialog.filters = PackedStringArray(["*.xml"])
 	editor_file_new_dialog.access = EditorFileDialog.ACCESS_RESOURCES
 	editor_file_new_dialog.file_mode = EditorFileDialog.FILE_MODE_SAVE_FILE
-	editor_file_new_dialog.file_selected.connect(func(path: String):
-		var file = FileAccess.open(path, FileAccess.WRITE)
-		file.store_string(NEW_MAPPER_CONTENT)
-		file.flush()
-		file = null
-		# scan后窗口可能被最小化了，保持置顶
-		var old_always_on_top = pin_to_top_button.button_pressed
-		if not old_always_on_top:
-			_on_pin_to_top_button_toggled(true)
-		EditorInterface.get_resource_filesystem().scan()
-		open_file(path)
-		if not old_always_on_top:
-			await get_tree().create_timer(1).timeout
-			_on_pin_to_top_button_toggled(false)
-	, CONNECT_DEFERRED)
+	editor_file_new_dialog.file_selected.connect(
+		func(path: String):
+			var file = FileAccess.open(path, FileAccess.WRITE)
+			file.store_string(NEW_MAPPER_CONTENT)
+			file.flush()
+			file = null
+			# scan后窗口可能被最小化了，保持置顶
+			var old_always_on_top = pin_to_top_button.button_pressed
+			if not old_always_on_top:
+				_on_pin_to_top_button_toggled(true)
+			EditorInterface.get_resource_filesystem().scan()
+			open_file(path)
+			if not old_always_on_top:
+				await get_tree().create_timer(1).timeout
+				_on_pin_to_top_button_toggled(false),
+		CONNECT_DEFERRED,
+	)
 	add_child(editor_file_new_dialog)
 	editor_file_new_dialog.hide()
 	# fix bug of godot
 	editor_file_new_dialog.visibility_changed.connect(
-		_on_dialog_visibility_changed.bind(editor_file_new_dialog))
-	
+		_on_dialog_visibility_changed.bind(editor_file_new_dialog),
+	)
+
+
 func _init_file_open_dialog():
 	editor_file_open_dialog.filters = PackedStringArray(["*.xml"])
 	editor_file_open_dialog.access = EditorFileDialog.ACCESS_RESOURCES
 	editor_file_open_dialog.file_mode = EditorFileDialog.FILE_MODE_OPEN_FILE
-	editor_file_open_dialog.file_selected.connect(func(path: String):
-		open_file(path)
-	, CONNECT_DEFERRED)
+	editor_file_open_dialog.file_selected.connect(
+		func(path: String):
+			open_file(path),
+		CONNECT_DEFERRED,
+	)
 	add_child(editor_file_open_dialog)
 	editor_file_open_dialog.hide()
 	# fix bug of godot
 	editor_file_open_dialog.visibility_changed.connect(
-		_on_dialog_visibility_changed.bind(editor_file_open_dialog))
-	
+		_on_dialog_visibility_changed.bind(editor_file_open_dialog),
+	)
+
+
 func _init_file_saveas_dialog():
 	editor_file_saveas_dialog.filters = PackedStringArray(["*.xml"])
 	editor_file_saveas_dialog.access = EditorFileDialog.ACCESS_RESOURCES
 	editor_file_saveas_dialog.file_mode = EditorFileDialog.FILE_MODE_SAVE_FILE
-	editor_file_saveas_dialog.file_selected.connect(func(path: String):
-		var content = ""
-		for i in xml_editor_container.get_children():
-			if i.visible:
-				content = i.text_editor.text
-				break
-		var file = FileAccess.open(path, FileAccess.WRITE)
-		file.store_string(content)
-		file.flush()
-		file = null
-		_file_modified_times[path] = FileAccess.get_modified_time(path)
-		EditorInterface.get_resource_filesystem().scan()
-		# scan后窗口可能被最小化了，所以用窗口的方法，能重新激活
-		while EditorInterface.get_resource_filesystem().is_scanning():
-			await get_tree().process_frame
-		get_window().open_file(path)
-	, CONNECT_DEFERRED)
+	editor_file_saveas_dialog.file_selected.connect(
+		func(path: String):
+			var content = ""
+			for i in xml_editor_container.get_children():
+				if i.visible:
+					content = i.text_editor.text
+					break
+			var file = FileAccess.open(path, FileAccess.WRITE)
+			file.store_string(content)
+			file.flush()
+			file = null
+			_file_modified_times[path] = FileAccess.get_modified_time(path)
+			EditorInterface.get_resource_filesystem().scan()
+			# scan后窗口可能被最小化了，所以用窗口的方法，能重新激活
+			while EditorInterface.get_resource_filesystem().is_scanning():
+				await get_tree().process_frame
+			get_window().open_file(path),
+		CONNECT_DEFERRED,
+	)
 	add_child(editor_file_saveas_dialog)
 	editor_file_saveas_dialog.hide()
 	# fix bug of godot
 	editor_file_saveas_dialog.visibility_changed.connect(
-		_on_dialog_visibility_changed.bind(editor_file_saveas_dialog))
-	
+		_on_dialog_visibility_changed.bind(editor_file_saveas_dialog),
+	)
+
+
 func _init_confirm_save_dialog():
 	confirm_save_dialog.ok_button_text = tr("Save")
 	confirm_save_dialog.add_button(tr("Discard"), DisplayServer.get_swap_cancel_ok(), "discard")
 	confirm_save_dialog.confirmed.connect(_close_tab.bind(true))
 	confirm_save_dialog.custom_action.connect(_discard)
-	confirm_save_dialog.about_to_popup.connect(func():
-		confirm_save_dialog.dialog_text = tr("Close and save changes?") + \
-			"\n\"" + closing_item.get_meta("path") + "\""
+	confirm_save_dialog.about_to_popup.connect(
+		func():
+			confirm_save_dialog.dialog_text = tr("Close and save changes?") + "\n\"" + closing_item.get_meta("path") + "\""
 	)
 	add_child(confirm_save_dialog)
 	confirm_save_dialog.hide()
 	# fix bug of godot
 	confirm_save_dialog.visibility_changed.connect(
-		_on_dialog_visibility_changed.bind(confirm_save_dialog))
-	
+		_on_dialog_visibility_changed.bind(confirm_save_dialog),
+	)
+
+
 func _init_file_not_exist_dialog():
 	file_not_exist_dialog.dialog_text = tr("File does not exist.")
 	add_child(file_not_exist_dialog)
 	file_not_exist_dialog.hide()
 	# fix bug of godot
 	file_not_exist_dialog.visibility_changed.connect(
-		_on_dialog_visibility_changed.bind(file_not_exist_dialog))
-		
+		_on_dialog_visibility_changed.bind(file_not_exist_dialog),
+	)
+
+
 func _init_search_help_dialog():
 	add_child(search_help_dialog)
 	search_help_dialog.hide()
 	search_help_dialog.visibility_changed.connect(
-		_on_dialog_visibility_changed.bind(search_help_dialog))
+		_on_dialog_visibility_changed.bind(search_help_dialog),
+	)
 	search_help_dialog.search_help_insert.connect(_on_search_help_insert)
-	
+
+
 func _on_search_help_insert(content: String):
 	if history.is_empty():
 		return
 	var editor = history.back().get_meta("editor").text_editor as CodeEdit
 	editor.insert_text_at_caret(content, 0)
-	
+
+
 func _reload_script_editor(item: TreeItem):
 	var old_editor = item.get_meta("editor") as Node
 	var content = old_editor.text_editor.text
@@ -583,13 +635,15 @@ func _reload_script_editor(item: TreeItem):
 	old_editor.queue_free()
 	await get_tree().create_timer(0.1).timeout
 	(xml_editor.text_editor as CodeEdit).get_v_scroll_bar().value = scroll_value
-	
+
+
 func _update_zoom(p_zoom_factor: float):
 	zoom_factor = p_zoom_factor
 	for i in history:
 		var editor = i.get_meta("editor")
 		editor.set_zoom_factor(p_zoom_factor)
-		
+
+
 func _close_tab(p_save: bool):
 	var item = closing_item
 	var path = item.get_meta("path")
@@ -612,18 +666,21 @@ func _close_tab(p_save: bool):
 	_update_find_replace_bar()
 	if history.is_empty():
 		refresh_xml_item_tree()
-		
+
+
 func _discard(_action: String):
 	_close_tab(false)
 	confirm_save_dialog.hide()
-	
+
+
 func _update_find_replace_bar():
 	if history.is_empty():
 		find_replace_bar.set_text_edit(null)
 		find_replace_bar.hide()
 	else:
 		history.back().get_meta("editor").set_find_replace_bar(find_replace_bar)
-		
+
+
 func _on_file_tree_item_selected() -> void:
 	var item = file_tree.get_selected()
 	if not item:
@@ -641,7 +698,8 @@ func _on_file_tree_item_selected() -> void:
 			i.hide()
 			i.set_process(false)
 	refresh_xml_item_tree()
-	
+
+
 func _on_file_tree_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		var item = file_tree.get_item_at_position(file_tree.get_local_mouse_position())
@@ -659,7 +717,8 @@ func _on_file_tree_gui_input(event: InputEvent) -> void:
 			rmb_menu.position = DisplayServer.mouse_get_position()
 			rmb_menu.popup()
 			rmb_menu.set_meta("item", item)
-			
+
+
 func _on_debug_index_pressed(index: int) -> void:
 	_recover_on_top()
 	if history.is_empty():
@@ -675,7 +734,8 @@ func _on_debug_index_pressed(index: int) -> void:
 				EditorInterface.get_editor_toaster().push_toast("No error found.", EditorToaster.SEVERITY_WARNING)
 			else:
 				EditorInterface.get_editor_toaster().push_toast("Error!", EditorToaster.SEVERITY_ERROR)
-				
+
+
 func _on_filter_file_text_changed(new_text: String) -> void:
 	for item: TreeItem in history:
 		if new_text == "":
@@ -683,7 +743,8 @@ func _on_filter_file_text_changed(new_text: String) -> void:
 		else:
 			new_text = new_text.replace("_", "").to_lower()
 			item.visible = item.get_text(0).replace("_", "").to_lower().contains(new_text)
-			
+
+
 func _on_filter_name_text_changed(new_text: String) -> void:
 	for item: TreeItem in item_tree.get_root().get_children():
 		if new_text == "":
@@ -691,13 +752,14 @@ func _on_filter_name_text_changed(new_text: String) -> void:
 		else:
 			new_text = new_text.replace("_", "").to_lower()
 			if item.get_text(0).replace("_", "").to_lower().contains(new_text) or \
-			item.get_text(1).replace("_", "").to_lower().contains(new_text):
+					item.get_text(1).replace("_", "").to_lower().contains(new_text):
 				item.visible = true
 			else:
 				item.visible = false
 	if new_text == "":
 		item_tree.scroll_to_item(item_tree.get_selected(), true)
-		
+
+
 func _on_item_tree_item_selected() -> void:
 	var item = item_tree.get_selected()
 	var line = item.get_meta("line")
@@ -708,7 +770,8 @@ func _on_item_tree_item_selected() -> void:
 	for aitem: TreeItem in item_tree.get_root().get_children():
 		if aitem != item:
 			aitem.deselect(0)
-			
+
+
 func _on_search_index_pressed(index: int) -> void:
 	match index:
 		SEARCH_MENU_OPTION.FIND:
@@ -733,52 +796,44 @@ func _on_search_index_pressed(index: int) -> void:
 			if not history.is_empty():
 				search = (history.back().get_meta("editor").text_editor as CodeEdit).get_selected_text(0)
 			search_help_dialog.popup_search(search)
-			
+
+
 func _on_pin_to_top_button_toggled(toggled_on: bool) -> void:
 	get_window().transient = false
 	get_window().always_on_top = toggled_on
-	
-func bind_file_system_events():
-	var dock = EditorInterface.get_file_system_dock()
-	dock.file_removed.connect(_on_file_removed)
-	dock.files_moved.connect(_on_file_moved)
-	dock.folder_removed.connect(_on_folder_removed)
-	dock.folder_moved.connect(_on_folder_moved)
-	
-func unbind_file_system_events():
-	var dock = EditorInterface.get_file_system_dock()
-	dock.file_removed.disconnect(_on_file_removed)
-	dock.files_moved.disconnect(_on_file_moved)
-	dock.folder_removed.disconnect(_on_folder_removed)
-	dock.folder_moved.disconnect(_on_folder_moved)
-	
+
+
 func _on_file_removed(path: String):
 	for item in history:
 		if item.get_meta("path") == path:
 			closing_item = item
 			_close_tab(false)
 			break
-			
+
+
 func _on_file_moved(old_file: String, new_file: String):
 	for item in history:
 		if item.get_meta("path") == old_file:
 			item.set_meta("path", new_file)
 			modify_item_name(item)
 			break
-			
+
+
 func _on_folder_removed(folder: String):
 	for item in history:
 		if item.get_meta("path").begins_with(folder):
 			closing_item = item
 			_close_tab(false)
 			break
-			
+
+
 func _on_folder_moved(old_folder: String, new_folder: String):
 	for item in history:
 		if item.get_meta("path").begins_with(old_folder):
 			item.set_meta("path", item.get_meta("path").replace(old_folder, new_folder))
 			modify_item_name(item)
-			
+
+
 # INFO 由于godot的bug，导致always on top的主窗口的popupmenu被挡住了。所以临时取消置顶。
 # 但该方法仍旧不能彻底解决问题，当popupmenu的选项激活了另一个窗口时，主窗口的always on top仍不生效。
 func _deal_popup_menu_hide_behind_window_bug():
@@ -786,26 +841,30 @@ func _deal_popup_menu_hide_behind_window_bug():
 	debug_menu.about_to_popup.connect(_on_popup_menu_about_to_popup)
 	search_menu.about_to_popup.connect(_on_popup_menu_about_to_popup)
 	rmb_menu.about_to_popup.connect(_on_popup_menu_about_to_popup)
-	
+
 	file_menu.visibility_changed.connect(_on_popup_menu_visibility_changed.bind(file_menu))
 	debug_menu.visibility_changed.connect(_on_popup_menu_visibility_changed.bind(debug_menu))
 	search_menu.visibility_changed.connect(_on_popup_menu_visibility_changed.bind(search_menu))
 	rmb_menu.visibility_changed.connect(_on_popup_menu_visibility_changed.bind(rmb_menu))
-	
+
+
 func _on_popup_menu_about_to_popup():
 	if pin_to_top_button.button_pressed:
 		_on_pin_to_top_button_toggled(false)
 		pin_to_top_button.set_meta("need_recover", true)
-		
+
+
 func _on_popup_menu_visibility_changed(menu: PopupMenu):
 	if not menu.visible:
 		_recover_on_top()
-		
+
+
 func _recover_on_top():
 	if pin_to_top_button.has_meta("need_recover"):
 		_on_pin_to_top_button_toggled(true)
 		pin_to_top_button.remove_meta("need_recover")
-		
+
+
 func _on_dialog_visibility_changed(dialog: AcceptDialog):
 	if dialog.visible == false:
 		# INFO dialog关闭的时候，要重置一下window的置顶信息，否则置顶失败
@@ -813,16 +872,17 @@ func _on_dialog_visibility_changed(dialog: AcceptDialog):
 			_on_pin_to_top_button_toggled(false)
 			_on_pin_to_top_button_toggled(true)
 
+
 func _init_disk_changed_dialog():
 	disk_changed = ConfirmationDialog.new()
 	disk_changed.set_translation_domain("GDSQL")
 	var vbc = VBoxContainer.new()
 	disk_changed.add_child(vbc)
-	
+
 	var dl = Label.new()
 	dl.text = tr("The following files are newer on disk.\nWhat action should be taken?")
 	vbc.add_child(dl)
-	
+
 	disk_changed_list = Tree.new()
 	vbc.add_child(disk_changed_list)
 	disk_changed_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -830,6 +890,7 @@ func _init_disk_changed_dialog():
 	disk_changed.confirmed.connect(_reload_disk_changed_files)
 	disk_changed.ok_button_text = tr("Reload")
 	add_child(disk_changed)
+
 
 func _check_disk_changed():
 	if not is_visible_in_tree() or not disk_changed_list:
@@ -850,24 +911,45 @@ func _check_disk_changed():
 			ti.set_icon(0, get_theme_icon("FileDead", "EditorIcons"))
 			ti.set_text(0, path.get_file())
 			ti.set_text(1, GDSQL.GDSQLUtils.localize_path(path) if path.begins_with("res://") else path)
-			ti.add_button(1, get_theme_icon("Close", "EditorIcons"), 0,
-				false, tr("Close file"))
+			ti.add_button(
+				1,
+				get_theme_icon("Close", "EditorIcons"),
+				0,
+				false,
+				tr("Close file"),
+			)
 		elif FileAccess.get_modified_time(path) != _file_modified_times[path]:
 			var ti = disk_changed_list.create_item(r)
 			ti.set_meta("path", path)
 			ti.set_icon(0, get_theme_icon("Edit", "EditorIcons"))
 			ti.set_text(0, path.get_file())
 			ti.set_text(1, GDSQL.GDSQLUtils.localize_path(path) if path.begins_with("res://") else path)
-			ti.add_button(1, get_theme_icon("Reload", "EditorIcons"), 1,
-				false, tr("Reload from disk"))
-			ti.add_button(1, get_theme_icon("ExternalLink", "EditorIcons"), 2,
-				false, tr("Open in External Program"))
-			ti.add_button(1, get_theme_icon("FileDialog", "EditorIcons"), 3,
-				false, tr("Show in File Manager"))
+			ti.add_button(
+				1,
+				get_theme_icon("Reload", "EditorIcons"),
+				1,
+				false,
+				tr("Reload from disk"),
+			)
+			ti.add_button(
+				1,
+				get_theme_icon("ExternalLink", "EditorIcons"),
+				2,
+				false,
+				tr("Open in External Program"),
+			)
+			ti.add_button(
+				1,
+				get_theme_icon("FileDialog", "EditorIcons"),
+				3,
+				false,
+				tr("Show in File Manager"),
+			)
 	if disk_changed_list.get_root().get_child_count() > 0:
 		if not disk_changed.visible:
 			disk_changed.popup_centered_ratio(0.3)
-			
+
+
 func _on_disk_changed_list_button_clicked(item: TreeItem, _column: int, id: int, _mouse_button_index: int):
 	var path: String = item.get_meta("path")
 	match id:
@@ -895,6 +977,7 @@ func _on_disk_changed_list_button_clicked(item: TreeItem, _column: int, id: int,
 				global_path = GDSQL.GDSQLUtils.globalize_path(path)
 			OS.shell_show_in_file_manager(global_path, true)
 
+
 func _remove_disk_changed_item(item: TreeItem):
 	var root = disk_changed_list.get_root()
 	root.remove_child(item)
@@ -902,9 +985,11 @@ func _remove_disk_changed_item(item: TreeItem):
 	if root.get_child_count() == 0:
 		disk_changed.hide()
 
+
 func _reopen_disk_changed_if_needed():
 	if disk_changed_list.get_root().get_child_count() > 0:
 		disk_changed.popup_centered_ratio(0.3)
+
 
 func _reload_disk_changed_files():
 	var has_unsaved = false
@@ -922,19 +1007,22 @@ func _reload_disk_changed_files():
 		confirm.set_translation_domain("GDSQL")
 		confirm.dialog_text = tr("Some files have unsaved changes. Reload anyway?")
 		confirm.ok_button_text = tr("Reload")
-		confirm.confirmed.connect(func():
-			_do_reload_all()
-			confirm.queue_free()
+		confirm.confirmed.connect(
+			func():
+				_do_reload_all()
+				confirm.queue_free()
 		)
-		confirm.canceled.connect(func():
-			confirm.hide()
-			confirm.queue_free()
-			_reopen_disk_changed_if_needed.call_deferred()
+		confirm.canceled.connect(
+			func():
+				confirm.hide()
+				confirm.queue_free()
+				_reopen_disk_changed_if_needed.call_deferred()
 		)
 		add_child(confirm)
 		confirm.popup_centered()
 	else:
 		_do_reload_all()
+
 
 func _do_reload_all():
 	var root = disk_changed_list.get_root()
@@ -946,6 +1034,7 @@ func _do_reload_all():
 		child.free()
 	disk_changed.hide()
 
+
 func _reload_single_file_with_check(path: String, item: TreeItem):
 	for tab_item: TreeItem in history:
 		if tab_item.get_meta("path") == path and tab_item.get_text(0).ends_with("(*)"):
@@ -954,23 +1043,26 @@ func _reload_single_file_with_check(path: String, item: TreeItem):
 			confirm.set_translation_domain("GDSQL")
 			confirm.dialog_text = tr("This file has unsaved changes. Reload anyway?") + "\n\"" + path + "\""
 			confirm.ok_button_text = tr("Reload")
-			confirm.confirmed.connect(func():
-				_reload_single_file(path)
-				_remove_disk_changed_item(item)
-				confirm.hide()
-				confirm.queue_free()
-				_reopen_disk_changed_if_needed.call_deferred()
+			confirm.confirmed.connect(
+				func():
+					_reload_single_file(path)
+					_remove_disk_changed_item(item)
+					confirm.hide()
+					confirm.queue_free()
+					_reopen_disk_changed_if_needed.call_deferred()
 			)
-			confirm.canceled.connect(func():
-				confirm.hide()
-				confirm.queue_free()
-				_reopen_disk_changed_if_needed.call_deferred()
+			confirm.canceled.connect(
+				func():
+					confirm.hide()
+					confirm.queue_free()
+					_reopen_disk_changed_if_needed.call_deferred()
 			)
 			add_child(confirm)
 			confirm.popup_centered()
 			return
 	_reload_single_file(path)
 	_remove_disk_changed_item(item)
+
 
 func _reload_single_file(path: String):
 	for item: TreeItem in history:

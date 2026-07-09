@@ -1,0 +1,79 @@
+name: GDScript Format
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    branches: [main, master, develop]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  format:
+    name: Check GDScript formatting
+    runs-on: ubuntu-latest
+
+    # Keep this true at first if the project is not ready to block PRs.
+    # Remove this line later when formatting should become mandatory.
+    continue-on-error: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install GDQuest GDScript Formatter
+        run: |
+          set -euo pipefail
+
+          VERSION="0.20.1"
+          ASSET="gdscript-formatter-${VERSION}-linux-x86_64.zip"
+          URL="https://github.com/GDQuest/GDScript-formatter/releases/download/${VERSION}/${ASSET}"
+
+          curl -L "$URL" -o "$ASSET"
+          unzip "$ASSET"
+          chmod +x gdscript-formatter-${VERSION}-linux-x86_64
+          sudo mv gdscript-formatter-${VERSION}-linux-x86_64 /usr/local/bin/gdscript-formatter
+
+      - name: Check GDScript formatting
+        shell: bash
+        # Known issue:
+        # Files `expression.gd` and `base_dao.gd` need proper refactor in order to be formattable
+        # for this reason they are being excluded from the check.
+        run: |
+          set -euo pipefail
+
+          mapfile -d '' FILES < <(
+           	find addons/gdsql \
+            		-type f \
+            		-name "*.gd" \
+            		! -ipath "*test*" \
+            		! \( -name "expression.gd" \) \
+            		-print0 | sort -z
+          )
+
+          if [ "${#FILES[@]}" -eq 0 ]; then
+            echo "No GDScript files found."
+            exit 0
+          fi
+
+          UNFORMATTED=()
+
+          for file in "${FILES[@]}"; do
+            if ! gdscript-formatter --check "$file" >/dev/null 2>&1; then
+              UNFORMATTED+=("$file")
+            fi
+          done
+
+          if [ "${#UNFORMATTED[@]}" -gt 0 ]; then
+            echo "::error title=GDScript formatting failed::${#UNFORMATTED[@]} file(s) need formatting."
+            echo ""
+            echo "The following files are not formatted:"
+            printf ' - %s\n' "${UNFORMATTED[@]}"
+            echo ""
+            echo "Run the GDQuest GDScript formatter locally, then commit the changes."
+            exit 1
+          fi
+
+          echo "All ${#FILES[@]} GDScript file(s) are formatted."

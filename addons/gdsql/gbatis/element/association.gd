@@ -64,7 +64,6 @@ extends RefCounted
 #                                     of the parent type.
 #                                     NOTICE foreignColumn belongs to child fetch.
 #>
-
 var property = ""
 var column = ""
 var java_type = ""
@@ -74,11 +73,12 @@ var column_prefix = ""
 var foreign_column = ""
 var auto_mapping = ""
 var result_embeded: GDSQL.GBatisResultMap
-var mapper_parser_ref: WeakRef: set = set_mapper_parser_ref
-
+var mapper_parser_ref: WeakRef:
+	set = set_mapper_parser_ref
+var head: Array
 # --------- 内部使用 ----------
 var _result_map: GDSQL.GBatisResultMap # 把association当作一个resultMap来用
-var head: Array
+
 
 func _init(conf: Dictionary):
 	property = conf.get("property", "").strip_edges()
@@ -89,12 +89,15 @@ func _init(conf: Dictionary):
 	column_prefix = conf.get("columnPrefix", "").strip_edges()
 	foreign_column = conf.get("foreignColumn", "").strip_edges()
 	auto_mapping = conf.get("autoMapping", "").strip_edges()
-	
-	assert(select.is_empty() or result_map.is_empty(),
-		"Cannot set attr select and resultMap at the same time in <association>.")
+
+	assert(
+		select.is_empty() or result_map.is_empty(),
+		"Cannot set attr select and resultMap at the same time in <association>.",
+	)
 	if not select.is_empty():
 		assert(not column.is_empty(), "Must set attr column if set select in <association>.")
-		
+
+
 func clean():
 	mapper_parser_ref = null
 	head.clear()
@@ -104,24 +107,28 @@ func clean():
 	elif result_embeded:
 		result_embeded.clean()
 		result_embeded = null
-	
+
+
 func set_mapper_parser_ref(mapper_parser):
 	mapper_parser_ref = mapper_parser
-	
+
+
 func push_element(element):
 	if not result_embeded:
-		result_embeded = GDSQL.GBatisResultMap.new({"type": java_type})
+		result_embeded = GDSQL.GBatisResultMap.new({ "type": java_type })
 		result_embeded.set_mapper_parser_ref(mapper_parser_ref)
 	result_embeded.push_back(element)
-	
+
+
 func check_head(p_head: Array):
 	head = p_head
-	
+
+
 ## 每处理一条数据需要调用一下
 func prepare_deal(data: Array):
 	if _result_map != null:
 		return
-		
+
 	_result_map = result_embeded
 	if _result_map == null:
 		if not result_map.is_empty():
@@ -133,14 +140,15 @@ func prepare_deal(data: Array):
 				assert(false, "Not found <resultMap> of id %s" % result_map)
 				return null
 		elif select.is_empty():
-			_result_map = GDSQL.GBatisResultMap.new({"type": java_type})
+			_result_map = GDSQL.GBatisResultMap.new({ "type": java_type })
 			_result_map.set_mapper_parser_ref(mapper_parser_ref)
-			
+
 	if _result_map != null:
 		_result_map.column_prefix = column_prefix
 		_result_map.check_head(head)
 		_result_map.prepare_deal(data)
-		
+
+
 ## 每处理一条数据后需要调用一下
 func reset():
 	# 如果有鉴别器，则返回值不稳定，需要重置

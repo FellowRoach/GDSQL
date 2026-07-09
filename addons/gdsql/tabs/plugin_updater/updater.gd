@@ -1,6 +1,5 @@
 @tool
 extends AcceptDialog
-
 ## Plugin version checker and updater.
 ##
 ## Usage:
@@ -14,7 +13,7 @@ const GDSQL_DIR = "res://addons/gdsql/"
 
 var _current_version: String = ""
 var _latest_version: String = ""
-var _release_info: Dictionary = {}
+var _release_info: Dictionary = { }
 var _download_pct: int = -1
 var _download_size: String = ""
 var _target_version: String = ""
@@ -82,14 +81,24 @@ func _init() -> void:
 	_http_notes.request_completed.connect(_on_notes_completed)
 
 
-
-
 ## Compare two semver strings. Returns -1, 0, or 1.
 func _ready() -> void:
 	_http.request(GITHUB_API)
 
 
-
+func _process(_delta: float) -> void:
+	if _download_pct == -2:
+		return
+	if _download_pct >= 0:
+		if _status_label:
+			_status_label.text = "Downloading... " + str(_download_pct) + "% (" + _download_size + ")"
+		if _upgrade_btn:
+			_upgrade_btn.text = str(_download_pct) + "%"
+	elif _download_pct == -1 and not _download_size.is_empty():
+		if _status_label:
+			_status_label.text = tr("Downloading... ") + _download_size
+		if _upgrade_btn:
+			_upgrade_btn.text = _download_size
 
 
 ## Called when the latest-release HTTP request completes.
@@ -160,7 +169,8 @@ func _on_request_completed(result: int, _code: int, _headers: PackedStringArray,
 func _on_notes_completed(result: int, _code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
 	if result != HTTPRequest.RESULT_SUCCESS or body.is_empty():
 		var fallback = _release_info.get("body", tr("No release notes."))
-		if fallback == null: fallback = ""
+		if fallback == null:
+			fallback = ""
 		_finalize_version_info(fallback)
 		return
 
@@ -168,14 +178,16 @@ func _on_notes_completed(result: int, _code: int, _headers: PackedStringArray, b
 	var err = json.parse(body.get_string_from_utf8())
 	if err != OK:
 		var fallback = _release_info.get("body", "No release notes.")
-		if fallback == null: fallback = ""
+		if fallback == null:
+			fallback = ""
 		_finalize_version_info(fallback)
 		return
 
 	var data = json.data
 	if not data is Dictionary:
 		var fallback = _release_info.get("body", "No release notes.")
-		if fallback == null: fallback = ""
+		if fallback == null:
+			fallback = ""
 		_finalize_version_info(fallback)
 		return
 
@@ -266,7 +278,7 @@ func _delete_collected(to_delete: Array) -> int:
 
 ## Build the set of files a given version should have, based on the manifest.
 func _files_for_version(version: String) -> Dictionary:
-	var files = {}
+	var files = { }
 	var f = FileAccess.open(MANIFEST_PATH, FileAccess.READ)
 	if not f:
 		return files
@@ -338,36 +350,36 @@ func _collect_files(dir: DirAccess, prefix: String, known: Dictionary, result: A
 func _on_upgrade() -> void:
 	_upgrade_btn.disabled = true
 	_upgrade_btn.text = tr("Preparing...")
-	
+
 	# Check for user-modified files
 	var user_files = _detect_user_files(_current_version)
-	
+
 	if not user_files.is_empty():
 		var warn = AcceptDialog.new()
 		warn.title = tr("Files Not Part of GDSQL")
 		warn.min_size = Vector2(540, 420)
-		
+
 		var mc = MarginContainer.new()
 		mc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		mc.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		warn.add_child(mc)
-		
+
 		var vb = VBoxContainer.new()
 		vb.add_theme_constant_override("separation", 15)
 		mc.add_child(vb)
-		
+
 		var warn_text = tr("The following files in addons/gdsql/ are not part of the plugin. They may be your custom data:")
 		var wl = Label.new()
 		wl.text = warn_text
 		vb.add_child(wl)
-		
+
 		var mc2 = MarginContainer.new()
 		mc2.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		vb.add_child(mc2)
-		
+
 		var sc = ScrollContainer.new()
 		mc2.add_child(sc)
-		
+
 		var il = ItemList.new()
 		il.theme_type_variation = "ItemListSecondary"
 		il.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -377,42 +389,57 @@ func _on_upgrade() -> void:
 			ft.push_back(uf)
 			il.add_item(uf)
 		sc.add_child(il)
-		
+
 		var wl2 = Label.new()
 		wl2.text = tr("Do you want to proceed with the upgrade? Forcing overwrite will erase existing files in the addons/gdsql/ directory.")
 		vb.add_child(wl2)
-		
+
 		var cp = Button.new()
 		cp.size_flags_horizontal = Control.SIZE_SHRINK_END
 		cp.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 		cp.text = tr("Copy list")
-		cp.pressed.connect(func():
-			DisplayServer.clipboard_set("\n".join(ft))
-			cp.text = tr("Copied!")
+		cp.pressed.connect(
+			func():
+				DisplayServer.clipboard_set("\n".join(ft))
+				cp.text = tr("Copied!")
 		)
 		mc2.add_child(cp)
-		
+
 		warn.get_ok_button().text = tr("Cancel")
 		warn.add_button(tr("Ignore and force overwrite"), false, "force")
-		
+
 		add_child(warn)
-		
+
 		var user_choice = ["cancel"]
-		warn.confirmed.connect(func(): user_choice[0] = "cancel"; warn.queue_free())
-		warn.canceled.connect(func(): user_choice[0] = "cancel"; warn.queue_free())
-		warn.custom_action.connect(func(a): user_choice[0] = a; warn.queue_free())
+
+		warn.confirmed.connect(
+			func():
+				user_choice[0] = "cancel"
+				warn.queue_free()
+		)
+		warn.canceled.connect(
+			func():
+				user_choice[0] = "cancel"
+				warn.queue_free()
+		)
+
+		warn.custom_action.connect(
+			func(a):
+				user_choice[0] = a
+				warn.queue_free(),
+		)
 
 		warn.popup_centered()
 		await warn.tree_exited
-		
+
 		if user_choice[0] != "force":
 			_upgrade_btn.disabled = false
 			_upgrade_btn.text = tr("Upgrade to v%s") % _latest_version
 			return
-			
+
 	_start_download()
-	
-	
+
+
 func _start_download() -> void:
 	var zip_url = "https://github.com/jinyangcruise/GDSQL/releases/download/v%s/gdsql-v%s.zip" % [_target_version, _target_version]
 	if zip_url.is_empty():
@@ -457,7 +484,7 @@ func _start_download() -> void:
 	var zip_files = reader.get_files()
 	var marker = "addons/gdsql/"
 	var extracted = 0
-	var extracted_paths = {}
+	var extracted_paths = { }
 	for fp in zip_files:
 		var idx = fp.find(marker)
 		if idx < 0:
@@ -570,21 +597,9 @@ func _download_with_progress(url: String) -> PackedByteArray:
 	return body
 
 
-func _process(_delta: float) -> void:
-	if _download_pct == -2:
-		return
-	if _download_pct >= 0:
-		if _status_label:
-			_status_label.text = "Downloading... " + str(_download_pct) + "% (" + _download_size + ")"
-		if _upgrade_btn:
-			_upgrade_btn.text = str(_download_pct) + "%"
-	elif _download_pct == -1 and not _download_size.is_empty():
-		if _status_label:
-			_status_label.text = tr("Downloading... ") + _download_size
-		if _upgrade_btn:
-			_upgrade_btn.text = _download_size
-
 func _format_size(b: int) -> String:
-	if b < 1024: return "%d B" % b
-	if b < 1048576: return "%.1f KB" % (b / 1024.0)
+	if b < 1024:
+		return "%d B" % b
+	if b < 1048576:
+		return "%.1f KB" % (b / 1024.0)
 	return "%.1f MB" % (b / 1048576.0)

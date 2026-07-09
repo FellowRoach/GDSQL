@@ -1692,7 +1692,7 @@ const utility_function_table = {
 }
 
 ## NOTICE 复制 @GlobalScope 文档内容到一个文件（例如：22.txt）中，然后执行下面的命令：
-## file="22.txt"; head -`grep -n 属性说明 22.txt | awk -F ':' '{print $1}'` 22.txt | tail -n +`grep -nE '^枚举$' 22.txt | awk -F ':' '{print $1}'` | grep -E '^enum|^flags|^● ' | sed "s/:/': {/g;" | sed "s/enum /\t}\n\t'/g" | sed "s/flags /\t}\n\t'/g" | sed "s/● /\t\t'/g" | sed "s/ = /': /g" | sed "s/$/,/g" | sed 's/{,/{/g' | tail -n +2 | awk 'BEGIN{print "const GLOBAL_ENUM_AND_FLAG = {"}{print $0}END{print "\t}\n}"}' 
+## file="22.txt"; head -`grep -n 属性说明 22.txt | awk -F ':' '{print $1}'` 22.txt | tail -n +`grep -nE '^枚举$' 22.txt | awk -F ':' '{print $1}'` | grep -E '^enum|^flags|^● ' | sed "s/:/': {/g;" | sed "s/enum /\t}\n\t'/g" | sed "s/flags /\t}\n\t'/g" | sed "s/● /\t\t'/g" | sed "s/ = /': /g" | sed "s/$/,/g" | sed 's/{,/{/g' | tail -n +2 | awk 'BEGIN{print "const GLOBAL_ENUM_AND_FLAG = {"}{print $0}END{print "\t}\n}"}'
 const GLOBAL_ENUM_AND_FLAG = {
 	'Side': {
 		'SIDE_LEFT': 0,
@@ -2273,32 +2273,56 @@ const op_names = {
 	OP_IN: 'in',
 }
 
+
+
+
+
 static func _static_init() -> void:
 	EXPRESSION_CACHE = ExpressionLRULink.new()
 	EXPRESSION_CACHE.capacity = 1024
+
+
+
+
 
 func _init() -> void:
 	if Engine.is_editor_hint():
 		if TranslationServer.has_domain("GDSQL"):
 			set_translation_domain("GDSQL")
-			
+
 func get_operator_name(p_op):
 	return op_names[p_op]
-	
+
+
+
+
+
 func get_lack_input_names() -> Array:
 	return lack_input_names
-	
+
+
+
+
+
 func clear_lack_input_names():
 	lack_input_names.clear()
-	
+
+
+
+
+
 func _set_error(p_err):
 	if error_set:
 		return
-		
+
 	error_str = p_err + ' in ' + expression
 	error_set = true
 	assert(false, error_str)
-	
+
+
+
+
+
 func alloc_node(type: String) -> ExpressionENode:
 	var node
 	match type:
@@ -2338,6 +2362,10 @@ func alloc_node(type: String) -> ExpressionENode:
 	nodes = node
 	return node
 
+
+
+
+
 func GET_CHAR():
 	if str_ofs >= max_str_ofs or str_ofs >= expression.length():
 		str_ofs += 1 # 外部有些地方 -=1， 在遇到EOF的时候会导致回退
@@ -2346,25 +2374,53 @@ func GET_CHAR():
 	str_ofs += 1
 	return ret
 
+
+
+
+
 func ERR_FAIL_V(m_retval):
 	push_error("Method/function failed. Returning: %s" % m_retval)
 	return m_retval
 
+
+
+
+
 static func is_digit(c: String) -> bool:
 	return c >= '0' and c <= '9'
-	
+
+
+
+
+
 static func is_hex_digit(c: String):
 	return (is_digit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))
 
+
+
+
+
 static func is_unicode_identifier_start(c: String) -> bool:
 	return BSEARCH_CHAR_RANGE(xid_start, c)
-	
+
+
+
+
+
 static func is_binary_digit(c: String) -> bool:
 	return (c == '0' || c == '1')
-	
+
+
+
+
+
 static func is_unicode_identifier_continue(c: String) -> bool:
 	return BSEARCH_CHAR_RANGE(xid_continue, c)
-	
+
+
+
+
+
 static func BSEARCH_CHAR_RANGE(m_array, c: String):
 	if c == '':
 		return false
@@ -2378,14 +2434,22 @@ static func BSEARCH_CHAR_RANGE(m_array, c: String):
 		if (c.unicode_at(0) < m_array[middle][0]):
 			high = middle - 1
 		elif (c.unicode_at(0) > m_array[middle][1]):
-			low = middle + 1                 
+			low = middle + 1
 		else:
-			return true                                   
+			return true
 	return false
-	
+
+
+
+
+
 static func has_utility_function(p_name) -> bool:
 	return utility_function_table.has(p_name)
-	
+
+
+
+
+
 func is_utility_function_vararg(p_name) -> bool:
 	if not utility_function_table.has(p_name):
 		return false
@@ -2393,12 +2457,20 @@ func is_utility_function_vararg(p_name) -> bool:
 	utility_function_table[p_name][1].begins_with("FUNCBINDVARARGS(") or \
 	utility_function_table[p_name][1].begins_with("FUNCBINDVARARGV(") or \
 	(utility_function_table[p_name].size() == 4 and utility_function_table[p_name][3])
-	
+
+
+
+
+
 func get_utility_function_argument_count(p_name) -> int:
 	if not utility_function_table.has(p_name):
 		return 0
 	return utility_function_table[p_name][0]
-	
+
+
+
+
+
 func _get_token(r_token: ExpressionToken) -> Error:
 	while (true) :
 
@@ -2450,7 +2522,7 @@ func _get_token(r_token: ExpressionToken) -> Error:
 						_set_error("Expected number after '$'")
 						r_token.type = TokenType.TK_ERROR
 						return ERR_PARSE_ERROR
-		
+
 					index *= 10
 					index += expression[str_ofs].unicode_at(0) - '0'.unicode_at(0)
 					str_ofs += 1
@@ -2469,7 +2541,7 @@ func _get_token(r_token: ExpressionToken) -> Error:
 					_set_error("Expected '='")
 					r_token.type = TokenType.TK_ERROR
 					return ERR_PARSE_ERROR
-	
+
 				return OK
 
 			'!':
@@ -2478,7 +2550,7 @@ func _get_token(r_token: ExpressionToken) -> Error:
 					str_ofs += 1
 				else:
 					r_token.type = TokenType.TK_OP_NOT
-	
+
 				return OK
 
 			'>':
@@ -2490,7 +2562,7 @@ func _get_token(r_token: ExpressionToken) -> Error:
 					str_ofs += 1
 				else:
 					r_token.type = TokenType.TK_OP_GREATER
-	
+
 				return OK
 
 			'<':
@@ -2502,7 +2574,7 @@ func _get_token(r_token: ExpressionToken) -> Error:
 					str_ofs += 1
 				else:
 					r_token.type = TokenType.TK_OP_LESS
-	
+
 				return OK
 
 			'+':
@@ -2523,7 +2595,7 @@ func _get_token(r_token: ExpressionToken) -> Error:
 					str_ofs += 1
 				else:
 					r_token.type = TokenType.TK_OP_MUL
-	
+
 				return OK
 
 			'%':
@@ -2536,7 +2608,7 @@ func _get_token(r_token: ExpressionToken) -> Error:
 					str_ofs += 1
 				else:
 					r_token.type = TokenType.TK_OP_BIT_AND
-	
+
 				return OK
 
 			'|':
@@ -2545,7 +2617,7 @@ func _get_token(r_token: ExpressionToken) -> Error:
 					str_ofs += 1
 				else:
 					r_token.type = TokenType.TK_OP_BIT_OR
-	
+
 				return OK
 
 			'^':
@@ -2671,15 +2743,15 @@ func _get_token(r_token: ExpressionToken) -> Error:
 							#_set_error("Invalid UTF-16 sequence in string, unpaired lead surrogate")
 							#r_token.type = TokenType.TK_ERROR
 							#return ERR_PARSE_ERROR
-			
+
 						_str += ch
-		
-	
+
+
 				if (prev != 0) :
 					_set_error("Invalid UTF-16 sequence in string, unpaired lead surrogate")
 					r_token.type = TokenType.TK_ERROR
 					return ERR_PARSE_ERROR
-	
+
 
 				r_token.type = TokenType.TK_CONSTANT
 				r_token.value = _str
@@ -2689,7 +2761,7 @@ func _get_token(r_token: ExpressionToken) -> Error:
 			_: # default:
 				if (cchar.unicode_at(0) <= 32) :
 					continue # break
-	
+
 
 				var next_char = "" if (str_ofs >= expression.length()) else expression[str_ofs]
 				if (is_digit(cchar) || (cchar == '.' && is_digit(next_char))) :
@@ -2722,8 +2794,8 @@ func _get_token(r_token: ExpressionToken) -> Error:
 											reading = READING_BIN
 										elif (next_char == 'x' or next_char == "X") :
 											reading = READING_HEX
-							
-						
+
+
 								elif (c == '.') :
 									reading = READING_DEC
 									is_float = true
@@ -2732,7 +2804,7 @@ func _get_token(r_token: ExpressionToken) -> Error:
 									is_float = true
 								else:
 									reading = READING_DONE
-					
+
 
 								#break
 							READING_BIN:
@@ -2740,7 +2812,7 @@ func _get_token(r_token: ExpressionToken) -> Error:
 									reading = READING_DONE
 								elif (c == 'b' or c == "B") :
 									bin_beg = true
-					
+
 
 								#break
 							READING_HEX:
@@ -2748,7 +2820,7 @@ func _get_token(r_token: ExpressionToken) -> Error:
 									reading = READING_DONE
 								elif (c == 'x' or c == "X") :
 									hex_beg = true
-					
+
 
 								#break
 							READING_DEC:
@@ -2757,7 +2829,7 @@ func _get_token(r_token: ExpressionToken) -> Error:
 									reading = READING_EXP
 								else:
 									reading = READING_DONE
-					
+
 
 								#break
 							READING_EXP:
@@ -2769,20 +2841,20 @@ func _get_token(r_token: ExpressionToken) -> Error:
 
 								else:
 									reading = READING_DONE
-					
+
 								#break
-			
+
 
 						if (reading == READING_DONE) :
 							break
-							
+
 						num += c
 						c = GET_CHAR()
 						is_first_char = false
-						
+
 					if (c != ""):
 						str_ofs -= 1
-						
+
 					r_token.type = TokenType.TK_CONSTANT
 
 					if (is_float) :
@@ -2793,7 +2865,7 @@ func _get_token(r_token: ExpressionToken) -> Error:
 						r_token.value = num.hex_to_int()
 					else:
 						r_token.value = num.to_int()
-		
+
 					return OK
 
 				elif (is_unicode_identifier_start(cchar)) :
@@ -2803,9 +2875,9 @@ func _get_token(r_token: ExpressionToken) -> Error:
 					while (is_unicode_identifier_continue(cchar)) :
 						id += cchar
 						cchar = GET_CHAR()
-						
+
 					str_ofs -= 1 # go back one
-					
+
 					# 1. 如果id是global enum名称，不用特殊处理，就是一个identifier；
 					# 2. 如果id是global enum名称的一部分，需要检查一下后续是否跟着剩下的部分，
 					# 如果组合起来是一个global enum的完整名称，那么就标记该token可能是一个
@@ -2855,7 +2927,7 @@ func _get_token(r_token: ExpressionToken) -> Error:
 						r_token.may_be_global_enum = true
 					else:
 						str_ofs = cofs_bak
-		
+
 
 
 					if (id == "in") :
@@ -2896,8 +2968,8 @@ func _get_token(r_token: ExpressionToken) -> Error:
 							r_token.type = TokenType.TK_BASIC_TYPE
 							r_token.value = a_type
 							return OK
-				
-			
+
+
 
 						if (has_utility_function(id)) :
 							# 在 SQL 模式下，max/min 优先作为聚合函数处理
@@ -2919,7 +2991,7 @@ func _get_token(r_token: ExpressionToken) -> Error:
 
 						r_token.type = TokenType.TK_IDENTIFIER
 						r_token.value = id
-		
+
 
 					return OK
 
@@ -2932,11 +3004,11 @@ func _get_token(r_token: ExpressionToken) -> Error:
 					_set_error("Unexpected character.")
 					r_token.type = TokenType.TK_ERROR
 					return ERR_PARSE_ERROR
-	
 
-		
+
+
 #undef GET_CHAR
-	
+
 
 	r_token.type = TokenType.TK_ERROR
 	return ERR_PARSE_ERROR
@@ -2944,6 +3016,11 @@ func _get_token(r_token: ExpressionToken) -> Error:
 
 
 func _parse_expression() -> ExpressionENode:
+
+
+
+
+
 	var expression_nodes = []
 
 	while (true) :
@@ -2954,7 +3031,7 @@ func _parse_expression() -> ExpressionENode:
 		_get_token(tk)
 		if (error_set) :
 			return null
-		
+
 
 		match (tk.type) :
 			TokenType.TK_CURLY_BRACKET_OPEN:
@@ -2966,25 +3043,25 @@ func _parse_expression() -> ExpressionENode:
 					_get_token(tk)
 					if (tk.type == TokenType.TK_CURLY_BRACKET_CLOSE) :
 						break
-		
+
 					str_ofs = cofs # revert
 					# parse an expression
 					var subexpr = _parse_expression()
 					if (!subexpr) :
 						return null
-		
+
 					dn.dict.push_back(subexpr)
 
 					_get_token(tk)
 					if (tk.type != TokenType.TK_COLON) :
 						_set_error("Expected ':'")
 						return null
-		
+
 
 					subexpr = _parse_expression()
 					if (!subexpr) :
 						return null
-		
+
 
 					dn.dict.push_back(subexpr)
 
@@ -2997,8 +3074,8 @@ func _parse_expression() -> ExpressionENode:
 					else:
 						_set_error("Expected ',' or '}'")
 						return null
-		
-	
+
+
 
 				expr = dn
  				#break
@@ -3012,13 +3089,13 @@ func _parse_expression() -> ExpressionENode:
 					_get_token(tk)
 					if (tk.type == TokenType.TK_BRACKET_CLOSE) :
 						break
-		
+
 					str_ofs = cofs # revert
 					# parse an expression
 					var subexpr = _parse_expression()
 					if (!subexpr) :
 						return null
-		
+
 					an.array.push_back(subexpr)
 
 					cofs = str_ofs
@@ -3030,8 +3107,8 @@ func _parse_expression() -> ExpressionENode:
 					else:
 						_set_error("Expected ',' or ']'")
 						return null
-		
-	
+
+
 
 				expr = an
 				#break
@@ -3040,12 +3117,12 @@ func _parse_expression() -> ExpressionENode:
 				var e = _parse_expression()
 				if (error_set) :
 					return null
-	
+
 				_get_token(tk)
 				if (tk.type != TokenType.TK_PARENTHESIS_CLOSE) :
 					_set_error("Expected ')'")
 					return null
-	
+
 
 				expr = e
 
@@ -3063,11 +3140,11 @@ func _parse_expression() -> ExpressionENode:
 					if identifier is ExpressionSelectNode:
 						_set_error("Un expected '('")
 						return null
-						
+
 					# 表名/字段名 后面跟一个左括号，说不通，所以还原为字符串
 					if identifier is ExpressionSQLInputNode:
 						identifier = tk.value
-						
+
 					# function call
 					var func_call = alloc_node('CallNode') as ExpressionCallNode
 					func_call.method = identifier
@@ -3090,15 +3167,15 @@ func _parse_expression() -> ExpressionENode:
 						cons.data_type = TYPE_ARRAY
 						arguments_ref = cons.arguments
 						func_call.arguments.push_back(cons)
-						
+
 						var separator = alloc_node('ConstantNode') as ExpressionConstantNode
 						separator.value = ','
 						func_call.arguments.push_back(separator)
-						
+
 						var order_by = alloc_node('ConstantNode') as ExpressionConstantNode
 						order_by.value = ''
 						func_call.arguments.push_back(order_by)
-						
+
 					var index = -1
 					while (true) :
 						index += 1
@@ -3106,7 +3183,7 @@ func _parse_expression() -> ExpressionENode:
 						_get_token(tk)
 						if (tk.type == TokenType.TK_PARENTHESIS_CLOSE) :
 							break
-							
+
 						# count(*) 特殊处理，相当于count('*')
 						var subexpr
 						if sql_mode and identifier is String and identifier.to_lower() == "count" and tk.type == TokenType.TK_OP_MUL:
@@ -3128,13 +3205,13 @@ func _parse_expression() -> ExpressionENode:
 								str_ofs = cofs2
 						else:
 							str_ofs = cofs2 # revert
-							
+
 						# parse an expression
 						if !subexpr:
 							subexpr = _parse_expression()
 						if (!subexpr) :
 							return null
-			
+
 
 						arguments_ref.push_back(subexpr)
 
@@ -3150,13 +3227,13 @@ func _parse_expression() -> ExpressionENode:
 									if func_call.has_meta('order'):
 										_set_error("Duplicate 'order' in group_concat")
 										return null
-										
+
 									func_call.set_meta('order', true)
 									_get_token(tk)
 									if not (tk.type == TokenType.TK_IDENTIFIER and tk.value.to_lower() == "by"):
 										_set_error("Expectd 'by' after order")
 										return null
-										
+
 									var order_str_begin = str_ofs
 									var order_str_end = str_ofs
 									var quote_types = {
@@ -3173,11 +3250,11 @@ func _parse_expression() -> ExpressionENode:
 										_get_token(tk)
 										if tk.type == TokenType.TK_EOF:
 											break
-											
+
 										if not in_quote and tk.type == TokenType.TK_PARENTHESIS_CLOSE:
 											str_ofs = cofs3
 											break
-											
+
 										if tk.type in quote_types or tk.type in quote_types_values:
 											if not in_quote and tk.type in quote_types: # 如果不在引号内，遇到引号则开始记录
 												stack.push_back(tk.type)
@@ -3216,13 +3293,13 @@ func _parse_expression() -> ExpressionENode:
 												if func_call.has_meta('separator'):
 													_set_error("Duplicate 'separator' in group_concat")
 													return null
-													
+
 												func_call.set_meta('separator', true)
 												_get_token(tk)
 												if not tk.type == TokenType.TK_CONSTANT:
 													_set_error("Expected constant after 'separator' in group_concat")
 													return null
-													
+
 												# set order by's text
 												(func_call.arguments[1] as ExpressionConstantNode).value = tk.value
 												var cofs4 = str_ofs
@@ -3234,7 +3311,7 @@ func _parse_expression() -> ExpressionENode:
 													return null
 											else:
 												order_str_end = str_ofs
-												
+
 									# 如果栈不为空，说明有开始引号没有匹配的结束引号
 									if not stack.is_empty():
 										var expected = ''
@@ -3244,7 +3321,7 @@ func _parse_expression() -> ExpressionENode:
 											TokenType.TK_PARENTHESIS_OPEN: expected = ')'
 										_set_error("Expected '%s'" % expected)
 										return null
-										
+
 									# set order by which might be an expression
 									#var cofs5 = str_ofs
 									#str_ofs = order_str_begin
@@ -3267,13 +3344,13 @@ func _parse_expression() -> ExpressionENode:
 									if func_call.has_meta('separator'):
 										_set_error("Duplicate 'separator' in group_concat")
 										return null
-										
+
 									func_call.set_meta('separator', true)
 									_get_token(tk)
 									if not tk.type == TokenType.TK_CONSTANT:
 										_set_error("Expected constant after 'separator' in group_concat")
 										return null
-										
+
 									# set order by's text
 									(func_call.arguments[1] as ExpressionConstantNode).value = tk.value
 									var cofs4 = str_ofs
@@ -3289,8 +3366,8 @@ func _parse_expression() -> ExpressionENode:
 						else:
 							_set_error("Expected ',' or ')'")
 							return null
-			
-		
+
+
 
 					expr = func_call
 				else:
@@ -3320,8 +3397,8 @@ func _parse_expression() -> ExpressionENode:
 						index.base = self_node
 						index.name = identifier
 						expr = index
-		
-	
+
+
 				#break
 			TokenType.TK_INPUT:
 				var input = alloc_node('InputNode')
@@ -3345,7 +3422,7 @@ func _parse_expression() -> ExpressionENode:
 				if (tk.type != TokenType.TK_PARENTHESIS_OPEN) :
 					_set_error("Expected '('")
 					return null
-	
+
 
 				var constructor = alloc_node('ConstructorNode')
 				constructor.data_type = bt
@@ -3355,13 +3432,13 @@ func _parse_expression() -> ExpressionENode:
 					_get_token(tk)
 					if (tk.type == TokenType.TK_PARENTHESIS_CLOSE) :
 						break
-		
+
 					str_ofs = cofs # revert
 					# parse an expression
 					var subexpr = _parse_expression()
 					if (!subexpr) :
 						return null
-		
+
 
 					constructor.arguments.push_back(subexpr)
 
@@ -3374,8 +3451,8 @@ func _parse_expression() -> ExpressionENode:
 					else:
 						_set_error("Expected ',' or ')'")
 						return null
-		
-	
+
+
 
 				expr = constructor
 
@@ -3389,7 +3466,7 @@ func _parse_expression() -> ExpressionENode:
 				if (tk.type != TokenType.TK_PARENTHESIS_OPEN) :
 					_set_error("Expected '('")
 					return null
-	
+
 
 				var bifunc = alloc_node('BuiltinFuncNode')
 				bifunc._func = _func
@@ -3399,13 +3476,13 @@ func _parse_expression() -> ExpressionENode:
 					_get_token(tk)
 					if (tk.type == TokenType.TK_PARENTHESIS_CLOSE) :
 						break
-		
+
 					str_ofs = cofs # revert
 					# parse an expression
 					var subexpr = _parse_expression()
 					if (!subexpr) :
 						return null
-		
+
 
 					bifunc.arguments.push_back(subexpr)
 
@@ -3418,16 +3495,16 @@ func _parse_expression() -> ExpressionENode:
 					else:
 						_set_error("Expected ',' or ')'")
 						return null
-		
-	
+
+
 
 				if (!is_utility_function_vararg(bifunc._func)) :
 					var expected_args = get_utility_function_argument_count(bifunc._func)
 					if (expected_args != -1 and expected_args != bifunc.arguments.size()) :
 						_set_error("Builtin func '" + str(bifunc._func) + "' expects " + str(expected_args) + " argument(s).")
 						return null
-		
-	
+
+
 
 				expr = bifunc
 
@@ -3465,7 +3542,7 @@ func _parse_expression() -> ExpressionENode:
 				_set_error("Expected expression.")
 				return null
 				#break
-		
+
 
 		# before going to operators, must check indexing!
 
@@ -3488,7 +3565,7 @@ func _parse_expression() -> ExpressionENode:
 					var what = _parse_expression()
 					if (!what) :
 						return null
-		
+
 
 					index.index = what
 
@@ -3496,7 +3573,7 @@ func _parse_expression() -> ExpressionENode:
 					if (tk.type != TokenType.TK_BRACKET_CLOSE) :
 						_set_error("Expected ']' at end of index.")
 						return null
-		
+
 					expr = index
 
 					#break
@@ -3507,7 +3584,7 @@ func _parse_expression() -> ExpressionENode:
 					if (tk.type != TokenType.TK_IDENTIFIER && tk.type != TokenType.TK_BUILTIN_FUNC) :
 						_set_error("Expected identifier after '.'")
 						return null
-		
+
 
 					var identifier = tk.value
 
@@ -3528,13 +3605,13 @@ func _parse_expression() -> ExpressionENode:
 							_get_token(tk)
 							if (tk.type == TokenType.TK_PARENTHESIS_CLOSE) :
 								break
-				
+
 							str_ofs = cofs3 # revert
 							# parse an expression
 							var subexpr = _parse_expression()
 							if (!subexpr) :
 								return null
-				
+
 
 							func_call.arguments.push_back(subexpr)
 
@@ -3547,8 +3624,8 @@ func _parse_expression() -> ExpressionENode:
 							else:
 								_set_error("Expected ',' or ')'")
 								return null
-				
-			
+
+
 
 						expr = func_call
 					else:
@@ -3573,7 +3650,7 @@ func _parse_expression() -> ExpressionENode:
 									if not lack_input_names.has(expr.name):
 										lack_input_names.push_back(expr.name)
 						expr = index
-		
+
 
 					#break
 				_: # default:
@@ -3607,7 +3684,7 @@ func _parse_expression() -> ExpressionENode:
 		_get_token(tk)
 		if (error_set) :
 			return null
-		
+
 
 		var op = OP_MAX
 
@@ -3680,12 +3757,12 @@ func _parse_expression() -> ExpressionENode:
 				#break
 			_: # default:
 				pass
-		
+
 
 		if (op == OP_MAX) : # stop appending stuff
 			str_ofs = _cofs
 			break
-		
+
 
 		# push operator and go on
 		if true:#{
@@ -3694,7 +3771,7 @@ func _parse_expression() -> ExpressionENode:
 			e.op = op
 			expression_nodes.push_back(e)
 		#}
-	
+
 
 	##  Reduce the set of expressions and place them in an operator tree, respecting precedence */
 
@@ -3770,7 +3847,7 @@ func _parse_expression() -> ExpressionENode:
 				_: # default:
 					_set_error("Parser bug, invalid operator in expression: " + str(expression_nodes[i].op))
 					return null
-	
+
 
 
 			if (priority < min_priority) :
@@ -3781,12 +3858,12 @@ func _parse_expression() -> ExpressionENode:
 				min_priority = priority
 				is_unary = unary
 
-		
+
 
 		if (next_op == -1) :
 			_set_error("Yet another parser bug....")
 			return ERR_FAIL_V(null)
-		
+
 
 		#  OK! create operator..
 		if (is_unary) :
@@ -3797,7 +3874,7 @@ func _parse_expression() -> ExpressionENode:
 					# can happen..
 					_set_error("Unexpected end of expression...")
 					return null
-	
+
 
 
 			# consecutively do unary operators
@@ -3842,8 +3919,8 @@ func _parse_expression() -> ExpressionENode:
 			expression_nodes[next_op - 1].node = op
 			expression_nodes.remove_at(next_op)
 			expression_nodes.remove_at(next_op)
-		
-	
+
+
 
 	return expression_nodes[0].node
 
@@ -3852,7 +3929,7 @@ func search_input_name_equal(node, input_name: String, sub_name: String, tree: D
 		return
 	var input_index = input_names.find(input_name)
 	var sub_index = input_names.find(sub_name)
-	
+
 	# 解析另一个操作数（在一个操作中，有两个操作数，外部已经确认其中一个是需要的字段，然后把另一个操作数传入来解析）
 	var parse_node = func(p_node):
 		if p_node is ExpressionNamedIndexNode:
@@ -3916,7 +3993,7 @@ func search_input_name_equal(node, input_name: String, sub_name: String, tree: D
 							'index': -1 # '%s:-1' % p_node.name,
 						}
 				return null # 复杂情况
-				
+
 		if all_constant_node(p_node):
 			var ret = [null]
 			var err = []
@@ -3924,7 +4001,7 @@ func search_input_name_equal(node, input_name: String, sub_name: String, tree: D
 			if err.is_empty():
 				return ret[0]
 		return p_node
-		
+
 	if node.op == OP_AND or node.op == OP_OR:
 		tree[op_names[node.op]] = {"left": {}, "right": {}}
 		search_input_name_equal(node.nodes[0], input_name, sub_name, tree[op_names[node.op]].left)
@@ -3946,7 +4023,7 @@ func search_input_name_equal(node, input_name: String, sub_name: String, tree: D
 			if node.nodes[0].name == input_name and node.nodes[0].subname == sub_name:
 				tree[op_names[node.op]] = parse_node.call(node.nodes[1])
 				dealed = true
-			if not dealed and node.nodes[0].name == sub_name and (node.nodes[0].subname == "" or 
+			if not dealed and node.nodes[0].name == sub_name and (node.nodes[0].subname == "" or
 			node.nodes[0].subname == sub_name ):
 				# 这里不考虑input_name了，因为node.nodes[0]所代表的字段，虽然有可能是
 				# 其他表的字段（在联表且多个表有相同名称的字段的情况下），但同样可能就是
@@ -3965,7 +4042,7 @@ func search_input_name_equal(node, input_name: String, sub_name: String, tree: D
 			if node.nodes[1].name == input_name and node.nodes[1].subname == sub_name:
 				tree[op_names[node.op]] = parse_node.call(node.nodes[0])
 				dealed = true
-			if not dealed and node.nodes[1].name == sub_name and (node.nodes[1].subname == "" or 
+			if not dealed and node.nodes[1].name == sub_name and (node.nodes[1].subname == "" or
 			node.nodes[1].subname == sub_name):
 				tree[op_names[node.op]] = parse_node.call(node.nodes[0])
 				dealed = true
@@ -4018,7 +4095,7 @@ func search_input_name_equal(node, input_name: String, sub_name: String, tree: D
 			if contains_input_name(node.nodes[0], input_name, sub_name) or \
 			contains_input_name(node.nodes[1], input_name, sub_name):
 				tree['r' + op_names[node.op]] = null # null表示复杂情况
-				
+
 func contains_input_name(p_node, input_name: String, sub_name: String) -> bool:
 	match (p_node.type) :
 		ExpressionENode.Type.TYPE_INPUT:
@@ -4035,7 +4112,7 @@ func contains_input_name(p_node, input_name: String, sub_name: String) -> bool:
 			var ret = contains_input_name(op.nodes[0], input_name, sub_name)
 			if (ret) :
 				return true
-				
+
 			if (op.nodes[1]) :
 				ret = contains_input_name(op.nodes[1], input_name, sub_name)
 				if (ret) :
@@ -4046,7 +4123,7 @@ func contains_input_name(p_node, input_name: String, sub_name: String) -> bool:
 			var ret = contains_input_name(index.base, input_name, sub_name)
 			if (ret) :
 				return true
-				
+
 			ret = contains_input_name(index.index, input_name, sub_name)
 			if (ret) :
 				return true
@@ -4098,17 +4175,17 @@ func contains_input_name(p_node, input_name: String, sub_name: String) -> bool:
 			var ret = contains_input_name(_call.base, input_name, sub_name)
 			if (ret) :
 				return true
-				
+
 			for i in _call.arguments:
 				ret = contains_input_name(i, input_name, sub_name)
 				if (ret) :
 					return true
-					
+
 			if _call.method is ExpressionENode:
 				ret = contains_input_name(_call.method, input_name, sub_name)
 				if (ret):
 					return true
-					
+
 			return false
 		ExpressionENode.Type.TYPE_SQL_SELECT:
 			var select = p_node as ExpressionSelectNode
@@ -4144,7 +4221,7 @@ func contains_input_name(p_node, input_name: String, sub_name: String) -> bool:
 						return true
 			return false
 	return false
-	
+
 func all_constant_node(p_node):
 	match (p_node.type) :
 		ExpressionENode.Type.TYPE_INPUT:
@@ -4158,7 +4235,7 @@ func all_constant_node(p_node):
 			var ret = all_constant_node(op.nodes[0])
 			if not ret:
 				return false
-				
+
 			if (op.nodes[1]) :
 				ret = all_constant_node(op.nodes[1])
 				if (not ret) :
@@ -4169,7 +4246,7 @@ func all_constant_node(p_node):
 			var ret = all_constant_node(index.base)
 			if (not ret) :
 				return false
-				
+
 			ret = all_constant_node(index.index)
 			if (not ret) :
 				return false
@@ -4213,17 +4290,17 @@ func all_constant_node(p_node):
 			var ret = all_constant_node(_call.base)
 			if (not ret) :
 				return false
-				
+
 			for i in _call.arguments:
 				ret = all_constant_node(i)
 				if (not ret) :
 					return false
-					
+
 			if _call.method is ExpressionENode:
 				ret = all_constant_node(_call.method)
 				if (not ret):
 					return false
-					
+
 			return true
 		ExpressionENode.Type.TYPE_SQL_SELECT:
 			var select = p_node as ExpressionSelectNode
@@ -4235,17 +4312,17 @@ func all_constant_node(p_node):
 			return true
 	assert(false, "Inner error 4063 in expression.gd") # 没考虑到的情况？
 	return false
-	
+
 func _compile_expression() -> bool:
 	if (!expression_dirty) :
 		return error_set
-	
+
 
 	if (nodes) :
 		#memdelete(nodes)
 		nodes = null
 		root = null
-	
+
 
 	error_str = ""
 	error_set = false
@@ -4257,10 +4334,10 @@ func _compile_expression() -> bool:
 		root = null
 		if (nodes) :
 			pass #memdelete(nodes)
-		
+
 		nodes = null
 		return true
-	
+
 
 	expression_dirty = false
 	return false
@@ -4299,7 +4376,7 @@ func _execute(p_inputs: Array, p_sql_varying_inputs: Dictionary, p_instance: Obj
 			var ret = _execute(p_inputs, p_sql_varying_inputs, p_instance, op.nodes[0], a, p_const_calls_only, r_error_str)
 			if (ret) :
 				return true
-				
+
 			# a[0] == null is ok
 			if sql_mode and a[0] is GDSQL.AggregateFunctions:
 				r_ret[0] = a[0]
@@ -4312,12 +4389,12 @@ func _execute(p_inputs: Array, p_sql_varying_inputs: Dictionary, p_instance: Obj
 				ret = _execute(p_inputs, p_sql_varying_inputs, p_instance, op.nodes[1], b, p_const_calls_only, r_error_str)
 				if (ret) :
 					return true
-					
+
 				# b[0] == null is ok
 				if sql_mode and b[0] is GDSQL.AggregateFunctions:
 					r_ret[0] = b[0]
 					return false
-					
+
 			if sql_mode and (a[0] is GDSQL.QueryResult or b[0] is GDSQL.QueryResult):
 				# Any row contains null make the final result a null
 				# NOTICE Bad for discover possible error so comment these codes.
@@ -4337,7 +4414,7 @@ func _execute(p_inputs: Array, p_sql_varying_inputs: Dictionary, p_instance: Obj
 					OP_EQUAL, OP_NOT_EQUAL:
 						if a[0] is GDSQL.QueryResult and b[0] is GDSQL.QueryResult and \
 						a[0].get_columns_count() != b[0].get_columns_count():
-							r_error_str[0] = tr("Operand should contain %d column(s)" % 
+							r_error_str[0] = tr("Operand should contain %d column(s)" %
 								a[0].get_columns_count())
 							return true
 						var a_and_b = [a, b]
@@ -4350,7 +4427,7 @@ func _execute(p_inputs: Array, p_sql_varying_inputs: Dictionary, p_instance: Obj
 									d[0] = d[0].get_data()
 								elif d[0] is Array:
 									if d[0].is_empty():
-										# 当数据集为空时，也算该数据集等于一个空数组;
+										# 当数据集为空时，也算该数据集等于一个空数组
 										# 当数据集不为空时，随便c[0].get_data()是什么值，
 										# 都不会影响OP_EQUAL、OP_NOT_EQUAL的判断结果
 										c[0] = c[0].get_data()
@@ -4377,7 +4454,7 @@ func _execute(p_inputs: Array, p_sql_varying_inputs: Dictionary, p_instance: Obj
 								break
 							else:
 								a_and_b.reverse()
-								
+
 					OP_LESS, OP_LESS_EQUAL, OP_GREATER, OP_GREATER_EQUAL, \
 					OP_ADD, OP_SUBTRACT, OP_MULTIPLY, OP_DIVIDE, OP_MODULE, \
 					OP_POWER, OP_SHIFT_LEFT, OP_SHIFT_RIGHT, OP_BIT_AND, \
@@ -4389,7 +4466,7 @@ func _execute(p_inputs: Array, p_sql_varying_inputs: Dictionary, p_instance: Obj
 					OP_IN:
 						if a[0] is GDSQL.QueryResult and b[0] is GDSQL.QueryResult and \
 						a[0].get_columns_count() != b[0].get_columns_count():
-							r_error_str[0] = tr("Operand should contain %d column(s)" % 
+							r_error_str[0] = tr("Operand should contain %d column(s)" %
 								a[0].get_columns_count())
 							return true
 						elif a[0] is GDSQL.QueryResult:
@@ -4409,7 +4486,7 @@ func _execute(p_inputs: Array, p_sql_varying_inputs: Dictionary, p_instance: Obj
 						pass
 					_: # 其他运算符，在下面进行拦截，这里不拦截了
 						pass
-						
+
 			var valid = true
 			#evaluate(op.op, a[0], b[0], r_ret, valid)
 			match op.op:
@@ -4697,11 +4774,11 @@ func _execute(p_inputs: Array, p_sql_varying_inputs: Dictionary, p_instance: Obj
 			var ret = _execute(p_inputs, p_sql_varying_inputs, p_instance, index.base, base, p_const_calls_only, r_error_str)
 			if (ret) :
 				return true
-				
+
 			if sql_mode and (base[0] == null or base[0] is GDSQL.AggregateFunctions):
 				r_ret[0] = base[0]
 				return false
-				
+
 			if sql_mode and base[0] is GDSQL.QueryResult and _deal_query_result(base, r_error_str):
 				return true
 
@@ -4710,7 +4787,7 @@ func _execute(p_inputs: Array, p_sql_varying_inputs: Dictionary, p_instance: Obj
 			ret = _execute(p_inputs, p_sql_varying_inputs, p_instance, index.index, idx, p_const_calls_only, r_error_str)
 			if (ret) :
 				return true
-				
+
 			if sql_mode and (idx[0] == null or idx[0] is GDSQL.AggregateFunctions):
 				r_ret[0] = idx[0]
 				return false
@@ -4718,7 +4795,7 @@ func _execute(p_inputs: Array, p_sql_varying_inputs: Dictionary, p_instance: Obj
 
 			if sql_mode and idx[0] is GDSQL.QueryResult and _deal_query_result(idx, r_error_str):
 				return true
-				
+
 			#var valid
 			#r_ret[0] = base[0].get(idx[0], valid) # base.get(idx, &valid)
 			#if (!valid) :
@@ -4758,7 +4835,7 @@ func _execute(p_inputs: Array, p_sql_varying_inputs: Dictionary, p_instance: Obj
 					r_error_str[0] = ex.get_error_text()
 					return true
 				r_ret[0] = v
-				
+
 
 			#break
 		ExpressionENode.Type.TYPE_NAMED_INDEX:
@@ -4768,11 +4845,11 @@ func _execute(p_inputs: Array, p_sql_varying_inputs: Dictionary, p_instance: Obj
 			var ret = _execute(p_inputs, p_sql_varying_inputs, p_instance, index.base, base, p_const_calls_only, r_error_str)
 			if (ret) :
 				return true
-				
+
 			if sql_mode and (base[0] == null or base[0] is GDSQL.AggregateFunctions):
 				r_ret[0] = base[0]
 				return false
-				
+
 			if sql_mode and base[0] is GDSQL.QueryResult and _deal_query_result(base, r_error_str):
 				return true
 
@@ -4785,11 +4862,11 @@ func _execute(p_inputs: Array, p_sql_varying_inputs: Dictionary, p_instance: Obj
 				#if ret:
 					#return true
 				#named_index[0] = input_names[named_index[0]]
-				
+
 			#if sql_mode and (named_index[0] == null or named_index[0] is GDSQL.AggregateFunctions):
 				#r_ret[0] = named_index[0]
 				#return false
-				
+
 			#var valid
 			#r_ret[0] = base[0].get_named(index.name, valid)
 			#if (!valid) :
@@ -4828,7 +4905,7 @@ func _execute(p_inputs: Array, p_sql_varying_inputs: Dictionary, p_instance: Obj
 						r_error_str[0] = ex.get_error_text()
 						return true
 					EXPRESSION_CACHE.put_value(ex_key, ex)
-					
+
 				var v = ex.execute([base[0], named_index[0]], null, false)
 				if ex.has_execute_failed():
 					r_error_str[0] = ex.get_error_text()
@@ -4848,10 +4925,10 @@ func _execute(p_inputs: Array, p_sql_varying_inputs: Dictionary, p_instance: Obj
 
 				if (ret) :
 					return true
-					
+
 				if sql_mode and value[0] is GDSQL.QueryResult and _deal_query_result(value, r_error_str):
 					return true
-					
+
 				arr[i] = value[0]
 
 
@@ -4868,7 +4945,7 @@ func _execute(p_inputs: Array, p_sql_varying_inputs: Dictionary, p_instance: Obj
 
 				if (ret) :
 					return true
-	
+
 				if sql_mode and key[0] is GDSQL.QueryResult and _deal_query_result(key, r_error_str):
 					return true
 
@@ -4899,16 +4976,16 @@ func _execute(p_inputs: Array, p_sql_varying_inputs: Dictionary, p_instance: Obj
 
 				if (ret) :
 					return true
-	
+
 				if sql_mode and (value[0] == null or value[0] is GDSQL.AggregateFunctions):
 					r_ret[0] = value[0]
 					return false
 
 				if sql_mode and value[0] is GDSQL.QueryResult and _deal_query_result(value, r_error_str):
 					return true
-					
+
 				arr[i] = value[0]
-				#argp[i] = arr[i] # argp.write[i] = &arr[i];
+				#argp[i] = arr[i] # argp.write[i] = &arr[i]
 
 
 			#Callable.CallError ce
@@ -4917,7 +4994,7 @@ func _execute(p_inputs: Array, p_sql_varying_inputs: Dictionary, p_instance: Obj
 			#if (ce.error != Callable.CallError.CALL_OK) :
 				#r_error_str[0] = vformat(RTR("Invalid arguments to construct '%s'"), get_type_name(constructor.data_type))
 				#return true
-				
+
 			match constructor.data_type:
 				TYPE_BOOL:
 					match arr.size():
@@ -5193,16 +5270,16 @@ func _execute(p_inputs: Array, p_sql_varying_inputs: Dictionary, p_instance: Obj
 				var ret = _execute(p_inputs, p_sql_varying_inputs, p_instance, bifunc.arguments[i], value, p_const_calls_only, r_error_str)
 				if (ret) :
 					return true
-	
+
 				if sql_mode and (value[0] == null or value[0] is GDSQL.AggregateFunctions):
 					r_ret[0] = value[0]
 					return false
-					
+
 				if sql_mode and value[0] is GDSQL.QueryResult and _deal_query_result(value, r_error_str):
 					return true
-					
+
 				arr[i] = value[0]
-				#argp[i] = arr[i] # argp.write[i] = &arr[i];
+				#argp[i] = arr[i] # argp.write[i] = &arr[i]
 
 
 			r_ret[0] = utility_function_table[bifunc._func][2].callv(arr)
@@ -5225,14 +5302,14 @@ func _execute(p_inputs: Array, p_sql_varying_inputs: Dictionary, p_instance: Obj
 			#break
 		ExpressionENode.Type.TYPE_CLASS:
 			var clazz = p_node as ExpressionClassNode
-			
+
 			var script = GDSQL.GDSQLUtils.gdscript
 			script.source_code = "extends Object\nvar value = " + clazz._class
 			var err = script.reload()
 			if err != OK:
 				r_error_str[0] = "Identifier \"" + clazz._class + "\" not declared in the current scope."
 				return true
-				
+
 			var obj = script.new()
 			r_ret[0] = obj.value
 			obj.free()
@@ -5247,12 +5324,12 @@ func _execute(p_inputs: Array, p_sql_varying_inputs: Dictionary, p_instance: Obj
 
 			if (ret) :
 				return true
-				
+
 			# base[0] is AggregateFunctions is ok
 			if sql_mode and base[0] == null:
 				r_ret[0] = null
 				return false
-				
+
 			if sql_mode and base[0] is GDSQL.QueryResult and _deal_query_result(base, r_error_str):
 				return true
 
@@ -5268,16 +5345,16 @@ func _execute(p_inputs: Array, p_sql_varying_inputs: Dictionary, p_instance: Obj
 
 				if (ret) :
 					return true
-					
+
 				# value[0] == null is ok
 				if sql_mode and value[0] is GDSQL.AggregateFunctions:
 					if not base[0] is GDSQL.AggregateFunctions:
 						r_ret[0] = value[0]
 						return false
-						
+
 				if sql_mode and value[0] is GDSQL.QueryResult and _deal_query_result(value, r_error_str):
 					return true
-					
+
 				arr.push_back(value[0])
 				#argp[i] = arr[i] # argp.write[i] = &arr[i]
 
@@ -5289,10 +5366,10 @@ func _execute(p_inputs: Array, p_sql_varying_inputs: Dictionary, p_instance: Obj
 
 				if (ret):
 					return true
-					
+
 				if sql_mode and method[0] is GDSQL.QueryResult and _deal_query_result(method, r_error_str):
 					return true
-					
+
 			# support group_concat
 			if sql_mode and method[0].contains('group_concat') and base[0] is GDSQL.AggregateFunctions:
 				var index = -1
@@ -5325,7 +5402,7 @@ func _execute(p_inputs: Array, p_sql_varying_inputs: Dictionary, p_instance: Obj
 						r_error_str[0] = tr("Not support this: '%s' in group_concat") % i
 						return true
 				arr.push_back(param)
-				
+
 			#Callable.CallError ce
 			if (p_const_calls_only) : # p_const_calls_only makes no difference here
 				r_ret[0] = Callable.create(base[0], method[0]).callv(arr)
@@ -5341,18 +5418,18 @@ func _execute(p_inputs: Array, p_sql_varying_inputs: Dictionary, p_instance: Obj
 			#break
 		ExpressionENode.Type.TYPE_SQL_SELECT:
 			var select = p_node as ExpressionSelectNode
-			
-			return select.cal(p_inputs, p_sql_varying_inputs, p_instance, 
+
+			return select.cal(p_inputs, p_sql_varying_inputs, p_instance,
 				r_ret, p_const_calls_only, r_error_str)
-				
+
 		ExpressionENode.Type.TYPE_SQL_INPUT:
 			var input_node = p_node as ExpressionSQLInputNode
-			
+
 			# 满足`补充表名.字段`的形式
 			if input_node.value_set:
 				r_ret[0] = input_node.value
 				return false
-				
+
 			# sql_input_names的结构：
 			# {
 			#     'x': {
@@ -5393,7 +5470,7 @@ func _execute(p_inputs: Array, p_sql_varying_inputs: Dictionary, p_instance: Obj
 				r_error_str[0] = tr("Unknown column: %s.%s in expression: %s") % [
 					input_node.name, input_node.subname, expression]
 				return true
-				
+
 	return false
 
 ## 把QueryResult返回成一个具体的元素
@@ -5414,16 +5491,16 @@ func _deal_query_result(res: Array, r_error_str: Array) -> bool:
 
 func set_sql_input_names(p_input_names: Dictionary):
 	sql_input_names = p_input_names
-	
+
 func set_nested_sql_queries(p_nested_sql_queries: Dictionary):
 	nested_sql_queries = p_nested_sql_queries
-	
+
 func parse(p_expression, p_input_names = [], p_sql_static_inputs = []) -> Error:
 	if (nodes) :
 		#memdelete(nodes)
 		nodes = null
 		root = null
-	
+
 
 	error_str = String()
 	error_set = false
@@ -5447,7 +5524,7 @@ func parse(p_expression, p_input_names = [], p_sql_static_inputs = []) -> Error:
 		if ["in", "null", "true", "false", "PI", "TAU", "INF", "NAN", "not", "or", "and"].has(i):
 			_set_error("input_names contains a keyword: " + i)
 			return ERR_INVALID_PARAMETER
-			
+
 	expression = p_expression
 	root = _parse_expression()
 
@@ -5455,15 +5532,15 @@ func parse(p_expression, p_input_names = [], p_sql_static_inputs = []) -> Error:
 		root = null
 		#if (nodes) :
 			#memdelete(nodes)
-		
+
 		nodes = null
 		return ERR_INVALID_PARAMETER
-	
+
 
 	return OK
 
 
-func execute(p_inputs: Array = [], p_sql_varying_inputs: Dictionary = {}, 
+func execute(p_inputs: Array = [], p_sql_varying_inputs: Dictionary = {},
 p_base: Object = null, p_show_error = true, p_const_calls_only = false) :
 	if error_set:
 		push_error("There was previously a parse error: " + error_str + ".")
@@ -5480,7 +5557,7 @@ p_base: Object = null, p_show_error = true, p_const_calls_only = false) :
 		if p_show_error:
 			push_error(error_str)
 			return null
-	
+
 
 	return output[0]
 
@@ -5503,34 +5580,34 @@ func _get_var_type(obj: Object) -> String:
 	if obj.get_script() and obj.get_script().get_global_name() != "":
 		basestr += '(' + obj.get_script().get_global_name() + ')'
 	return basestr
-	
+
 func _is_global_enum_or_flag(p_name: String) -> bool:
 	if GLOBAL_ENUM_AND_FLAG.has(p_name):
 		return true
-		
+
 	for i in GLOBAL_ENUM_AND_FLAG:
 		if GLOBAL_ENUM_AND_FLAG[i].has(p_name):
 			return true
-			
+
 	return false
-	
+
 func _is_class(p_name) -> bool:
 	if not (p_name is String or p_name is StringName):
 		return false
-		
+
 	# Native class
 	if ClassDB.class_exists(p_name):
 		return true
-		
+
 	# User custom class
 	for i in ProjectSettings.get_global_class_list():
 		if i.class == p_name:
 			return true
-			
+
 	# Autoload.
 	if ProjectSettings.has_setting("autoload/" + p_name):
 		return true
-		
+
 	return false
 
 func _identifier_to_input_if_match(identifier, r_err: Array):
@@ -5539,7 +5616,7 @@ func _identifier_to_input_if_match(identifier, r_err: Array):
 		#if (input_names[i] == identifier) :
 			#input_index = i
 			#break
-			
+
 	if (input_index != -1) :
 		var input = alloc_node('InputNode')
 		input.index = input_index
@@ -5554,12 +5631,12 @@ func _identifier_to_input_if_match(identifier, r_err: Array):
 			var input = alloc_node("SelectNode")
 			input.parse(sql_input_names, sql_static_inputs, nested_sql_queries[identifier], r_err)
 			identifier = input
-			
+
 	return identifier
-	
+
 static func is_expression_e_node(obj) -> bool:
 	return obj is ExpressionENode
-	
+
 static func is_none_const_expression_e_node(obj, r_ret: Array) -> bool:
 	if obj is ExpressionSelectNode:
 		if obj.value is GDSQL.QueryResult:
@@ -5572,16 +5649,16 @@ static func is_none_const_expression_e_node(obj, r_ret: Array) -> bool:
 			return false
 		return true
 	return obj is ExpressionENode
-	
+
 class ExpressionInput extends RefCounted:
 	var type: int = TYPE_NIL
 	var name: String
-	
+
 class ExpressionToken extends RefCounted:
 	var type: TokenType
 	var value
 	var may_be_global_enum = false
-	
+
 class ExpressionENode extends RefCounted:
 	enum Type {
 		TYPE_INPUT,
@@ -5604,22 +5681,22 @@ class ExpressionENode extends RefCounted:
 	var next: ExpressionENode
 
 	var type: Type
-	
+
 class ExpressionExpressionNode extends RefCounted:
 	var is_op = false
 	var op: Variant.Operator
 	var node: ExpressionENode
-	
+
 class ExpressionInputNode extends ExpressionENode:
 	var index = 0
 	func _init() -> void:
 		type = ExpressionENode.Type.TYPE_INPUT
-		
+
 class ExpressionConstantNode extends ExpressionENode:
 	var value
 	func _init() -> void:
 		type = ExpressionENode.Type.TYPE_CONSTANT
-	
+
 
 
 class ExpressionOperatorNode extends ExpressionENode:
@@ -5629,14 +5706,14 @@ class ExpressionOperatorNode extends ExpressionENode:
 
 	func _init() -> void:
 		type = ExpressionENode.Type.TYPE_OPERATOR
-	
+
 
 
 class ExpressionSelfNode extends ExpressionENode:
 	var possible_global_enum = false
 	func _init() -> void:
 		type = ExpressionENode.Type.TYPE_SELF
-	
+
 
 
 class ExpressionIndexNode extends ExpressionENode:
@@ -5645,7 +5722,7 @@ class ExpressionIndexNode extends ExpressionENode:
 
 	func _init() -> void:
 		type = ExpressionENode.Type.TYPE_INDEX
-	
+
 
 
 class ExpressionNamedIndexNode extends ExpressionENode:
@@ -5655,7 +5732,7 @@ class ExpressionNamedIndexNode extends ExpressionENode:
 
 	func _init() -> void:
 		type = ExpressionENode.Type.TYPE_NAMED_INDEX
-	
+
 
 
 class ExpressionConstructorNode extends ExpressionENode:
@@ -5664,7 +5741,7 @@ class ExpressionConstructorNode extends ExpressionENode:
 
 	func _init() -> void:
 		type = ExpressionENode.Type.TYPE_CONSTRUCTOR
-	
+
 
 
 class ExpressionCallNode extends ExpressionENode:
@@ -5674,21 +5751,21 @@ class ExpressionCallNode extends ExpressionENode:
 
 	func _init() -> void:
 		type = ExpressionENode.Type.TYPE_CALL
-	
+
 
 
 class ExpressionArrayNode extends ExpressionENode:
 	var array: Array
 	func _init() -> void:
 		type = ExpressionENode.Type.TYPE_ARRAY
-	
+
 
 
 class ExpressionDictionaryNode extends ExpressionENode:
 	var dict: Array
 	func _init() -> void:
 		type = ExpressionENode.Type.TYPE_DICTIONARY
-	
+
 
 
 class ExpressionBuiltinFuncNode extends ExpressionENode:
@@ -5697,7 +5774,7 @@ class ExpressionBuiltinFuncNode extends ExpressionENode:
 	var arguments: Array
 	func _init() -> void:
 		type = ExpressionENode.Type.TYPE_BUILTIN_FUNC
-	
+
 
 class ExpressionBuiltinFuncCallableNode extends ExpressionENode:
 	@warning_ignore("unused_private_class_variable")
@@ -5718,20 +5795,20 @@ class ExpressionSelectNode extends ExpressionENode:
 	var info # QueryResult / {"sql": String, ___Rep0___: QueryResult, ___Rep1___: {"sql": String, ...}
 	var value
 	var expression#: GDSQL.SQLExpression
-	
+
 	func _init() -> void:
 		type = ExpressionENode.Type.TYPE_SQL_SELECT
-		
-	func cal(p_inputs: Array, p_sql_varying_inputs: Dictionary, p_instance: Object, 
+
+	func cal(p_inputs: Array, p_sql_varying_inputs: Dictionary, p_instance: Object,
 	r_ret: Array, p_const_calls_only: bool, r_error_str: Array):
 		if value != null:
 			r_ret[0] = value
 			return false
-			
+
 		if expression:
-			return expression._execute(p_inputs, p_sql_varying_inputs, p_instance, 
+			return expression._execute(p_inputs, p_sql_varying_inputs, p_instance,
 				expression.root, r_ret, p_const_calls_only, r_error_str)
-				
+
 		if info is Dictionary:
 			# info's structure like:
 			# {
@@ -5763,7 +5840,7 @@ class ExpressionSelectNode extends ExpressionENode:
 							input_names.push_back(t)
 							inputs.push_back(sql_static_inputs[sql_input_names[t][false]])
 					# NOTICE 不管字段，因为inputs里包含了字段的数据，在子查询dao里，会自己重新构造input_names结构
-					
+
 				# 如果涉及其他表的数据，现在不能query怎么办？
 				# 比如 select * from t where t.id == a.id，
 				# 这里的办法是QueryResult增加lack_tables属性。
@@ -5774,12 +5851,12 @@ class ExpressionSelectNode extends ExpressionENode:
 				dao.set_inputs(inputs)
 				dao.set_sub_queries(reps)
 				value = dao.query()
-				
+
 				if value == null or not value.ok():
 					r_error_str[0] = tr("Error occur in subquery: %s") % \
 						info.sql if value == null else value.get_err()
 					return true
-					
+
 				r_ret[0] = value
 				return false
 			# info.sql类似：1 + (__Rep0__)
@@ -5789,17 +5866,17 @@ class ExpressionSelectNode extends ExpressionENode:
 				expression.set_sql_input_names(sql_input_names)
 				expression.set_nested_sql_queries(reps)
 				expression.parse(info.sql, [], sql_static_inputs)
-				return expression._execute(p_inputs, p_sql_varying_inputs, p_instance, 
+				return expression._execute(p_inputs, p_sql_varying_inputs, p_instance,
 					expression.root, r_ret, p_const_calls_only, r_error_str)
 		else:
 			r_error_str[0] = tr("Inner error %s in expression.gd") % 5759 # 没考虑到的情况？
 			return true
-			
+
 	func parse(p_sql_input_names: Dictionary, p_sql_static_inputs: Array, p_info, r_error_str: Array):
 		sql_input_names = p_sql_input_names
 		sql_static_inputs = p_sql_static_inputs
 		info = p_info
-		
+
 		# QueryResult
 		if info is GDSQL.QueryResult:
 			value = info
@@ -5834,7 +5911,7 @@ class ExpressionSelectNode extends ExpressionENode:
 							input_names.push_back(t)
 							inputs.push_back(sql_static_inputs[sql_input_names[t][false]])
 					# NOTICE 不管字段，因为inputs里包含了字段的数据，在子查询dao里，会自己重新构造input_names结构
-					
+
 				# 如果涉及其他表的数据，现在不能query怎么办？
 				# 比如 select * from t where t.id == a.id，
 				# 这里的办法是QueryResult增加lack_tables属性。
@@ -5845,7 +5922,7 @@ class ExpressionSelectNode extends ExpressionENode:
 				dao.set_inputs(inputs)
 				dao.set_sub_queries(reps)
 				value = dao.query()
-				
+
 				if value == null or not value.ok():
 					if value and value.lack_data():
 						# parse阶段缺数据没事，这个dao没啥用，不要了
@@ -5862,17 +5939,17 @@ class ExpressionSelectNode extends ExpressionENode:
 				expression.parse(info.sql, [], sql_static_inputs)
 		else:
 			r_error_str[0] = tr("Inner error %s in expression.gd") % 5828 # 没考虑到的情况？
-			
+
 class ExpressionSQLInputNode extends ExpressionENode:
 	var name: String
 	var subname: String # 可能存在
 	var info: Dictionary
 	var value # 当属于补充表的字段时，其实可以当作一个常量
 	var value_set: bool = false
-	
+
 	func _init() -> void:
 		type = ExpressionENode.Type.TYPE_SQL_INPUT
-		
+
 	## 该函数的目标是：判断该节点是否代表一个补充表中的字段，这样就能设置value为一个常数
 	func parse(sql_input_names: Dictionary, sql_static_inputs: Array, r_error_str: Array):
 		if subname == "":
@@ -5887,7 +5964,7 @@ class ExpressionSQLInputNode extends ExpressionENode:
 						return
 			if flag:
 				return # 不能当常量，因为跟每一行的数据有关系，所以不设置value
-				
+
 			# 其次满足`补充表名.字段`的形式
 			for k in sql_input_names[name]:
 				if k is int:
@@ -5914,19 +5991,19 @@ class ExpressionSQLInputNode extends ExpressionENode:
 						return
 					else:
 						break
-						
+
 class ExpressionCacheNode extends RefCounted:
 	var key
 	var value: Variant
 	var prev: ExpressionCacheNode
 	var next: ExpressionCacheNode
-	
+
 class ExpressionLRULink extends RefCounted:
 	var cache: Dictionary
 	var capacity: int
 	var head: ExpressionCacheNode = ExpressionCacheNode.new()
 	var tail: ExpressionCacheNode = ExpressionCacheNode.new()
-	
+
 	func _notification(what: int) -> void:
 		if what == NOTIFICATION_PREDELETE:
 			if head:
@@ -5935,28 +6012,28 @@ class ExpressionLRULink extends RefCounted:
 			if tail:
 				tail.prev = null
 				tail = null
-				
+
 	func _init() -> void:
 		head.next = tail
 		tail.prev = head
-		
+
 	func has_key(key) -> bool:
 		return cache.has(key)
-		
+
 	func get_value(key):
 		if not cache.has(key):
 			return null
 		var node = cache[key] as ExpressionCacheNode
 		move_to_tail(node)
 		return node.value
-		
+
 	func remove_value(key):
 		if not has_key(key):
 			return
 		var node = cache[key] as ExpressionCacheNode
 		remove_node(node)
 		cache.erase(key)
-		
+
 	func put_value(key, value: Variant):
 		if cache.has(key):
 			var node = cache[key] as ExpressionCacheNode
@@ -5966,61 +6043,60 @@ class ExpressionLRULink extends RefCounted:
 			var node = ExpressionCacheNode.new()
 			node.key = key
 			node.value = value
-			
-			# 添加节点到链表尾部  
+
+			# 添加节点到链表尾部
 			add_to_tail(node)
-			
-			# 将新节点添加到哈希表中  
+
+			# 将新节点添加到哈希表中
 			cache[key] = node
-			
-			# 如果超出容量，删除最久未使用的节点  
+
+			# 如果超出容量，删除最久未使用的节点
 			if cache.size() > capacity:
 				var removed_node = remove_head()
 				cache.erase(removed_node.key)
-				
+
 	func add_to_tail(node: ExpressionCacheNode):
 		var prev_node = tail.prev
 		prev_node.next = node
 		node.prev = prev_node
 		node.next = tail
 		tail.prev = node
-		
+
 	func remove_node(node: ExpressionCacheNode):
 		var prev_node = node.prev
 		var next_node = node.next
 		prev_node.next = next_node
 		next_node.prev = prev_node
-		
+
 	func move_to_tail(node: ExpressionCacheNode):
 		remove_node(node)
 		add_to_tail(node)
-		
+
 	func remove_head():
 		var head_next = head.next
 		remove_node(head_next)
 		return head_next
-		
+
 	func clear():
 		# 清空双向链表
 		var current = head.next
 		while current != tail:
 			var next_node = current.next
-			# 从哈希表中移除当前节点的键  
+			# 从哈希表中移除当前节点的键
 			cache.erase(current.key)
-			# 断开当前节点的连接  
+			# 断开当前节点的连接
 			current.prev = null
 			current.next = null
-			# 移动到下一个节点  
+			# 移动到下一个节点
 			current = next_node
-			
-		# 双向链表重置为只有一个头节点和尾节点  
+
+		# 双向链表重置为只有一个头节点和尾节点
 		head.next = tail
 		tail.prev = head
-		
+
 	func clean():
 		clear()
 		head.next = null
 		tail.prev = null
 		head = null
 		tail = null
-		

@@ -14,13 +14,26 @@ var content: Array
 ## CDATA在content中的索引
 var cdata_indexes: Array
 ## 父
-var parent#: GDSQL.GXMLItem
+var parent #: GDSQL.GXMLItem
+
+
+func _notification(what):
+	if what == NOTIFICATION_PREDELETE:
+		parent = null
+		attrs.clear()
+		for i in content:
+			if i is Resource and i.resource_path == resource_path:
+				i.clean()
+		content.clear()
+		cdata_indexes.clear()
+
 
 func _validate_property(property: Dictionary) -> void:
 	match property.name:
 		"name", "attrs", "content", "cdata_indexes":
 			property.usage = PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY
-			
+
+
 func to_dict(flags: GXML.TO_DICT_FLAG) -> Dictionary:
 	var a_content = []
 	var pre_str = ""
@@ -37,17 +50,18 @@ func to_dict(flags: GXML.TO_DICT_FLAG) -> Dictionary:
 				a_content.push_back(pre_str)
 				pre_str = ""
 			a_content.push_back(i.to_dict(flags))
-			
+
 	if not pre_str.is_empty():
 		a_content.push_back(pre_str)
-		
+
 	return {
 		"name": name,
 		"attrs": attrs,
 		"content": a_content,
 		"cdata_indexes": cdata_indexes,
 	}
-	
+
+
 func clean():
 	parent = null
 	attrs.clear()
@@ -56,13 +70,3 @@ func clean():
 			i.clean()
 	content.clear()
 	cdata_indexes.clear()
-	
-func _notification(what):
-	if what == NOTIFICATION_PREDELETE:
-		parent = null
-		attrs.clear()
-		for i in content:
-			if i is Resource and i.resource_path == resource_path:
-				i.clean()
-		content.clear()
-		cdata_indexes.clear()
