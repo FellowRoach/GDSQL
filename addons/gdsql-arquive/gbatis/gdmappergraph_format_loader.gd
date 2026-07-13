@@ -23,8 +23,8 @@ func _handles_type(type: StringName) -> bool:
 
 @warning_ignore("unused_parameter")
 func _load(path: String, original_path: String, use_sub_threads: bool, cache_mode: int) -> Variant:
-	if not GDSQL.GDSQLUtils.file_exists(path):
-		return ERR_FILE_NOT_FOUND
+	#if not GDSQL.GDSQLUtils.file_exists(path):
+	#return ERR_FILE_NOT_FOUND
 
 	var res = GDMapperGraph.new()
 	res.load(path)
