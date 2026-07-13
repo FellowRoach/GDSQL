@@ -82,6 +82,7 @@
 | `QueryDiagnostic` | Diagnostics | Represents an informational message, warning, or error from a pipeline stage. | `get_code()`, `get_severity()`, `get_message()` |
 | `OperationResult` | Common results | Generic value-plus-diagnostics result for operations without a specialized result class. | `is_successful()` |
 | `QueryValidationResult` | Validation | Contains validation diagnostics and an optional bound query. | `is_valid()`, `get_bound_query()` |
+| `QueryBindingResult` | Binding | Contains binding diagnostics and an optional bound query. | `is_successful()`, `get_bound_query()` |
 | `QueryPlanningResult` | Planning | Contains a generated plan and planning diagnostics. | `is_successful()`, `get_plan()` |
 | `QueryExecutionResult` | Execution | Contains execution output, diagnostics, and optional statistics. | `is_successful()`, `get_rows()` |
 | `StorageOperationResult` | Storage | Describes the outcome of a staged storage mutation. | `is_successful()` |

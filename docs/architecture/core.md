@@ -1388,6 +1388,31 @@ addons/gdsql/
 
 Folders represent dependency boundaries rather than only user-facing features.
 
+## 17.1 Project-owned runtime workspace
+
+The plugin implementation and the project's database workspace are separate:
+
+```text
+res://
+├── addons/
+│   └── gdsql/                  # Plugin implementation only
+├── .gdsql/
+│   └── settings.cfg            # Project/tool settings only
+└── data/
+    ├── databases.cfg           # Database catalog
+    └── <database>/
+        ├── schema/              # Table definitions
+        ├── tables/              # Row data stored as .gsql files
+        ├── mappers/             # Optional mapping definitions
+        └── graphs/              # Query graph documents
+```
+
+`.gdsql` is a hidden project configuration directory. It is not a second
+plugin directory and must not contain runtime classes. The `data` directory is
+project-owned database content. `DatabasePathResolver` and the ConfigFile
+backend own the physical layout; query models, validators, planners, and
+executors use logical catalog and table identifiers only.
+
 ---
 
 ## 18. Editor containment
