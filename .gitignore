@@ -25,5 +25,8 @@ docs/node_modules/
 docs/.vitepress/dist/
 docs/.vitepress/cache/
 
-# folder for local usage, experimentation and manual testing
+# folder for local usage, experimentation and manual testing for the addon development
 /local
+/data
+
+!.gitkeep
