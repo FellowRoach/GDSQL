@@ -1413,6 +1413,49 @@ project-owned database content. `DatabasePathResolver` and the ConfigFile
 backend own the physical layout; query models, validators, planners, and
 executors use logical catalog and table identifiers only.
 
+## 17.2 First code-only Fluent API milestone
+
+The first executable vertical slice is an insert through the Fluent API:
+
+```gdscript
+var database := GDSQLDatabase.open(&"game_config")
+
+var query := database.query().insert() \
+    .into_table(&"heroes") \
+    .values({&"id": 1, &"name": "Knight"}) \
+    .build()
+
+var result := database.execute(query)
+```
+
+This path still crosses every canonical boundary:
+
+```text
+InsertQueryBuilder
+    → InsertQuerySpec
+    → DefaultQueryValidator / BoundInsertQuery
+    → DefaultQueryPlanner / InsertPlan
+    → DefaultQueryExecutor
+    → TableStorage session and commit
+    → ConfigFileTableStorage
+```
+
+For this milestone, each table remains one `.gsql` file. This keeps reads and
+writes bounded to one table, matches the project workspace, and leaves the
+choice replaceable behind `TableStorage`. A database-wide file can be evaluated
+later if measured workloads show that many small files are a practical problem.
+
+The initial ConfigFile layout is:
+
+```text
+data/databases.cfg                     # registered database names
+data/<database>/schema/<table>.cfg     # typed table and column metadata
+data/<database>/tables/<table>.gsql    # row sections keyed by primary key
+```
+
+The first insert requires an explicit primary key. Auto-increment, schema DDL,
+update, delete, select, SQL text, and editor integration remain later slices.
+
 ---
 
 ## 18. Editor containment

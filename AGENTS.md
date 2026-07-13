@@ -62,7 +62,7 @@ paths or depend on ConfigFile section names.
 - Add or update tests at the boundary being changed.
 - Update the glossary or architecture docs when introducing a new public
   concept, folder, dependency, or result type.
-- Update the glossary status register whenever a concept moves from
+- Update the glossary `State` column whenever a concept moves from
   `Planned` to `Scaffolded`, `Implemented`, `Tested`, or `Verified`.
 - Before handoff, run Godot parsing/tests available in the repository and
   report any environment limitation precisely.

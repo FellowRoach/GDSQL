@@ -49,6 +49,7 @@ classDef future fill:#FFFFFF,stroke:#94A3B8,stroke-width:2px,stroke-dasharray:6 
     subgraph Fluent["Fluent Construction"]
         Query["Query"]
         SelectQueryBuilder["SelectQueryBuilder"]
+        InsertQueryBuilder["InsertQueryBuilder"]
     end
 
     subgraph Graph["Graph Translation"]
@@ -96,6 +97,7 @@ classDef future fill:#FFFFFF,stroke:#94A3B8,stroke-width:2px,stroke-dasharray:6 
 
         BoundQuery["BoundQuery"]
         BoundSelectQuery["BoundSelectQuery"]
+        BoundInsertQuery["BoundInsertQuery"]
         BoundQueryOperation["BoundQueryOperation"]
         BoundColumnExpression["BoundColumnExpression"]
 
@@ -117,6 +119,7 @@ classDef future fill:#FFFFFF,stroke:#94A3B8,stroke-width:2px,stroke-dasharray:6 
         AggregatePlan["AggregatePlan"]
         SortPlan["SortPlan"]
         LimitPlan["LimitPlan"]
+        InsertPlan["InsertPlan"]
     end
 
     subgraph Execution["Query Execution"]
@@ -213,6 +216,8 @@ classDef future fill:#FFFFFF,stroke:#94A3B8,stroke-width:2px,stroke-dasharray:6 
     FluentAPI --> Query
     Query --> SelectQueryBuilder
     SelectQueryBuilder --> QuerySpec
+    Query --> InsertQueryBuilder
+    InsertQueryBuilder --> InsertQuerySpec
 
     GraphInput --> QueryGraph
     QueryGraph --> GraphQueryCompiler
@@ -260,7 +265,9 @@ classDef future fill:#FFFFFF,stroke:#94A3B8,stroke-width:2px,stroke-dasharray:6 
     QueryValidationResult --> BoundQuery
     BoundQuery --> BoundQueryOperation
     BoundQueryOperation --> BoundSelectQuery
+    BoundQueryOperation --> BoundInsertQuery
     BoundQuery --> BoundColumnExpression
+    BoundColumnExpression --> ExpressionVisitor
     BoundColumnExpression --> TableId
     BoundColumnExpression --> ColumnId
 
@@ -276,6 +283,7 @@ classDef future fill:#FFFFFF,stroke:#94A3B8,stroke-width:2px,stroke-dasharray:6 
     PlanNode --> AggregatePlan
     PlanNode --> SortPlan
     PlanNode --> LimitPlan
+    PlanNode --> InsertPlan
     PlanNode --> PlanNodeVisitor
 
     QueryPlan --> QueryExecutor
@@ -404,7 +412,7 @@ class SqlLexer,SqlToken,TokenizationResult translation;
 class SqlParser,SqlParseResult,SqlStatement,SqlSelectStatement translation;
 class SqlColumnNode,SqlTableNode,SqlBinaryExpressionNode,SqlLiteralNode translation;
 class SqlQueryCompiler,QueryCompilationResult translation;
-class Query,SelectQueryBuilder,QueryGraph,GraphQueryCompiler translation;
+class Query,SelectQueryBuilder,InsertQueryBuilder,QueryGraph,GraphQueryCompiler translation;
 
 %% Canonical query and expression models
 class QuerySpec,SelectQuerySpec,InsertQuerySpec,UpdateQuerySpec,DeleteQuerySpec canonical;
@@ -416,13 +424,13 @@ class ComparisonOperator,LogicalOperator canonical;
 
 %% Validation and binding
 class QueryValidator,DefaultQueryValidator,QueryValidationResult validation;
-class BoundQuery,BoundSelectQuery,BoundQueryOperation validation;
+class BoundQuery,BoundSelectQuery,BoundInsertQuery,BoundQueryOperation validation;
 class BoundColumnExpression,TableId,ColumnId validation;
 
 %% Planning
 class QueryPlanner,QueryPlanningResult,QueryPlan planning;
 class PlanNode,PlanNodeVisitor,TableScanPlan,PrimaryKeyLookupPlan planning;
-class FilterPlan,ProjectionPlan,AggregatePlan,SortPlan,LimitPlan planning;
+class FilterPlan,ProjectionPlan,AggregatePlan,SortPlan,LimitPlan,InsertPlan planning;
 
 %% Execution
 class QueryExecutor,DefaultQueryExecutor,ExecutionContext execution;

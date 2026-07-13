@@ -1,8 +1,24 @@
 class_name GDSQLQuery
 extends RefCounted
 
-func select() -> GDSQLSelectQueryBuilder: return null
-func insert() -> GDSQLSelectQueryBuilder: return null
-func update() -> GDSQLSelectQueryBuilder: return null
-func delete() -> GDSQLSelectQueryBuilder: return null
+var _database_name: StringName
 
+
+func _init(database_name: StringName = &"") -> void:
+	_database_name = database_name
+
+
+func select() -> GDSQLSelectQueryBuilder:
+	return GDSQLSelectQueryBuilder.new()
+
+
+func insert() -> GDSQLInsertQueryBuilder:
+	return GDSQLInsertQueryBuilder.new(_database_name)
+
+
+func update() -> RefCounted:
+	return null
+
+
+func delete() -> RefCounted:
+	return null

@@ -1,5 +1,5 @@
 class_name GDSQLGraphQueryCompiler
 extends RefCounted
 
-func compile(graph: GDSQLQueryGraph) -> GDSQLQueryCompilationResult: return null
-
+func compile(graph: GDSQLQueryGraph) -> GDSQLQueryCompilationResult:
+	return null

@@ -12,6 +12,10 @@ var limit: int = -1
 var offset: int = 0
 var distinct: bool = false
 
-func _init() -> void: operation = Operation.SELECT
-func accept(visitor: GDSQLQuerySpecVisitor) -> Variant: return visitor.visit_select(self)
 
+func _init() -> void:
+	operation = Operation.SELECT
+
+
+func accept(visitor: GDSQLQuerySpecVisitor) -> Variant:
+	return visitor.visit_select(self)

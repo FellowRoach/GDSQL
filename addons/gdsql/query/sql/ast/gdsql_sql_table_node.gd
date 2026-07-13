@@ -3,4 +3,3 @@ extends GDSQLSqlStatement
 
 var name: StringName
 var alias: StringName
-

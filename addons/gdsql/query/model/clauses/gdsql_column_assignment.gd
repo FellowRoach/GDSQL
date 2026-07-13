@@ -3,4 +3,3 @@ extends RefCounted
 
 var column: StringName
 var expression: GDSQLQueryExpression
-

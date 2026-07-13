@@ -1,3 +1,2 @@
 class_name GDSQLStorageOperationResult
 extends GDSQLOperationResult
-

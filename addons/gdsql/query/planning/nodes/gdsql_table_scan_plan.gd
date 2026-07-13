@@ -3,5 +3,7 @@ extends GDSQLPlanNode
 
 var table: GDSQLTableDefinition
 var alias: StringName
-func accept(visitor: GDSQLPlanNodeVisitor) -> Variant: return visitor.visit_table_scan(self)
 
+
+func accept(visitor: GDSQLPlanNodeVisitor) -> Variant:
+	return visitor.visit_table_scan(self)
