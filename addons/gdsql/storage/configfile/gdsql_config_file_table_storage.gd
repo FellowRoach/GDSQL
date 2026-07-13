@@ -1,0 +1,7 @@
+class_name GDSQLConfigFileTableStorage
+extends GDSQLTableStorage
+
+var path_resolver: GDSQLDatabasePathResolver
+var config_cache: GDSQLConfigFileCache
+var codec: GDSQLGodotVariantCodec
+

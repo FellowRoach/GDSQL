@@ -1,0 +1,3 @@
+class_name GDSQLCsvExportMaterializer
+extends GDSQLResultMaterializer
+

@@ -1,0 +1,10 @@
+class_name GDSQLExecutionContext
+extends RefCounted
+
+var catalog: GDSQLCatalogService
+var storage: GDSQLTableStorage
+var transactions: GDSQLTransactionManager
+var expression_evaluator: GDSQLExpressionEvaluator
+var function_registry: GDSQLQueryFunctionRegistry
+var cancellation: GDSQLQueryCancellationToken
+

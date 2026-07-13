@@ -1,0 +1,5 @@
+class_name GDSQLQueryCompilationResult
+extends GDSQLOperationResult
+
+var query: GDSQLQuerySpec
+

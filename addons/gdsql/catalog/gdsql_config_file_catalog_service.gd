@@ -1,0 +1,3 @@
+class_name GDSQLConfigFileCatalogService
+extends GDSQLCatalogService
+

@@ -1,0 +1,3 @@
+class_name GDSQLEditorTableMaterializer
+extends GDSQLResultMaterializer
+

@@ -1,0 +1,3 @@
+class_name GDSQLDictionaryResultMaterializer
+extends GDSQLResultMaterializer
+
