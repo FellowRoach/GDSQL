@@ -85,8 +85,8 @@ func rename_database(
 		return _error(&"GDSQL_CATALOG_DATABASE_DIRECTORY_EXISTS", "Database directory '%s' already exists." % new_path)
 	var database := _catalog.get_database(current_name)
 	if DirAccess.rename_absolute(
-			ProjectSettings.globalize_path(old_path),
-			ProjectSettings.globalize_path(new_path),
+		ProjectSettings.globalize_path(old_path),
+		ProjectSettings.globalize_path(new_path),
 	) != OK:
 		return _error(&"GDSQL_CATALOG_DATABASE_RENAME_FAILED", "Could not rename database directory '%s'." % old_path)
 	registry.erase_section(String(current_name))
