@@ -5,16 +5,43 @@ var context: GDSQLDatabaseContext
 var database_name: StringName
 
 
-static func open(database_name: StringName, data_root: String = "res://data") -> GDSQLDatabase:
-	return GDSQLDatabase.new(database_name, GDSQLRuntimeFactory.create_default(data_root))
+static func open(
+		database_name: StringName,
+		data_root: String = "res://data",
+) -> GDSQLDatabaseResult:
+	var result := GDSQLDatabaseResult.new()
+	var database_context := GDSQLRuntimeFactory.create_default(data_root)
+	if database_context.catalog.get_database(database_name) == null:
+		result.add_diagnostic(
+			GDSQLQueryDiagnostic.new(
+				&"GDSQL_DATABASE_NOT_FOUND",
+				"Database '%s' is not registered." % database_name,
+			),
+		)
+		return result
+	result.value = GDSQLDatabase.new(database_name, database_context)
+	return result
+
+
+static func create(
+		database_name: StringName,
+		data_root: String = "res://data",
+) -> GDSQLDatabaseResult:
+	var database_context := GDSQLRuntimeFactory.create_default(data_root)
+	var catalog_result := database_context.create_database(database_name)
+	var result := GDSQLDatabaseResult.new()
+	result.diagnostics.merge(catalog_result.diagnostics)
+	if catalog_result.is_successful():
+		result.value = GDSQLDatabase.new(database_name, database_context)
+	return result
 
 
 func _init(
-		p_database_name: StringName = &"",
-		p_context: GDSQLDatabaseContext = null,
+		database_name: StringName = &"",
+		context: GDSQLDatabaseContext = null,
 ) -> void:
-	database_name = p_database_name
-	context = p_context
+	self.database_name = database_name
+	self.context = context
 
 
 func query() -> GDSQLQuery:
@@ -29,6 +56,10 @@ func execute(query_spec: GDSQLQuerySpec) -> GDSQLQueryResult:
 	return context.execute(query_spec)
 
 
+func create_table(table_definition: GDSQLTableDefinition) -> GDSQLCatalogOperationResult:
+	return context.create_table(database_name, table_definition)
+
+
 func insert(table_name: StringName, values: Dictionary) -> GDSQLQueryResult:
 	var query_spec := query().insert().into_table(table_name).values(values).build()
 	return execute(query_spec)
@@ -36,10 +67,10 @@ func insert(table_name: StringName, values: Dictionary) -> GDSQLQueryResult:
 
 func execute_sql(source: String) -> GDSQLQueryResult:
 	var result := GDSQLQueryResult.new()
-	result.diagnostics.append(
+	result.diagnostics.add(
 		GDSQLQueryDiagnostic.new(
 			&"GDSQL_SQL_NOT_IMPLEMENTED",
-			"SQL execution is not implemented in the Fluent API milestone.",
+			"SQL execution is not implemented in the current runtime.",
 		),
 	)
 	return result

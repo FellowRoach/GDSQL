@@ -4,8 +4,8 @@ extends RefCounted
 var values: Dictionary = { }
 
 
-func _init(p_values: Dictionary = { }) -> void:
-	values = p_values.duplicate(true)
+func _init(values: Dictionary = { }) -> void:
+	self.values = values.duplicate(true)
 
 
 func get_value(column: StringName) -> Variant:

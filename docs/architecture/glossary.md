@@ -24,8 +24,8 @@ state in the same change as implementation or test work.
 
 | Name | Domain | Responsibility | Principal API | State |
 |---|---|---|---|---|
-| `Database` | Public API | Main user-facing entry point for opening a database, building queries, and executing canonical query specs. | `open()`, `query()`, `execute()`, `insert()`, `execute_sql()` | 🚧 |
-| `DatabaseContext` | Runtime facade | Coordinates validation, binding, planning, execution, and result materialization. | `execute(query)`, `prepare(query)` | 🚧 |
+| `Database` | Public API | Main user-facing entry point for creating or opening a database, managing its tables, building queries, and executing canonical query specs. | `create()`, `open()`, `create_table()`, `query()`, `execute()`, `insert()`, `execute_sql()` | 🚧 |
+| `DatabaseContext` | Runtime facade | Coordinates catalog administration, validation, binding, planning, execution, and result materialization. | `create_database()`, `create_table()`, `execute(query)`, `prepare(query)` | 🚧 |
 | `Query` | Fluent API | User-facing fluent query entry point that creates operation-specific builders. | `select()`, `insert()`, `update()`, `delete()` | 🚧 |
 | `SelectQueryBuilder` | Fluent API | Builds a `SelectQuerySpec` through a controlled fluent interface. | `from_table()`, `columns()`, `where()`, `join()`, `order_by()`, `limit()`, `offset()`, `build()` | 🚧 |
 | `InsertQueryBuilder` | Fluent API | Builds an `InsertQuerySpec` from one or more named rows. | `into_table()`, `values()`, `build()` | 🛠️ |
@@ -98,7 +98,9 @@ state in the same change as implementation or test work.
 | Name | Domain | Responsibility | Principal API | State |
 |---|---|---|---|---|
 | `QueryDiagnostic` | Diagnostics | Represents an informational message, warning, or error from a pipeline stage. | `get_code()`, `get_severity()`, `get_message()` | 🛠️ |
-| `OperationResult` | Common results | Generic value-plus-diagnostics result for operations without a specialized result class. | `is_successful()` | 🛠️ |
+| `Diagnostics` | Diagnostics | Reusable diagnostic collection that inspects severity and performs explicitly requested debug reporting. | `add()`, `merge()`, `has_errors()`, `is_successful()`, `print_to_debug()` | 🛠️ |
+| `OperationResult` | Common results | Generic value-plus-result that composes `Diagnostics` for operations without a specialized result class. | `is_successful()` | 🛠️ |
+| `CatalogOperationResult` | Catalog results | Contains the value and structured diagnostics produced by a catalog structure mutation. | `is_successful()`, `get_value()` | 🛠️ |
 | `QueryValidationResult` | Validation | Contains validation diagnostics and an optional bound query. | `is_valid()`, `get_bound_query()` | 🛠️ |
 | `QueryBindingResult` | Binding | Contains binding diagnostics and an optional bound query. | `is_successful()`, `get_bound_query()` | 🚧 |
 | `QueryPlanningResult` | Planning | Contains a generated plan and planning diagnostics. | `is_successful()`, `get_plan()` | 🛠️ |
@@ -157,6 +159,8 @@ state in the same change as implementation or test work.
 |---|---|---|---|---|
 | `CatalogService` | Catalog | Abstract access to database, table, column, and index definitions. | `get_database()`, `get_table()`, `has_table()`, `create_snapshot()` | 🚧 |
 | `ConfigFileCatalogService` | Catalog backend | Catalog implementation backed by GDSQL configuration files. | CatalogService implementation | 🛠️ |
+| `CatalogAdministrationService` | Catalog | Abstract contract for creating and changing logical database structure without exposing storage formats to the public API. | `create_database()`, `create_table()` | 🛠️ |
+| `ConfigFileCatalogAdministrationService` | Catalog backend | Persists database registrations and creates complete ConfigFile-backed table structures, including schema and empty table files. | CatalogAdministrationService implementation | 🛠️ |
 | `CatalogSnapshot` | Catalog | Stable catalog view used during validation, binding, and planning. | `get_database()`, `get_table()` | 🚧 |
 | `DatabaseDefinition` | Catalog | Typed definition of a logical database. | Access to name and tables | 🛠️ |
 | `TableDefinition` | Catalog | Typed definition of a table, its columns, primary key, and indexes. | `get_column()`, `get_primary_key()` | 🛠️ |
@@ -168,7 +172,7 @@ state in the same change as implementation or test work.
 | Name | Domain | Responsibility | Principal API | State |
 |---|---|---|---|---|
 | `TableStorage` | Storage | Abstract row-level storage contract used by the runtime. | `read_table()`, `find_by_primary_key()`, `stage_insert()`, `stage_update()`, `stage_delete()`, `commit()`, `rollback()` | 🚧 |
-| `ConfigFileTableStorage` | Storage backend | Implements `TableStorage` using ConfigFile-backed `.gsql` files. | TableStorage implementation | 🚧 |
+| `ConfigFileTableStorage` | Storage backend | Implements `TableStorage` using ConfigFile-backed `.cfg` files. | TableStorage implementation | 🚧 |
 | `StorageSession` | Storage | Tracks loaded data, staged changes, and dirty state for one unit of work. | Session-specific state access | 🛠️ |
 | `TableSnapshot` | Storage | Stable collection of rows read from a table for an operation. | `get_rows()`, `find_by_primary_key()` | 🛠️ |
 | `RowRecord` | Storage and execution | Typed runtime representation of one row. | `get_value()`, `set_value()`, `has_column()` | 🛠️ |
@@ -181,7 +185,8 @@ state in the same change as implementation or test work.
 | Name | Domain | Responsibility | Principal API | State |
 |---|---|---|---|---|
 | `RowSet` | Execution results | Internal collection of rows and their result schema. | `get_rows()`, `get_schema()` | 🚧 |
-| `QueryResult` | Public results | Stable public representation of query output and diagnostics. | `is_successful()`, `get_rows()`, `get_diagnostics()`, `get_affected_rows()`, `get_returned_rows()` | 🛠️ |
+| `DatabaseResult` | Public results | Contains a database handle or structured diagnostics from `Database.create()` and `Database.open()`. | `is_successful()`, `get_database()` | 🛠️ |
+| `QueryResult` | Public results | Stable public representation of query output that inherits the composed diagnostics behavior from `OperationResult`. | `is_successful()`, `get_rows()`, `get_diagnostics()`, `get_affected_rows()`, `get_returned_rows()` | 🛠️ |
 | `ResultMapping` | Mapping | Describes how result columns map into an output representation. | Mapping accessors | 🚧 |
 | `ResultMaterializer` | Mapping | Abstract contract for converting a `RowSet` into a user-facing result. | `materialize(rows, mapping)` | 🚧 |
 | `DictionaryResultMaterializer` | Mapping | Converts rows into dictionaries. | `materialize()` | 🚧 |

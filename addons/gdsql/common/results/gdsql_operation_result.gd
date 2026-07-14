@@ -2,15 +2,12 @@ class_name GDSQLOperationResult
 extends RefCounted
 
 var value: Variant
-var diagnostics: Array[GDSQLQueryDiagnostic] = []
+var diagnostics := GDSQLDiagnostics.new()
 
 
 func is_successful() -> bool:
-	for diagnostic in diagnostics:
-		if diagnostic.severity == GDSQLQueryDiagnostic.Severity.ERROR:
-			return false
-	return true
+	return diagnostics.is_successful()
 
 
 func add_diagnostic(diagnostic: GDSQLQueryDiagnostic) -> void:
-	diagnostics.append(diagnostic)
+	diagnostics.add(diagnostic)

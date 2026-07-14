@@ -135,6 +135,9 @@ classDef future fill:#FFFFFF,stroke:#94A3B8,stroke-width:2px,stroke-dasharray:6 
 
     subgraph Catalog["Catalog"]
         CatalogService["CatalogService"]
+        ConfigFileCatalogService["ConfigFileCatalogService"]
+        CatalogAdministrationService["CatalogAdministrationService"]
+        ConfigFileCatalogAdministrationService["ConfigFileCatalogAdministrationService"]
         CatalogSnapshot["CatalogSnapshot"]
 
         DatabaseDefinition["DatabaseDefinition"]
@@ -170,14 +173,17 @@ classDef future fill:#FFFFFF,stroke:#94A3B8,stroke-width:2px,stroke-dasharray:6 
         EditorTableMaterializer["EditorTableMaterializer"]
         CsvExportMaterializer["CsvExportMaterializer"]
 
+        DatabaseResult["DatabaseResult"]
         QueryResult["QueryResult"]
     end
 
     subgraph Diagnostics["Diagnostics"]
         QueryDiagnostic["QueryDiagnostic"]
+        DiagnosticsCollection["Diagnostics"]
         SourceSpan["SourceSpan"]
 
         OperationResult["OperationResult"]
+        CatalogOperationResult["CatalogOperationResult"]
         QueryExecutionResult["QueryExecutionResult"]
         QueryPlanningResult["QueryPlanningResult"]
         StorageOperationResult["StorageOperationResult"]
@@ -326,7 +332,7 @@ classDef future fill:#FFFFFF,stroke:#94A3B8,stroke-width:2px,stroke-dasharray:6 
     ResultMaterializer --> QueryResult
 
     QueryDiagnostic --> SourceSpan
-    OperationResult --> QueryDiagnostic
+    DiagnosticsCollection --> QueryDiagnostic
     QueryValidationResult --> QueryDiagnostic
     QueryPlanningResult --> QueryDiagnostic
     QueryExecutionResult --> QueryDiagnostic
@@ -351,56 +357,79 @@ classDef future fill:#FFFFFF,stroke:#94A3B8,stroke-width:2px,stroke-dasharray:6 
     EditorBoundary --> QueryResult
     EditorBoundary --> QueryDiagnostic
 
+    CatalogService --> ConfigFileCatalogService
+    ConfigFileCatalogService --> DatabasePathResolver
+    CatalogAdministrationService --> ConfigFileCatalogAdministrationService
+    ConfigFileCatalogAdministrationService --> DatabasePathResolver
+    CatalogAdministrationService --> CatalogOperationResult
+    Database --> CatalogOperationResult
+    DatabaseContext --> CatalogAdministrationService
+    GDSQLRuntimeFactory --> CatalogAdministrationService
+    GDSQLRuntimeFactory --> ConfigFileCatalogAdministrationService
+    OperationResult --> DatabaseResult
+    Database --> DatabaseResult
+    OperationResult --> DiagnosticsCollection
+    OperationResult --> QueryResult
+
 %% SQL translation: edges 0–13
 linkStyle 0,1,2,3,4,5,6,7,8,9,10,11,12,13 stroke:#8B5CF6,stroke-width:2.5px;
 
-%% Fluent API: edges 14–16
-linkStyle 14,15,16 stroke:#3B82F6,stroke-width:2.5px;
+%% Fluent API: edges 14–18
+linkStyle 14,15,16,17,18 stroke:#3B82F6,stroke-width:2.5px;
 
-%% Graph frontend: edges 17–19
-linkStyle 17,18,19 stroke:#C026D3,stroke-width:2.5px;
+%% Graph frontend: edges 19–21
+linkStyle 19,20,21 stroke:#C026D3,stroke-width:2.5px;
 
-%% Future frontend extension: edge 20
-linkStyle 20 stroke:#94A3B8,stroke-width:2px,stroke-dasharray:6 4;
+%% Future frontend extension: edge 22
+linkStyle 22 stroke:#94A3B8,stroke-width:2px,stroke-dasharray:6 4;
 
-%% Canonical QuerySpec model: edges 21–35
-linkStyle 21,22,23,24,25,26,27,28,29,30,31,32,33,34,35 stroke:#D97706,stroke-width:2px;
+%% Canonical QuerySpec model: edges 23–37
+linkStyle 23,24,25,26,27,28,29,30,31,32,33,34,35,36,37 stroke:#D97706,stroke-width:2px;
 
-%% Expression model: edges 36–47
-linkStyle 36,37,38,39,40,41,42,43,44,45,46,47 stroke:#CA8A04,stroke-width:2px;
+%% Expression model: edges 38–49
+linkStyle 38,39,40,41,42,43,44,45,46,47,48,49 stroke:#CA8A04,stroke-width:2px;
 
-%% Validation and binding: edges 48–57
-linkStyle 48,49,50,51,52,53,54,55,56,57 stroke:#DB2777,stroke-width:2.5px;
+%% Validation and binding: edges 50–61
+linkStyle 50,51,52,53,54,55,56,57,58,59,60,61 stroke:#DB2777,stroke-width:2.5px;
 
-%% Planning: edges 58–69
-linkStyle 58,59,60,61,62,63,64,65,66,67,68,69 stroke:#EA580C,stroke-width:2.5px;
+%% Planning: edges 62–74
+linkStyle 62,63,64,65,66,67,68,69,70,71,72,73,74 stroke:#EA580C,stroke-width:2.5px;
 
-%% Execution: edges 70–78
-linkStyle 70,71,72,73,74,75,76,77,78 stroke:#16A34A,stroke-width:2.5px;
+%% Execution: edges 75–83
+linkStyle 75,76,77,78,79,80,81,82,83 stroke:#16A34A,stroke-width:2.5px;
 
-%% Catalog: edges 79–83
-linkStyle 79,80,81,82,83 stroke:#0284C7,stroke-width:2px;
+%% Catalog: edges 84–88
+linkStyle 84,85,86,87,88 stroke:#0284C7,stroke-width:2px;
 
-%% Storage: edges 84–91
-linkStyle 84,86,87,88,89,90,91 stroke:#0F766E,stroke-width:2.5px;
+%% Storage: edges 89–96
+linkStyle 89,91,92,93,94,95,96 stroke:#0F766E,stroke-width:2.5px;
 
-%% Future storage extension: edge 85
-linkStyle 85 stroke:#94A3B8,stroke-width:2px,stroke-dasharray:6 4;
+%% Future storage extension: edge 90
+linkStyle 90 stroke:#94A3B8,stroke-width:2px,stroke-dasharray:6 4;
 
-%% Execution output: edges 92–95
-linkStyle 92,93,94,95 stroke:#16A34A,stroke-width:2px;
+%% Execution output: edges 97–100
+linkStyle 97,98,99,100 stroke:#16A34A,stroke-width:2px;
 
-%% Result materialization: edges 96–103
-linkStyle 96,97,98,99,100,101,102,103 stroke:#475569,stroke-width:2.5px;
+%% Result materialization: edges 101–108
+linkStyle 101,102,103,104,105,106,107,108 stroke:#475569,stroke-width:2.5px;
 
-%% Diagnostics: edges 104–110
-linkStyle 104,105,106,107,108,109,110 stroke:#DC2626,stroke-width:1.8px;
+%% Diagnostics: edges 109–115
+linkStyle 109,110,111,112,113,114,115 stroke:#DC2626,stroke-width:1.8px;
 
-%% Runtime facade: edges 111–121
-linkStyle 111,112,113,114,115,116,117,118,119,120,121 stroke:#7C3AED,stroke-width:2.5px;
+%% Runtime facade: edges 116–126
+linkStyle 116,117,118,119,120,121,122,123,124,125,126 stroke:#7C3AED,stroke-width:2.5px;
 
-%% Editor boundary: edges 122–125
-linkStyle 122,123,124,125 stroke:#C026D3,stroke-width:2px;
+%% Editor boundary: edges 127–130
+linkStyle 127,128,129,130 stroke:#C026D3,stroke-width:2px;
+
+%% Catalog administration and backend composition: edges 131–139
+linkStyle 131,132,133,134,135,136,137,138,139 stroke:#0284C7,stroke-width:2px;
+
+%% Public database result: edges 140–141
+linkStyle 140,141 stroke:#475569,stroke-width:2px;
+
+%% Composed diagnostics and query result inheritance: edges 142–143
+linkStyle 142,143 stroke:#475569,stroke-width:2px;
 
 
 %% Frontends
@@ -438,7 +467,8 @@ class ExpressionEvaluator,QueryFunctionRegistry,QueryCancellationToken execution
 class TransactionManager,QueryExecutionResult execution;
 
 %% Catalog
-class CatalogService,CatalogSnapshot catalog;
+class CatalogService,ConfigFileCatalogService,CatalogSnapshot catalog;
+class CatalogAdministrationService,ConfigFileCatalogAdministrationService catalog;
 class DatabaseDefinition,TableDefinition,ColumnDefinition,IndexDefinition catalog;
 
 %% Storage
@@ -451,10 +481,10 @@ class FutureStorage future;
 class RowSet,ResultSchema,ResultMapping result;
 class ResultMaterializer,DictionaryResultMaterializer result;
 class ResourceResultMaterializer,ModelResultMaterializer result;
-class EditorTableMaterializer,CsvExportMaterializer,QueryResult result;
+class EditorTableMaterializer,CsvExportMaterializer,DatabaseResult,QueryResult result;
 
 %% Diagnostics
-class QueryDiagnostic,SourceSpan,OperationResult diagnostic;
+class QueryDiagnostic,DiagnosticsCollection,SourceSpan,OperationResult,CatalogOperationResult diagnostic;
 class QueryPlanningResult,StorageOperationResult,StorageCommitResult diagnostic;
 
 %% Runtime and editor

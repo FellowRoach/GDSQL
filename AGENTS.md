@@ -46,7 +46,7 @@ belongs under `res://.gdsql/` and `res://data/` (default data if not created, is
 res://.gdsql/settings.cfg
 res://data/databases.cfg
 res://data/<database>/schema/*.cfg
-res://data/<database>/tables/*.gsql
+res://data/<database>/tables/*.cfg
 res://data/<database>/mappers/
 res://data/<database>/graphs/
 ```

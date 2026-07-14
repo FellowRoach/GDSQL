@@ -12,6 +12,8 @@ static func create_default(settings: Variant = null) -> GDSQLDatabaseContext:
 	var codec := GDSQLGodotVariantCodec.new()
 	var storage: GDSQLTableStorage = GDSQLConfigFileTableStorage.new(path_resolver, cache, codec)
 	var catalog: GDSQLCatalogService = GDSQLConfigFileCatalogService.new(path_resolver)
+	var catalog_administration: GDSQLCatalogAdministrationService = \
+		GDSQLConfigFileCatalogAdministrationService.new(path_resolver, catalog)
 	var transactions := GDSQLTransactionManager.new(storage)
 	var expression_evaluator := GDSQLExpressionEvaluator.new()
 	var function_registry := GDSQLQueryFunctionRegistry.new()
@@ -26,6 +28,7 @@ static func create_default(settings: Variant = null) -> GDSQLDatabaseContext:
 	)
 	return GDSQLDatabaseContext.new(
 		catalog,
+		catalog_administration,
 		storage,
 		GDSQLDefaultQueryValidator.new(catalog),
 		GDSQLDefaultQueryPlanner.new(),

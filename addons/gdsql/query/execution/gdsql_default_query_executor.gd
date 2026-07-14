@@ -37,12 +37,12 @@ func _execute_insert(
 	var session := context.transactions.begin()
 	for row in insert_plan.rows:
 		var stage_result := context.storage.stage_insert(insert_plan.target, row, session)
-		result.diagnostics.append_array(stage_result.diagnostics)
+		result.diagnostics.merge(stage_result.diagnostics)
 		if not stage_result.is_successful():
 			context.transactions.rollback(session)
 			return result
 	var commit_result := context.transactions.commit(session)
-	result.diagnostics.append_array(commit_result.diagnostics)
+	result.diagnostics.merge(commit_result.diagnostics)
 	if not commit_result.is_successful():
 		context.transactions.rollback(session)
 		return result

@@ -2,6 +2,7 @@ class_name GDSQLDatabaseContext
 extends RefCounted
 
 var catalog: GDSQLCatalogService
+var catalog_administration: GDSQLCatalogAdministrationService
 var storage: GDSQLTableStorage
 var validator: GDSQLQueryValidator
 var planner: GDSQLQueryPlanner
@@ -11,6 +12,7 @@ var execution_context: GDSQLExecutionContext
 
 func _init(
 		_catalog: GDSQLCatalogService = null,
+		_catalog_administration: GDSQLCatalogAdministrationService = null,
 		_storage: GDSQLTableStorage = null,
 		_validator: GDSQLQueryValidator = null,
 		_planner: GDSQLQueryPlanner = null,
@@ -18,6 +20,7 @@ func _init(
 		_execution_context: GDSQLExecutionContext = null,
 ) -> void:
 	catalog = _catalog
+	catalog_administration = _catalog_administration
 	storage = _storage
 	validator = _validator
 	planner = _planner
@@ -25,18 +28,29 @@ func _init(
 	execution_context = _execution_context
 
 
+func create_database(database_name: StringName) -> GDSQLCatalogOperationResult:
+	return catalog_administration.create_database(database_name)
+
+
+func create_table(
+		database_name: StringName,
+		table: GDSQLTableDefinition,
+) -> GDSQLCatalogOperationResult:
+	return catalog_administration.create_table(database_name, table)
+
+
 func execute(query: GDSQLQuerySpec) -> GDSQLQueryResult:
 	var public_result := GDSQLQueryResult.new()
 	var validation := validator.validate(query)
-	public_result.diagnostics.append_array(validation.diagnostics)
+	public_result.diagnostics.merge(validation.diagnostics)
 	if not validation.is_valid():
 		return public_result
 	var planning := planner.create_plan(validation.bound_query)
-	public_result.diagnostics.append_array(planning.diagnostics)
+	public_result.diagnostics.merge(planning.diagnostics)
 	if not planning.is_successful() or planning.plan == null:
 		return public_result
 	var execution := executor.execute(planning.plan, execution_context)
-	public_result.diagnostics.append_array(execution.diagnostics)
+	public_result.diagnostics.merge(execution.diagnostics)
 	if execution.rows != null:
 		public_result.rows = execution.rows.rows.duplicate()
 	public_result.statistics = execution.statistics.duplicate()
@@ -47,6 +61,6 @@ func prepare(query: GDSQLQuerySpec) -> GDSQLQueryPlanningResult:
 	var validation := validator.validate(query)
 	if not validation.is_valid():
 		var result := GDSQLQueryPlanningResult.new()
-		result.diagnostics.append_array(validation.diagnostics)
+		result.diagnostics.merge(validation.diagnostics)
 		return result
 	return planner.create_plan(validation.bound_query)

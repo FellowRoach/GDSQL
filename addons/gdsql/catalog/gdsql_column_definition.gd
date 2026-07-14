@@ -10,10 +10,16 @@ var default_value: Variant
 
 
 func _init(
-		p_name: StringName = &"",
-		p_type: Variant.Type = TYPE_NIL,
-		p_nullable: bool = true,
+		name: StringName = &"",
+		type: Variant.Type = TYPE_NIL,
+		nullable: bool = true,
+		unique: bool = false,
+		auto_increment: bool = false,
+		default_value: Variant = null,
 ) -> void:
-	name = p_name
-	data_type = p_type
-	nullable = p_nullable
+	self.name = name
+	self.data_type = type
+	self.nullable = nullable
+	self.unique = unique
+	self.auto_increment = auto_increment
+	self.default_value = default_value

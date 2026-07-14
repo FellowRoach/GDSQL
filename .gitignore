@@ -28,5 +28,6 @@ docs/.vitepress/cache/
 # folder for local usage, experimentation and manual testing for the addon development
 /local
 /data
+/.gdsql
 
 !.gitkeep

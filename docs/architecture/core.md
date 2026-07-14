@@ -81,7 +81,7 @@ QueryExecutor
     ↓
 Catalog and storage contracts
     ↓
-ConfigFile / .gsql implementation
+ConfigFile / .cfg implementation
 ```
 
 ---
@@ -968,7 +968,7 @@ func rollback(session: StorageSession) -> void
 
 The ConfigFile implementation owns knowledge of:
 
-- `.gsql` files.
+- `.cfg` files.
 - Table file paths.
 - Section names.
 - Primary-key-to-section mapping.
@@ -1003,7 +1003,7 @@ QueryExecutor
     depends on TableStorage.
 
 ConfigFileTableStorage
-    depends on ConfigFile, .gsql paths, codecs, and persistence.
+    depends on ConfigFile, .cfg paths, codecs, and persistence.
 ```
 
 Storage representations do not propagate upward into the canonical query model.
@@ -1086,6 +1086,47 @@ var default_value: Variant
 ```
 
 Rows and query execution remain outside the catalog.
+
+### 13.1 Catalog administration
+
+Catalog reads and catalog mutations use separate contracts. Query validation,
+binding, planning, and execution depend only on `CatalogService`; they cannot
+create or alter structure. Code-facing structure management enters through
+`Database` and is delegated by `DatabaseContext` to
+`CatalogAdministrationService`.
+
+```gdscript
+@abstract
+class_name CatalogAdministrationService
+extends RefCounted
+
+@abstract
+func create_database(database_name: StringName) -> CatalogOperationResult
+
+@abstract
+func create_table(
+    database_name: StringName,
+    table: TableDefinition,
+) -> CatalogOperationResult
+```
+
+The public API accepts typed `TableDefinition` and `ColumnDefinition` objects.
+It does not accept ConfigFile sections or construct project paths. The concrete
+ConfigFile administration service lives in `storage/configfile`, receives a
+`DatabasePathResolver` through its constructor, and owns creation of database
+registrations, workspace directories, and schema files.
+
+Catalog mutations return `CatalogOperationResult` with structured diagnostics
+for invalid definitions, duplicate objects, unreadable catalogs, and failed
+persistence. Ordinary catalog failures are not printed or thrown.
+
+Database creation establishes the project-owned structure described in section
+17.1. Table creation persists both schema metadata and an empty backend table
+file, so a successful operation leaves a complete, immediately usable table.
+Row contents and later mutations remain owned by `TableStorage`. The ConfigFile
+backend may complete a missing empty table file when an existing stored schema
+exactly matches the requested definition; this repairs incomplete structures
+without overwriting a table or changing its schema.
 
 ---
 
@@ -1312,6 +1353,7 @@ GraphCompiler
 addons/gdsql/
 ├── api/
 │   ├── database.gd
+│   ├── database_result.gd
 │   ├── database_context.gd
 │   ├── query.gd
 │   └── query_result.gd
@@ -1353,6 +1395,8 @@ addons/gdsql/
 │
 ├── catalog/
 │   ├── catalog_service.gd
+│   ├── catalog_administration_service.gd
+│   ├── catalog_operation_result.gd
 │   ├── database_definition.gd
 │   ├── table_definition.gd
 │   ├── column_definition.gd
@@ -1366,6 +1410,7 @@ addons/gdsql/
 │   └── configfile/
 │       ├── config_file_table_storage.gd
 │       ├── config_file_catalog_service.gd
+│       ├── config_file_catalog_administration_service.gd
 │       ├── config_file_cache.gd
 │       └── godot_variant_codec.gd
 │
@@ -1402,7 +1447,7 @@ res://
     ├── databases.cfg           # Database catalog
     └── <database>/
         ├── schema/              # Table definitions
-        ├── tables/              # Row data stored as .gsql files
+        ├── tables/              # Row data stored as .cfg files
         ├── mappers/             # Optional mapping definitions
         └── graphs/              # Query graph documents
 ```
@@ -1412,49 +1457,6 @@ plugin directory and must not contain runtime classes. The `data` directory is
 project-owned database content. `DatabasePathResolver` and the ConfigFile
 backend own the physical layout; query models, validators, planners, and
 executors use logical catalog and table identifiers only.
-
-## 17.2 First code-only Fluent API milestone
-
-The first executable vertical slice is an insert through the Fluent API:
-
-```gdscript
-var database := GDSQLDatabase.open(&"game_config")
-
-var query := database.query().insert() \
-    .into_table(&"heroes") \
-    .values({&"id": 1, &"name": "Knight"}) \
-    .build()
-
-var result := database.execute(query)
-```
-
-This path still crosses every canonical boundary:
-
-```text
-InsertQueryBuilder
-    → InsertQuerySpec
-    → DefaultQueryValidator / BoundInsertQuery
-    → DefaultQueryPlanner / InsertPlan
-    → DefaultQueryExecutor
-    → TableStorage session and commit
-    → ConfigFileTableStorage
-```
-
-For this milestone, each table remains one `.gsql` file. This keeps reads and
-writes bounded to one table, matches the project workspace, and leaves the
-choice replaceable behind `TableStorage`. A database-wide file can be evaluated
-later if measured workloads show that many small files are a practical problem.
-
-The initial ConfigFile layout is:
-
-```text
-data/databases.cfg                     # registered database names
-data/<database>/schema/<table>.cfg     # typed table and column metadata
-data/<database>/tables/<table>.gsql    # row sections keyed by primary key
-```
-
-The first insert requires an explicit primary key. Auto-increment, schema DDL,
-update, delete, select, SQL text, and editor integration remain later slices.
 
 ---
 
@@ -1482,7 +1484,7 @@ func run_current_query() -> void:
         code_editor.text
     )
 
-    diagnostics_panel.display(result.diagnostics)
+    diagnostics_panel.display(result.diagnostics.entries)
 
     if result.is_successful():
         result_grid.display(result.rows)
@@ -1497,24 +1499,48 @@ No runtime class needs to reference the editor components used to display the re
 Each pipeline stage returns structured results and diagnostics.
 
 ```gdscript
+class_name Diagnostics
+extends RefCounted
+
+var entries: Array[QueryDiagnostic] = []
+
+func is_successful() -> bool:
+	for diagnostic in entries:
+		if diagnostic.severity == \
+				QueryDiagnostic.Severity.ERROR:
+			return false
+
+	return true
+
+func print_to_debug(
+	minimum_severity := QueryDiagnostic.Severity.ERROR
+) -> void:
+	for diagnostic in entries:
+		if diagnostic.severity >= minimum_severity:
+			print_debug(diagnostic.message)
+```
+
+Result types compose this component and delegate success inspection to it:
+
+```gdscript
 class_name OperationResult
 extends RefCounted
 
 var value: Variant
-var diagnostics: Array[QueryDiagnostic] = []
+var diagnostics := Diagnostics.new()
 
 func is_successful() -> bool:
-    for diagnostic in diagnostics:
-        if diagnostic.severity == \
-                QueryDiagnostic.Severity.ERROR:
-            return false
-
-    return true
+	return diagnostics.is_successful()
 ```
+
+Success inspection has no output side effects. Callers explicitly invoke
+`print_to_debug()` when diagnostic reporting is desired and choose whether the
+minimum included severity is `INFO`, `WARNING`, or `ERROR`.
 
 More specific result types may include:
 
 ```text
+DatabaseResult
 TokenizationResult
 SqlParseResult
 QueryCompilationResult
@@ -1614,7 +1640,7 @@ Private fields and getters may be used where stronger control is required.
 
 `Dictionary` remains appropriate where dynamic data is inherent:
 
-- Reading serialized `.gsql` rows.
+- Reading serialized `.cfg` rows.
 - Importing JSON.
 - Handling arbitrary parameters.
 - Interacting with `ConfigFile`.
@@ -1703,7 +1729,7 @@ var result := validator.validate(query)
 assert_true(result.is_valid())
 ```
 
-No `.gsql` file is required.
+No `.cfg` file is required.
 
 ### Planner
 
@@ -1772,7 +1798,7 @@ The initial planner may generate straightforward operator trees. Cost estimation
 
 ### Storage representations remain contained
 
-A `.gsql` section name belongs to the ConfigFile backend.
+A `.cfg` section name belongs to the ConfigFile backend.
 
 Higher layers use domain concepts such as:
 
@@ -1827,9 +1853,9 @@ The architecture succeeds when each subsystem has a clear responsibility, an exp
 
 # Extra topic
 
-## Extensibility Beyond Local `.gsql` Storage
+## Extensibility Beyond Local `.cfg` Storage
 
-The proposed architecture does not require every database operation to use a local `.gsql` file.
+The proposed architecture does not require every database operation to use a local `.cfg` file.
 
 Because the query pipeline depends on abstract contracts such as `TableStorage`, another implementation could later send operations to a remote authority instead of reading and writing local files.
 

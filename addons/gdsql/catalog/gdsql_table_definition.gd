@@ -8,6 +8,19 @@ var primary_key: StringName
 var indexes: Array[GDSQLIndexDefinition] = []
 
 
+func _init(
+		name: StringName = &"",
+		primary_key: StringName = &"",
+) -> void:
+	self.name = name
+	self.primary_key = primary_key
+
+
+func add_column(column: GDSQLColumnDefinition) -> GDSQLTableDefinition:
+	columns.append(column)
+	return self
+
+
 func get_column(column_name: StringName) -> GDSQLColumnDefinition:
 	for column in columns:
 		if column.name == column_name:

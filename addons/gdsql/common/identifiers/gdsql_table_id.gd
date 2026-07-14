@@ -5,6 +5,6 @@ var database_name: StringName
 var table_name: StringName
 
 
-func _init(p_database: StringName = &"", p_table: StringName = &"") -> void:
-	database_name = p_database
-	table_name = p_table
+func _init(database: StringName = &"", table: StringName = &"") -> void:
+	self.database_name = database
+	self.table_name = table

@@ -7,13 +7,13 @@ var codec: GDSQLGodotVariantCodec
 
 
 func _init(
-		p_path_resolver: GDSQLDatabasePathResolver,
-		p_config_cache: GDSQLConfigFileCache,
-		p_codec: GDSQLGodotVariantCodec,
+		path_resolver: GDSQLDatabasePathResolver,
+		config_cache: GDSQLConfigFileCache,
+		codec: GDSQLGodotVariantCodec,
 ) -> void:
-	path_resolver = p_path_resolver
-	config_cache = p_config_cache
-	codec = p_codec
+	self.path_resolver = path_resolver
+	self.config_cache = config_cache
+	self.codec = codec
 
 
 func read_table(table: GDSQLTableDefinition, session: GDSQLStorageSession) -> GDSQLTableSnapshot:

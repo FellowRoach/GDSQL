@@ -8,7 +8,7 @@ Everything provided bellow is a "vision" of the future after the architectural i
 
 ## 1. Vision for networked and remote data management
 
-The canonical query architecture should allow GDSQL to support more than local `.gsql` files.
+The canonical query architecture should allow GDSQL to support more than local `.cfg` files.
 
 The query runtime should depend on abstract contracts rather than assuming that all data exists in a local `ConfigFile`. This permits additional data-management strategies to be implemented without changing the SQL parser, fluent API, query model, or editor.
 
@@ -93,7 +93,7 @@ TableStorage
     ↓
 ConfigFileTableStorage
     ↓
-.gsql
+.cfg
 ```
 
 This model is appropriate for:
@@ -394,7 +394,7 @@ RemoteServiceTableStorage
 InMemoryTableStorage
 ```
 
-The server can use GDSQL’s canonical query model even when `.gsql` is no longer the physical persistence format.
+The server can use GDSQL’s canonical query model even when `.cfg` is no longer the physical persistence format.
 
 That possibility depends on preserving the storage abstraction:
 
@@ -879,7 +879,7 @@ Network serialization is separate from storage serialization.
 
 ```text
 GodotVariantCodec
-    Encodes values for `.gsql` persistence.
+    Encodes values for `.cfg` persistence.
 
 NetworkMessageCodec
     Encodes commands and events for transport.
@@ -962,7 +962,7 @@ Example ownership:
 | Item definitions | Local packaged data | Development tools |
 | Player profile | Local replicated cache | Dedicated server |
 | Match state | Memory or replicated cache | Match host |
-| Save-game preferences | Local `.gsql` | Local client |
+| Save-game preferences | Local `.cfg` | Local client |
 | Global economy | Cached remote view | Backend service |
 | Session lobby | Replicated memory | Lobby host |
 
@@ -1481,7 +1481,7 @@ TableDefinition --> IndexDefinition
 %% =========================================================
 subgraph STORAGE["Storage Domain"]
     TableStorage["TableStorage<br/>Abstract row storage"]
-    ConfigFileTableStorage["ConfigFileTableStorage<br/>.gsql backend"]
+    ConfigFileTableStorage["ConfigFileTableStorage<br/>.cfg backend"]
     InMemoryTableStorage["InMemoryTableStorage<br/>Memory backend"]
     ReplicatedTableStorage["ReplicatedTableStorage<br/>Read-only replicated backend"]
     HybridTableStorage["HybridTableStorage<br/>Multi-source backend"]
