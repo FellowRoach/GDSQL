@@ -97,7 +97,6 @@ BoundQuery("`**GDSQLBoundQueryOperation**
 
 -
 *Purpose:* Represent a catalog-resolved operation ready for planning
-*API:* Operation-specific typed target, source, assignment and predicate fields
 *Owned by:* GDSQLBoundQuery
 *Parent of:* BoundSelect, BoundInsert, BoundUpdate and BoundDelete
 *Uses:* Stable table and column identifiers`")
@@ -163,7 +162,7 @@ ConfigAdministration("`**GDSQLConfigFileCatalogAdministrationService**
 
 -
 *Purpose:* Persist database and table lifecycle operations using ConfigFile resources
-*API:* create_database(), rename_database(), drop_database(), create_table(), rename_table(), alter_table(), drop_table()
+*API:* create, rename, alter and drop database or table structures
 *Extends:* GDSQLCatalogAdministrationService
 *Uses:* Catalog reader, path resolver and ConfigFile cache`")
 
@@ -171,7 +170,7 @@ ConfigStorage("`**GDSQLConfigFileTableStorage**
 
 -
 *Purpose:* Persist table rows as ConfigFile sections and values
-*API:* read_table(), find_by_primary_key(), stage_insert(), stage_update(), stage_delete(), commit(), rollback()
+*API:* Read, primary-key lookup, staged mutations, commit and rollback
 *Extends:* GDSQLTableStorage
 *Uses:* Path resolver, ConfigFile cache and Variant codec`")
 
@@ -209,7 +208,7 @@ Executor -->|"GDSQLQueryExecutionResult"| Results
 Context -->|"GDSQLDatabaseResult / GDSQLQueryResult"| Results
 
 Context -->|"catalog lifecycle API"| CatalogAdministration
-Validator -->|"get_table()"| CatalogService
+Validator -->|"get_table() · create_snapshot()"| CatalogService
 Executor -->|"read_table() · find_by_primary_key()"| TableStorage
 Executor -->|"stage_*() · commit() · rollback()"| TableStorage
 
